@@ -1,0 +1,5 @@
+enum: ParticipantRole
+serialized: byName
+values:
+  - interviewer
+  - candidate

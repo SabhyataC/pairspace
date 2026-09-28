@@ -1,0 +1,11 @@
+class: CodeSnapshot
+table: code_snapshot
+fields:
+  roomId: int, relation(parent=room, onDelete=Cascade)
+  content: String
+  language: String
+  updatedAt: DateTime, default=now
+indexes:
+  code_snapshot_room_idx:
+    fields: roomId
+    unique: true

@@ -1,0 +1,7 @@
+class: Participant
+table: participant
+fields:
+  roomId: int, relation(parent=room, onDelete=Cascade)
+  role: ParticipantRole
+  displayName: String
+  joinedAt: DateTime, default=now

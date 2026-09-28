@@ -1,0 +1,9 @@
+class: Room
+table: room
+fields:
+  code: String
+  createdAt: DateTime, default=now
+indexes:
+  room_code_idx:
+    fields: code
+    unique: true

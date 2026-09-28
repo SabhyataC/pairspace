@@ -16,8 +16,18 @@ import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
 import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
     as _iaic;
 import 'package:serverpod_client/serverpod_client.dart' as _isc;
+import 'code_snapshot.dart' as _ixhe19s2;
 import 'greetings/greeting.dart' as _izw8z7ou;
+import 'participant.dart' as _ih83ei55;
+import 'participant_role.dart' as _i5kza8cj;
+import 'room.dart' as _ieflxecy;
+import 'stroke.dart' as _ikjj7mbr;
+export 'code_snapshot.dart';
 export 'greetings/greeting.dart';
+export 'participant.dart';
+export 'participant_role.dart';
+export 'room.dart';
+export 'stroke.dart';
 export 'client.dart';
 
 class Protocol extends _isc.SerializationManager {
@@ -54,11 +64,45 @@ class Protocol extends _isc.SerializationManager {
       }
     }
 
+    if (t == _ixhe19s2.CodeSnapshot) {
+      return _ixhe19s2.CodeSnapshot.fromJson(data) as T;
+    }
     if (t == _izw8z7ou.Greeting) {
       return _izw8z7ou.Greeting.fromJson(data) as T;
     }
+    if (t == _ih83ei55.Participant) {
+      return _ih83ei55.Participant.fromJson(data) as T;
+    }
+    if (t == _i5kza8cj.ParticipantRole) {
+      return _i5kza8cj.ParticipantRole.fromJson(data) as T;
+    }
+    if (t == _ieflxecy.Room) {
+      return _ieflxecy.Room.fromJson(data) as T;
+    }
+    if (t == _ikjj7mbr.Stroke) {
+      return _ikjj7mbr.Stroke.fromJson(data) as T;
+    }
+    if (t == _isc.getType<_ixhe19s2.CodeSnapshot?>()) {
+      return (data != null ? _ixhe19s2.CodeSnapshot.fromJson(data) : null) as T;
+    }
     if (t == _isc.getType<_izw8z7ou.Greeting?>()) {
       return (data != null ? _izw8z7ou.Greeting.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_ih83ei55.Participant?>()) {
+      return (data != null ? _ih83ei55.Participant.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_i5kza8cj.ParticipantRole?>()) {
+      return (data != null ? _i5kza8cj.ParticipantRole.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_ieflxecy.Room?>()) {
+      return (data != null ? _ieflxecy.Room.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_ikjj7mbr.Stroke?>()) {
+      return (data != null ? _ikjj7mbr.Stroke.fromJson(data) : null) as T;
+    }
+    if (t == List<double>) {
+      return (data as List).map((e) => deserialize<double>(e)).toList() as T;
     }
     try {
       return _iaic.Protocol().deserialize<T>(data, t);
@@ -71,7 +115,12 @@ class Protocol extends _isc.SerializationManager {
 
   static String? getClassNameForType(Type type) {
     return switch (type) {
+      _ixhe19s2.CodeSnapshot => 'CodeSnapshot',
       _izw8z7ou.Greeting => 'Greeting',
+      _ih83ei55.Participant => 'Participant',
+      _i5kza8cj.ParticipantRole => 'ParticipantRole',
+      _ieflxecy.Room => 'Room',
+      _ikjj7mbr.Stroke => 'Stroke',
       _ => null,
     };
   }
@@ -86,8 +135,18 @@ class Protocol extends _isc.SerializationManager {
     }
 
     switch (data) {
+      case _ixhe19s2.CodeSnapshot():
+        return 'CodeSnapshot';
       case _izw8z7ou.Greeting():
         return 'Greeting';
+      case _ih83ei55.Participant():
+        return 'Participant';
+      case _i5kza8cj.ParticipantRole():
+        return 'ParticipantRole';
+      case _ieflxecy.Room():
+        return 'Room';
+      case _ikjj7mbr.Stroke():
+        return 'Stroke';
     }
     className = _iaic.Protocol().getClassNameForObject(data);
     if (className != null) {
@@ -110,8 +169,23 @@ class Protocol extends _isc.SerializationManager {
     if (dataClassName is! String) {
       return super.deserializeByClassName(data);
     }
+    if (dataClassName == 'CodeSnapshot') {
+      return deserialize<_ixhe19s2.CodeSnapshot>(data['data']);
+    }
     if (dataClassName == 'Greeting') {
       return deserialize<_izw8z7ou.Greeting>(data['data']);
+    }
+    if (dataClassName == 'Participant') {
+      return deserialize<_ih83ei55.Participant>(data['data']);
+    }
+    if (dataClassName == 'ParticipantRole') {
+      return deserialize<_i5kza8cj.ParticipantRole>(data['data']);
+    }
+    if (dataClassName == 'Room') {
+      return deserialize<_ieflxecy.Room>(data['data']);
+    }
+    if (dataClassName == 'Stroke') {
+      return deserialize<_ikjj7mbr.Stroke>(data['data']);
     }
     if (dataClassName.startsWith('serverpod_auth_idp.')) {
       data['className'] = dataClassName.substring(19);

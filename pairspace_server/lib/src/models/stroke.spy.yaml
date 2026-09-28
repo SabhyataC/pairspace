@@ -1,0 +1,11 @@
+class: Stroke
+table: stroke
+fields:
+  roomId: int, relation(parent=room, onDelete=Cascade)
+  points: List<double>
+  color: int
+  width: double
+  createdAt: DateTime, default=now
+indexes:
+  stroke_room_idx:
+    fields: roomId
