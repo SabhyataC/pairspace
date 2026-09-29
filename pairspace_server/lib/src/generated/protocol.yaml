@@ -7,7 +7,18 @@ emailIdp:
   - verifyPasswordResetCode:
   - finishPasswordReset:
   - hasAccount:
+googleIdp:
+  - login:
+  - loginWithCode:
+  - hasAccount:
 jwtRefresh:
   - refreshAccessToken:
 greeting:
   - hello:
+room:
+  - createRoom:
+  - joinRoom:
+  - pendingParticipants:
+  - admitParticipant:
+  - denyParticipant:
+  - checkStatus:

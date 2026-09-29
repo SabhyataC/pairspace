@@ -11,22 +11,27 @@
 // ignore_for_file: dead_code, unnecessary_type_check
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:pairspace_server/src/generated/participant.dart' as _ibvon4z2;
 import 'package:serverpod/protocol.dart' as _isp;
 import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _iacs;
 import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _iais;
+import 'access_denied.dart' as _icyx6leh;
 import 'code_snapshot.dart' as _ixhe19s2;
 import 'greetings/greeting.dart' as _izw8z7ou;
 import 'participant.dart' as _ih83ei55;
 import 'participant_role.dart' as _i5kza8cj;
+import 'participant_status.dart' as _idcdy19m;
 import 'room.dart' as _ieflxecy;
 import 'stroke.dart' as _ikjj7mbr;
+export 'access_denied.dart';
 export 'code_snapshot.dart';
 export 'greetings/greeting.dart';
 export 'participant.dart';
 export 'participant_role.dart';
+export 'participant_status.dart';
 export 'room.dart';
 export 'stroke.dart';
 
@@ -126,10 +131,22 @@ class Protocol extends _is.DatabaseSerializationManager {
           dartType: 'int',
         ),
         _isp.ColumnDefinition(
+          name: 'authUserId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
           name: 'role',
           columnType: _isp.ColumnType.text,
           isNullable: false,
           dartType: 'protocol:ParticipantRole',
+        ),
+        _isp.ColumnDefinition(
+          name: 'status',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'protocol:ParticipantStatus',
         ),
         _isp.ColumnDefinition(
           name: 'displayName',
@@ -157,7 +174,25 @@ class Protocol extends _is.DatabaseSerializationManager {
           matchType: null,
         ),
       ],
-      indexes: [],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'participant_room_user_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'roomId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'authUserId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
       managed: true,
     ),
     _isp.TableDefinition(
@@ -178,6 +213,12 @@ class Protocol extends _is.DatabaseSerializationManager {
           columnType: _isp.ColumnType.text,
           isNullable: false,
           dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdBy',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
         ),
         _isp.ColumnDefinition(
           name: 'createdAt',
@@ -311,6 +352,9 @@ class Protocol extends _is.DatabaseSerializationManager {
       }
     }
 
+    if (t == _icyx6leh.AccessDeniedException) {
+      return _icyx6leh.AccessDeniedException.fromJson(data) as T;
+    }
     if (t == _ixhe19s2.CodeSnapshot) {
       return _ixhe19s2.CodeSnapshot.fromJson(data) as T;
     }
@@ -323,11 +367,20 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _i5kza8cj.ParticipantRole) {
       return _i5kza8cj.ParticipantRole.fromJson(data) as T;
     }
+    if (t == _idcdy19m.ParticipantStatus) {
+      return _idcdy19m.ParticipantStatus.fromJson(data) as T;
+    }
     if (t == _ieflxecy.Room) {
       return _ieflxecy.Room.fromJson(data) as T;
     }
     if (t == _ikjj7mbr.Stroke) {
       return _ikjj7mbr.Stroke.fromJson(data) as T;
+    }
+    if (t == _is.getType<_icyx6leh.AccessDeniedException?>()) {
+      return (data != null
+              ? _icyx6leh.AccessDeniedException.fromJson(data)
+              : null)
+          as T;
     }
     if (t == _is.getType<_ixhe19s2.CodeSnapshot?>()) {
       return (data != null ? _ixhe19s2.CodeSnapshot.fromJson(data) : null) as T;
@@ -342,6 +395,10 @@ class Protocol extends _is.DatabaseSerializationManager {
       return (data != null ? _i5kza8cj.ParticipantRole.fromJson(data) : null)
           as T;
     }
+    if (t == _is.getType<_idcdy19m.ParticipantStatus?>()) {
+      return (data != null ? _idcdy19m.ParticipantStatus.fromJson(data) : null)
+          as T;
+    }
     if (t == _is.getType<_ieflxecy.Room?>()) {
       return (data != null ? _ieflxecy.Room.fromJson(data) : null) as T;
     }
@@ -350,6 +407,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == List<double>) {
       return (data as List).map((e) => deserialize<double>(e)).toList() as T;
+    }
+    if (t == List<_ibvon4z2.Participant>) {
+      return (data as List)
+              .map((e) => deserialize<_ibvon4z2.Participant>(e))
+              .toList()
+          as T;
     }
     try {
       return _iais.Protocol().deserialize<T>(data, t);
@@ -365,10 +428,12 @@ class Protocol extends _is.DatabaseSerializationManager {
 
   static String? getClassNameForType(Type type) {
     return switch (type) {
+      _icyx6leh.AccessDeniedException => 'AccessDeniedException',
       _ixhe19s2.CodeSnapshot => 'CodeSnapshot',
       _izw8z7ou.Greeting => 'Greeting',
       _ih83ei55.Participant => 'Participant',
       _i5kza8cj.ParticipantRole => 'ParticipantRole',
+      _idcdy19m.ParticipantStatus => 'ParticipantStatus',
       _ieflxecy.Room => 'Room',
       _ikjj7mbr.Stroke => 'Stroke',
       _ => null,
@@ -385,6 +450,8 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
 
     switch (data) {
+      case _icyx6leh.AccessDeniedException():
+        return 'AccessDeniedException';
       case _ixhe19s2.CodeSnapshot():
         return 'CodeSnapshot';
       case _izw8z7ou.Greeting():
@@ -393,6 +460,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'Participant';
       case _i5kza8cj.ParticipantRole():
         return 'ParticipantRole';
+      case _idcdy19m.ParticipantStatus():
+        return 'ParticipantStatus';
       case _ieflxecy.Room():
         return 'Room';
       case _ikjj7mbr.Stroke():
@@ -423,6 +492,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName is! String) {
       return super.deserializeByClassName(data);
     }
+    if (dataClassName == 'AccessDeniedException') {
+      return deserialize<_icyx6leh.AccessDeniedException>(data['data']);
+    }
     if (dataClassName == 'CodeSnapshot') {
       return deserialize<_ixhe19s2.CodeSnapshot>(data['data']);
     }
@@ -434,6 +506,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (dataClassName == 'ParticipantRole') {
       return deserialize<_i5kza8cj.ParticipantRole>(data['data']);
+    }
+    if (dataClassName == 'ParticipantStatus') {
+      return deserialize<_idcdy19m.ParticipantStatus>(data['data']);
     }
     if (dataClassName == 'Room') {
       return deserialize<_ieflxecy.Room>(data['data']);

@@ -2,6 +2,12 @@ class: Participant
 table: participant
 fields:
   roomId: int, relation(parent=room, onDelete=Cascade)
+  authUserId: UuidValue
   role: ParticipantRole
+  status: ParticipantStatus
   displayName: String
   joinedAt: DateTime, default=now
+indexes:
+  participant_room_user_idx:
+    fields: roomId, authUserId
+    unique: true

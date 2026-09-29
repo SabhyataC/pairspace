@@ -12,13 +12,16 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:serverpod/serverpod.dart' as _is;
 import 'participant_role.dart' as _i5kza8cj;
+import 'participant_status.dart' as _idcdy19m;
 
 abstract class Participant
     implements _is.TableRow<int?>, _is.ProtocolSerialization {
   Participant._({
     this.id,
     required this.roomId,
+    required this.authUserId,
     required this.role,
+    required this.status,
     required this.displayName,
     DateTime? joinedAt,
   }) : joinedAt = joinedAt ?? DateTime.now();
@@ -26,7 +29,9 @@ abstract class Participant
   factory Participant({
     int? id,
     required int roomId,
+    required _is.UuidValue authUserId,
     required _i5kza8cj.ParticipantRole role,
+    required _idcdy19m.ParticipantStatus status,
     required String displayName,
     DateTime? joinedAt,
   }) = _ParticipantImpl;
@@ -35,8 +40,14 @@ abstract class Participant
     return Participant(
       id: jsonSerialization['id'] as int?,
       roomId: jsonSerialization['roomId'] as int,
+      authUserId: _is.UuidValueJsonExtension.fromJson(
+        jsonSerialization['authUserId'],
+      ),
       role: _i5kza8cj.ParticipantRole.fromJson(
         (jsonSerialization['role'] as String),
+      ),
+      status: _idcdy19m.ParticipantStatus.fromJson(
+        (jsonSerialization['status'] as String),
       ),
       displayName: jsonSerialization['displayName'] as String,
       joinedAt: jsonSerialization['joinedAt'] == null
@@ -54,7 +65,11 @@ abstract class Participant
 
   int roomId;
 
+  _is.UuidValue authUserId;
+
   _i5kza8cj.ParticipantRole role;
+
+  _idcdy19m.ParticipantStatus status;
 
   String displayName;
 
@@ -69,7 +84,9 @@ abstract class Participant
   Participant copyWith({
     int? id,
     int? roomId,
+    _is.UuidValue? authUserId,
     _i5kza8cj.ParticipantRole? role,
+    _idcdy19m.ParticipantStatus? status,
     String? displayName,
     DateTime? joinedAt,
   });
@@ -79,7 +96,9 @@ abstract class Participant
       '__className__': 'Participant',
       if (id != null) 'id': id,
       'roomId': roomId,
+      'authUserId': authUserId.toJson(),
       'role': role.toJson(),
+      'status': status.toJson(),
       'displayName': displayName,
       'joinedAt': joinedAt.toJson(),
     };
@@ -91,7 +110,9 @@ abstract class Participant
       '__className__': 'Participant',
       if (id != null) 'id': id,
       'roomId': roomId,
+      'authUserId': authUserId.toJson(),
       'role': role.toJson(),
+      'status': status.toJson(),
       'displayName': displayName,
       'joinedAt': joinedAt.toJson(),
     };
@@ -131,13 +152,17 @@ class _ParticipantImpl extends Participant {
   _ParticipantImpl({
     int? id,
     required int roomId,
+    required _is.UuidValue authUserId,
     required _i5kza8cj.ParticipantRole role,
+    required _idcdy19m.ParticipantStatus status,
     required String displayName,
     DateTime? joinedAt,
   }) : super._(
          id: id,
          roomId: roomId,
+         authUserId: authUserId,
          role: role,
+         status: status,
          displayName: displayName,
          joinedAt: joinedAt,
        );
@@ -149,14 +174,18 @@ class _ParticipantImpl extends Participant {
   Participant copyWith({
     Object? id = _Undefined,
     int? roomId,
+    _is.UuidValue? authUserId,
     _i5kza8cj.ParticipantRole? role,
+    _idcdy19m.ParticipantStatus? status,
     String? displayName,
     DateTime? joinedAt,
   }) {
     return Participant(
       id: id is int? ? id : this.id,
       roomId: roomId ?? this.roomId,
+      authUserId: authUserId ?? this.authUserId,
       role: role ?? this.role,
+      status: status ?? this.status,
       displayName: displayName ?? this.displayName,
       joinedAt: joinedAt ?? this.joinedAt,
     );
@@ -171,10 +200,23 @@ class ParticipantUpdateTable extends _is.UpdateTable<ParticipantTable> {
     value,
   );
 
+  _is.ColumnValue<_is.UuidValue, _is.UuidValue> authUserId(
+    _is.UuidValue value,
+  ) => _is.ColumnValue(
+    table.authUserId,
+    value,
+  );
+
   _is.ColumnValue<_i5kza8cj.ParticipantRole, _i5kza8cj.ParticipantRole> role(
     _i5kza8cj.ParticipantRole value,
   ) => _is.ColumnValue(
     table.role,
+    value,
+  );
+
+  _is.ColumnValue<_idcdy19m.ParticipantStatus, _idcdy19m.ParticipantStatus>
+  status(_idcdy19m.ParticipantStatus value) => _is.ColumnValue(
+    table.status,
     value,
   );
 
@@ -197,8 +239,17 @@ class ParticipantTable extends _is.Table<int?> {
       'roomId',
       this,
     );
+    authUserId = _is.ColumnUuid(
+      'authUserId',
+      this,
+    );
     role = _is.ColumnEnum(
       'role',
+      this,
+      _is.EnumSerialization.byName,
+    );
+    status = _is.ColumnEnum(
+      'status',
       this,
       _is.EnumSerialization.byName,
     );
@@ -217,7 +268,11 @@ class ParticipantTable extends _is.Table<int?> {
 
   late final _is.ColumnInt roomId;
 
+  late final _is.ColumnUuid authUserId;
+
   late final _is.ColumnEnum<_i5kza8cj.ParticipantRole> role;
+
+  late final _is.ColumnEnum<_idcdy19m.ParticipantStatus> status;
 
   late final _is.ColumnString displayName;
 
@@ -227,7 +282,9 @@ class ParticipantTable extends _is.Table<int?> {
   List<_is.Column> get columns => [
     id,
     roomId,
+    authUserId,
     role,
+    status,
     displayName,
     joinedAt,
   ];

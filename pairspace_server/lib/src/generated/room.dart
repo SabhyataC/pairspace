@@ -16,12 +16,14 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
   Room._({
     this.id,
     required this.code,
+    required this.createdBy,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
   factory Room({
     int? id,
     required String code,
+    required _is.UuidValue createdBy,
     DateTime? createdAt,
   }) = _RoomImpl;
 
@@ -29,6 +31,9 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
     return Room(
       id: jsonSerialization['id'] as int?,
       code: jsonSerialization['code'] as String,
+      createdBy: _is.UuidValueJsonExtension.fromJson(
+        jsonSerialization['createdBy'],
+      ),
       createdAt: jsonSerialization['createdAt'] == null
           ? null
           : _is.DateTimeJsonExtension.fromJson(jsonSerialization['createdAt']),
@@ -44,6 +49,8 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
 
   String code;
 
+  _is.UuidValue createdBy;
+
   DateTime createdAt;
 
   @override
@@ -55,6 +62,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
   Room copyWith({
     int? id,
     String? code,
+    _is.UuidValue? createdBy,
     DateTime? createdAt,
   });
   @override
@@ -63,6 +71,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
       '__className__': 'Room',
       if (id != null) 'id': id,
       'code': code,
+      'createdBy': createdBy.toJson(),
       'createdAt': createdAt.toJson(),
     };
   }
@@ -73,6 +82,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
       '__className__': 'Room',
       if (id != null) 'id': id,
       'code': code,
+      'createdBy': createdBy.toJson(),
       'createdAt': createdAt.toJson(),
     };
   }
@@ -111,10 +121,12 @@ class _RoomImpl extends Room {
   _RoomImpl({
     int? id,
     required String code,
+    required _is.UuidValue createdBy,
     DateTime? createdAt,
   }) : super._(
          id: id,
          code: code,
+         createdBy: createdBy,
          createdAt: createdAt,
        );
 
@@ -125,11 +137,13 @@ class _RoomImpl extends Room {
   Room copyWith({
     Object? id = _Undefined,
     String? code,
+    _is.UuidValue? createdBy,
     DateTime? createdAt,
   }) {
     return Room(
       id: id is int? ? id : this.id,
       code: code ?? this.code,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -140,6 +154,13 @@ class RoomUpdateTable extends _is.UpdateTable<RoomTable> {
 
   _is.ColumnValue<String, String> code(String value) => _is.ColumnValue(
     table.code,
+    value,
+  );
+
+  _is.ColumnValue<_is.UuidValue, _is.UuidValue> createdBy(
+    _is.UuidValue value,
+  ) => _is.ColumnValue(
+    table.createdBy,
     value,
   );
 
@@ -157,6 +178,10 @@ class RoomTable extends _is.Table<int?> {
       'code',
       this,
     );
+    createdBy = _is.ColumnUuid(
+      'createdBy',
+      this,
+    );
     createdAt = _is.ColumnDateTime(
       'createdAt',
       this,
@@ -168,12 +193,15 @@ class RoomTable extends _is.Table<int?> {
 
   late final _is.ColumnString code;
 
+  late final _is.ColumnUuid createdBy;
+
   late final _is.ColumnDateTime createdAt;
 
   @override
   List<_is.Column> get columns => [
     id,
     code,
+    createdBy,
     createdAt,
   ];
 }

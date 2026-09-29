@@ -2,6 +2,7 @@ class: Room
 table: room
 fields:
   code: String
+  createdBy: UuidValue
   createdAt: DateTime, default=now
 indexes:
   room_code_idx:

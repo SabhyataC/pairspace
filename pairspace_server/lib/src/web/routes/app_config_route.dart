@@ -12,7 +12,7 @@ class AppConfigRoute extends WidgetRoute {
   AppConfigWidget widget;
 
   AppConfigRoute({
-    required final ServerConfig apiConfig,
+    required ServerConfig apiConfig,
   }) : widget = AppConfigWidget(apiUrl: apiConfig.apiUrl.toString());
 
   @override
