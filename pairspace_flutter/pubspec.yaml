@@ -29,6 +29,7 @@ dependencies:
   cupertino_icons: ^1.0.5
   flutter:
     sdk: flutter
+  web: ^1.0.0
   google_fonts: ^8.1.0
   pairspace_client:
     path: ../pairspace_client
