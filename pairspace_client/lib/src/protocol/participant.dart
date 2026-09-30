@@ -12,13 +12,16 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:serverpod_client/serverpod_client.dart' as _isc;
 import 'participant_role.dart' as _i5kza8cj;
+import 'participant_status.dart' as _idcdy19m;
 
 abstract class Participant
     implements _isc.SerializableModel, _isc.ProtocolSerialization {
   Participant._({
     this.id,
     required this.roomId,
+    required this.authUserId,
     required this.role,
+    required this.status,
     required this.displayName,
     DateTime? joinedAt,
   }) : joinedAt = joinedAt ?? DateTime.now();
@@ -26,7 +29,9 @@ abstract class Participant
   factory Participant({
     int? id,
     required int roomId,
+    required _isc.UuidValue authUserId,
     required _i5kza8cj.ParticipantRole role,
+    required _idcdy19m.ParticipantStatus status,
     required String displayName,
     DateTime? joinedAt,
   }) = _ParticipantImpl;
@@ -35,8 +40,14 @@ abstract class Participant
     return Participant(
       id: jsonSerialization['id'] as int?,
       roomId: jsonSerialization['roomId'] as int,
+      authUserId: _isc.UuidValueJsonExtension.fromJson(
+        jsonSerialization['authUserId'],
+      ),
       role: _i5kza8cj.ParticipantRole.fromJson(
         (jsonSerialization['role'] as String),
+      ),
+      status: _idcdy19m.ParticipantStatus.fromJson(
+        (jsonSerialization['status'] as String),
       ),
       displayName: jsonSerialization['displayName'] as String,
       joinedAt: jsonSerialization['joinedAt'] == null
@@ -52,7 +63,11 @@ abstract class Participant
 
   int roomId;
 
+  _isc.UuidValue authUserId;
+
   _i5kza8cj.ParticipantRole role;
+
+  _idcdy19m.ParticipantStatus status;
 
   String displayName;
 
@@ -64,7 +79,9 @@ abstract class Participant
   Participant copyWith({
     int? id,
     int? roomId,
+    _isc.UuidValue? authUserId,
     _i5kza8cj.ParticipantRole? role,
+    _idcdy19m.ParticipantStatus? status,
     String? displayName,
     DateTime? joinedAt,
   });
@@ -74,7 +91,9 @@ abstract class Participant
       '__className__': 'Participant',
       if (id != null) 'id': id,
       'roomId': roomId,
+      'authUserId': authUserId.toJson(),
       'role': role.toJson(),
+      'status': status.toJson(),
       'displayName': displayName,
       'joinedAt': joinedAt.toJson(),
     };
@@ -86,7 +105,9 @@ abstract class Participant
       '__className__': 'Participant',
       if (id != null) 'id': id,
       'roomId': roomId,
+      'authUserId': authUserId.toJson(),
       'role': role.toJson(),
+      'status': status.toJson(),
       'displayName': displayName,
       'joinedAt': joinedAt.toJson(),
     };
@@ -104,13 +125,17 @@ class _ParticipantImpl extends Participant {
   _ParticipantImpl({
     int? id,
     required int roomId,
+    required _isc.UuidValue authUserId,
     required _i5kza8cj.ParticipantRole role,
+    required _idcdy19m.ParticipantStatus status,
     required String displayName,
     DateTime? joinedAt,
   }) : super._(
          id: id,
          roomId: roomId,
+         authUserId: authUserId,
          role: role,
+         status: status,
          displayName: displayName,
          joinedAt: joinedAt,
        );
@@ -122,14 +147,18 @@ class _ParticipantImpl extends Participant {
   Participant copyWith({
     Object? id = _Undefined,
     int? roomId,
+    _isc.UuidValue? authUserId,
     _i5kza8cj.ParticipantRole? role,
+    _idcdy19m.ParticipantStatus? status,
     String? displayName,
     DateTime? joinedAt,
   }) {
     return Participant(
       id: id is int? ? id : this.id,
       roomId: roomId ?? this.roomId,
+      authUserId: authUserId ?? this.authUserId,
       role: role ?? this.role,
+      status: status ?? this.status,
       displayName: displayName ?? this.displayName,
       joinedAt: joinedAt ?? this.joinedAt,
     );

@@ -124,7 +124,7 @@ void run(List<String> args) async {
     ],
     identityProviderBuilders: [
       GoogleIdpConfigFromPasswords(),
-       ServerpodCloudEmailIdpConfig(appDisplayName: 'pairspace'),
+      ServerpodCloudEmailIdpConfig(appDisplayName: 'pairspace'),
     ],
   );
 

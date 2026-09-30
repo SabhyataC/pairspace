@@ -12,6 +12,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:pairspace_server/src/generated/participant.dart' as _ibvon4z2;
+import 'package:pairspace_server/src/generated/stroke.dart' as _iziyni4f;
 import 'package:serverpod/protocol.dart' as _isp;
 import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
@@ -407,6 +408,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == List<double>) {
       return (data as List).map((e) => deserialize<double>(e)).toList() as T;
+    }
+    if (t == List<_iziyni4f.Stroke>) {
+      return (data as List)
+              .map((e) => deserialize<_iziyni4f.Stroke>(e))
+              .toList()
+          as T;
     }
     if (t == List<_ibvon4z2.Participant>) {
       return (data as List)

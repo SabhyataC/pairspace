@@ -11,21 +11,27 @@
 // ignore_for_file: dead_code, unnecessary_type_check
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:pairspace_client/src/protocol/participant.dart' as _i9rgdsem;
+import 'package:pairspace_client/src/protocol/stroke.dart' as _is7tpwzz;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _iacc;
 import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
     as _iaic;
 import 'package:serverpod_client/serverpod_client.dart' as _isc;
+import 'access_denied.dart' as _icyx6leh;
 import 'code_snapshot.dart' as _ixhe19s2;
 import 'greetings/greeting.dart' as _izw8z7ou;
 import 'participant.dart' as _ih83ei55;
 import 'participant_role.dart' as _i5kza8cj;
+import 'participant_status.dart' as _idcdy19m;
 import 'room.dart' as _ieflxecy;
 import 'stroke.dart' as _ikjj7mbr;
+export 'access_denied.dart';
 export 'code_snapshot.dart';
 export 'greetings/greeting.dart';
 export 'participant.dart';
 export 'participant_role.dart';
+export 'participant_status.dart';
 export 'room.dart';
 export 'stroke.dart';
 export 'client.dart';
@@ -64,6 +70,9 @@ class Protocol extends _isc.SerializationManager {
       }
     }
 
+    if (t == _icyx6leh.AccessDeniedException) {
+      return _icyx6leh.AccessDeniedException.fromJson(data) as T;
+    }
     if (t == _ixhe19s2.CodeSnapshot) {
       return _ixhe19s2.CodeSnapshot.fromJson(data) as T;
     }
@@ -76,11 +85,20 @@ class Protocol extends _isc.SerializationManager {
     if (t == _i5kza8cj.ParticipantRole) {
       return _i5kza8cj.ParticipantRole.fromJson(data) as T;
     }
+    if (t == _idcdy19m.ParticipantStatus) {
+      return _idcdy19m.ParticipantStatus.fromJson(data) as T;
+    }
     if (t == _ieflxecy.Room) {
       return _ieflxecy.Room.fromJson(data) as T;
     }
     if (t == _ikjj7mbr.Stroke) {
       return _ikjj7mbr.Stroke.fromJson(data) as T;
+    }
+    if (t == _isc.getType<_icyx6leh.AccessDeniedException?>()) {
+      return (data != null
+              ? _icyx6leh.AccessDeniedException.fromJson(data)
+              : null)
+          as T;
     }
     if (t == _isc.getType<_ixhe19s2.CodeSnapshot?>()) {
       return (data != null ? _ixhe19s2.CodeSnapshot.fromJson(data) : null) as T;
@@ -95,6 +113,10 @@ class Protocol extends _isc.SerializationManager {
       return (data != null ? _i5kza8cj.ParticipantRole.fromJson(data) : null)
           as T;
     }
+    if (t == _isc.getType<_idcdy19m.ParticipantStatus?>()) {
+      return (data != null ? _idcdy19m.ParticipantStatus.fromJson(data) : null)
+          as T;
+    }
     if (t == _isc.getType<_ieflxecy.Room?>()) {
       return (data != null ? _ieflxecy.Room.fromJson(data) : null) as T;
     }
@@ -103,6 +125,18 @@ class Protocol extends _isc.SerializationManager {
     }
     if (t == List<double>) {
       return (data as List).map((e) => deserialize<double>(e)).toList() as T;
+    }
+    if (t == List<_is7tpwzz.Stroke>) {
+      return (data as List)
+              .map((e) => deserialize<_is7tpwzz.Stroke>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_i9rgdsem.Participant>) {
+      return (data as List)
+              .map((e) => deserialize<_i9rgdsem.Participant>(e))
+              .toList()
+          as T;
     }
     try {
       return _iaic.Protocol().deserialize<T>(data, t);
@@ -115,10 +149,12 @@ class Protocol extends _isc.SerializationManager {
 
   static String? getClassNameForType(Type type) {
     return switch (type) {
+      _icyx6leh.AccessDeniedException => 'AccessDeniedException',
       _ixhe19s2.CodeSnapshot => 'CodeSnapshot',
       _izw8z7ou.Greeting => 'Greeting',
       _ih83ei55.Participant => 'Participant',
       _i5kza8cj.ParticipantRole => 'ParticipantRole',
+      _idcdy19m.ParticipantStatus => 'ParticipantStatus',
       _ieflxecy.Room => 'Room',
       _ikjj7mbr.Stroke => 'Stroke',
       _ => null,
@@ -135,6 +171,8 @@ class Protocol extends _isc.SerializationManager {
     }
 
     switch (data) {
+      case _icyx6leh.AccessDeniedException():
+        return 'AccessDeniedException';
       case _ixhe19s2.CodeSnapshot():
         return 'CodeSnapshot';
       case _izw8z7ou.Greeting():
@@ -143,6 +181,8 @@ class Protocol extends _isc.SerializationManager {
         return 'Participant';
       case _i5kza8cj.ParticipantRole():
         return 'ParticipantRole';
+      case _idcdy19m.ParticipantStatus():
+        return 'ParticipantStatus';
       case _ieflxecy.Room():
         return 'Room';
       case _ikjj7mbr.Stroke():
@@ -169,6 +209,9 @@ class Protocol extends _isc.SerializationManager {
     if (dataClassName is! String) {
       return super.deserializeByClassName(data);
     }
+    if (dataClassName == 'AccessDeniedException') {
+      return deserialize<_icyx6leh.AccessDeniedException>(data['data']);
+    }
     if (dataClassName == 'CodeSnapshot') {
       return deserialize<_ixhe19s2.CodeSnapshot>(data['data']);
     }
@@ -180,6 +223,9 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'ParticipantRole') {
       return deserialize<_i5kza8cj.ParticipantRole>(data['data']);
+    }
+    if (dataClassName == 'ParticipantStatus') {
+      return deserialize<_idcdy19m.ParticipantStatus>(data['data']);
     }
     if (dataClassName == 'Room') {
       return deserialize<_ieflxecy.Room>(data['data']);

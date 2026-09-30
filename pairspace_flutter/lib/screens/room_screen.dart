@@ -49,6 +49,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pairspace_client/pairspace_client.dart';
 import 'package:web/web.dart' as web;
+import 'canvas_board.dart';
 
 import '../client.dart';
 
@@ -68,6 +69,13 @@ class _RoomScreenState extends State<RoomScreen> {
   bool _isPending = false;
 
   List<Participant> _pending = [];
+  final CanvasController _canvas = CanvasController();
+  StreamController<Stroke>? _outgoing;
+  StreamSubscription<Stroke>? _incoming;
+  bool _canvasWanted = false;
+  Timer? _reconnectTimer;
+  final Map<String, Stroke> _sent = {};
+
   Timer? _pendingTimer;
 
   @override
@@ -83,6 +91,11 @@ class _RoomScreenState extends State<RoomScreen> {
   @override
   void dispose() {
     _pendingTimer?.cancel();
+    _canvas.dispose();
+    _canvasWanted = false;
+    _reconnectTimer?.cancel();
+    _incoming?.cancel();
+    _outgoing?.close();
     super.dispose();
   }
 
@@ -97,6 +110,13 @@ class _RoomScreenState extends State<RoomScreen> {
         _isInterviewer = true;
         _loading = false;
       });
+      final uri = Uri.parse(web.window.location.href);
+      web.window.history.replaceState(
+        null,
+        '',
+        uri.replace(queryParameters: {'room': room.code}).toString(),
+      );
+      _openCanvasStream();
       _startPendingPolling();
     } catch (e) {
       if (!mounted) return;
@@ -130,6 +150,7 @@ class _RoomScreenState extends State<RoomScreen> {
         _isPending = false;
         _loading = false;
       });
+      _openCanvasStream();
       if (_isInterviewer) _startPendingPolling();
     } catch (e) {
       if (!mounted) return;
@@ -147,6 +168,7 @@ class _RoomScreenState extends State<RoomScreen> {
 
       if (participant.status == ParticipantStatus.admitted) {
         setState(() => _isPending = false);
+        _openCanvasStream();
         return;
       }
       if (participant.status == ParticipantStatus.denied) {
@@ -212,6 +234,69 @@ class _RoomScreenState extends State<RoomScreen> {
     await Clipboard.setData(ClipboardData(text: inviteUri.toString()));
     if (!mounted) return;
     _showMessage('Invite link copied');
+  }
+
+  // Identifies a stroke I sent, so I can recognise it when the server echoes it back.
+  String _strokeKey(Stroke s) =>
+      '${s.createdAt.microsecondsSinceEpoch}|${s.points.length}';
+
+  void _openCanvasStream() {
+    final roomId = _roomId;
+    if (roomId == null || _canvasWanted) return;
+    _canvasWanted = true;
+    _connectCanvas(roomId);
+  }
+
+  void _connectCanvas(int roomId) {
+    _incoming?.cancel();
+    _sent.clear();
+
+    final outgoing = StreamController<Stroke>();
+    _outgoing = outgoing;
+
+    _incoming = client.canvas
+        .strokeStream(roomId, outgoing.stream)
+        .listen(
+          (stroke) {
+            final mine = _sent.remove(_strokeKey(stroke));
+            if (mine != null) {
+              mine.id = stroke.id; // learn the database id of my own stroke
+              _canvas.add(mine); // does nothing if it's already on the canvas
+              return;
+            }
+            _canvas.add(stroke);
+          },
+          onError: (Object e) => debugPrint('Canvas stream error: $e'),
+          onDone: () {
+            debugPrint('Canvas stream CLOSED');
+            if (_outgoing != outgoing) return; // an older connection
+            _outgoing = null;
+            outgoing.close();
+            if (!mounted || !_canvasWanted) return;
+            _reconnectTimer?.cancel();
+            _reconnectTimer = Timer(const Duration(seconds: 2), () {
+              if (mounted && _canvasWanted) _connectCanvas(roomId);
+            });
+          },
+        );
+
+    _loadSavedStrokes(roomId);
+  }
+
+  Future<void> _loadSavedStrokes(int roomId) async {
+    try {
+      final saved = await client.canvas.getStrokes(roomId);
+      if (!mounted) return;
+      _canvas.replaceAll(saved);
+    } catch (e) {
+      debugPrint('Failed to load strokes: $e');
+    }
+  }
+
+  void _sendStroke(Stroke stroke) {
+    if (_outgoing == null) return;
+    _sent[_strokeKey(stroke)] = stroke;
+    _outgoing!.add(stroke);
   }
 
   void _showMessage(String message) {
@@ -343,6 +428,15 @@ class _RoomScreenState extends State<RoomScreen> {
                           ),
                         ),
                     ],
+                    const SizedBox(height: 24),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 900),
+                      child: CanvasBoard(
+                        roomId: _roomId!,
+                        controller: _canvas,
+                        onStrokeComplete: _sendStroke,
+                      ),
+                    ),
                   ],
                 ),
               )

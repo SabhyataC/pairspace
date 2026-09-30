@@ -13,6 +13,9 @@ googleIdp:
   - hasAccount:
 jwtRefresh:
   - refreshAccessToken:
+canvas:
+  - strokeStream:
+  - getStrokes:
 greeting:
   - hello:
 room:

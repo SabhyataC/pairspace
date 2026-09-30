@@ -14,6 +14,9 @@ import 'dart:async' as _ida;
 import 'package:http/http.dart' as _i85jenna;
 import 'package:pairspace_client/src/protocol/greetings/greeting.dart'
     as _ig9dsi4a;
+import 'package:pairspace_client/src/protocol/participant.dart' as _i9rgdsem;
+import 'package:pairspace_client/src/protocol/room.dart' as _iiu20v5l;
+import 'package:pairspace_client/src/protocol/stroke.dart' as _is7tpwzz;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _iacc;
 import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
@@ -204,6 +207,60 @@ class EndpointEmailIdp extends _iaic.EndpointEmailIdpBase {
   );
 }
 
+/// {@category Endpoint}
+class EndpointGoogleIdp extends _iaic.EndpointGoogleIdpBase {
+  EndpointGoogleIdp(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'googleIdp';
+
+  /// Validates a Google ID token and either logs in the associated user or
+  /// creates a new user account if the Google account ID is not yet known.
+  ///
+  /// If a new user is created an associated [UserProfile] is also created.
+  @override
+  _ida.Future<_iacc.AuthSuccess> login({
+    required String idToken,
+    required String? accessToken,
+  }) => caller.callServerEndpoint<_iacc.AuthSuccess>(
+    'googleIdp',
+    'login',
+    {
+      'idToken': idToken,
+      'accessToken': accessToken,
+    },
+  );
+
+  /// Validates a Google authorization code from the web OAuth2 PKCE flow and
+  /// either logs in the associated user or creates a new account.
+  ///
+  /// This is the web counterpart of [login], which accepts an ID token directly
+  /// (used on native platforms via the `google_sign_in` package).
+  ///
+  /// If a new user is created an associated [UserProfile] is also created.
+  @override
+  _ida.Future<_iacc.AuthSuccess> loginWithCode({
+    required String code,
+    required String codeVerifier,
+    required String redirectUri,
+  }) => caller.callServerEndpoint<_iacc.AuthSuccess>(
+    'googleIdp',
+    'loginWithCode',
+    {
+      'code': code,
+      'codeVerifier': codeVerifier,
+      'redirectUri': redirectUri,
+    },
+  );
+
+  @override
+  _ida.Future<bool> hasAccount() => caller.callServerEndpoint<bool>(
+    'googleIdp',
+    'hasAccount',
+    {},
+  );
+}
+
 /// By extending [RefreshJwtTokensEndpoint], the JWT token refresh endpoint
 /// is made available on the server and enables automatic token refresh on the client.
 /// {@category Endpoint}
@@ -246,6 +303,37 @@ class EndpointJwtRefresh extends _iacc.EndpointRefreshJwtTokens {
       );
 }
 
+/// {@category Endpoint}
+class EndpointCanvas extends _isc.EndpointRef {
+  EndpointCanvas(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'canvas';
+
+  /// Client sends its strokes in, and receives every stroke drawn in the room.
+  _ida.Stream<_is7tpwzz.Stroke> strokeStream(
+    int roomId,
+    _ida.Stream<_is7tpwzz.Stroke> strokes,
+  ) =>
+      caller.callStreamingServerEndpoint<
+        _ida.Stream<_is7tpwzz.Stroke>,
+        _is7tpwzz.Stroke
+      >(
+        'canvas',
+        'strokeStream',
+        {'roomId': roomId},
+        {'strokes': strokes},
+      );
+
+  /// All saved strokes of a room, oldest first. Admitted participants only.
+  _ida.Future<List<_is7tpwzz.Stroke>> getStrokes(int roomId) =>
+      caller.callServerEndpoint<List<_is7tpwzz.Stroke>>(
+        'canvas',
+        'getStrokes',
+        {'roomId': roomId},
+      );
+}
+
 /// This is an example endpoint that returns a greeting message through
 /// its [hello] method.
 /// {@category Endpoint}
@@ -261,6 +349,56 @@ class EndpointGreeting extends _isc.EndpointRef {
         'greeting',
         'hello',
         {'name': name},
+      );
+}
+
+/// {@category Endpoint}
+class EndpointRoom extends _isc.EndpointRef {
+  EndpointRoom(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'room';
+
+  _ida.Future<_iiu20v5l.Room> createRoom() =>
+      caller.callServerEndpoint<_iiu20v5l.Room>(
+        'room',
+        'createRoom',
+        {},
+      );
+
+  _ida.Future<_i9rgdsem.Participant> joinRoom(String code) =>
+      caller.callServerEndpoint<_i9rgdsem.Participant>(
+        'room',
+        'joinRoom',
+        {'code': code},
+      );
+
+  _ida.Future<List<_i9rgdsem.Participant>> pendingParticipants(int roomId) =>
+      caller.callServerEndpoint<List<_i9rgdsem.Participant>>(
+        'room',
+        'pendingParticipants',
+        {'roomId': roomId},
+      );
+
+  _ida.Future<_i9rgdsem.Participant> admitParticipant(int participantId) =>
+      caller.callServerEndpoint<_i9rgdsem.Participant>(
+        'room',
+        'admitParticipant',
+        {'participantId': participantId},
+      );
+
+  _ida.Future<_i9rgdsem.Participant> denyParticipant(int participantId) =>
+      caller.callServerEndpoint<_i9rgdsem.Participant>(
+        'room',
+        'denyParticipant',
+        {'participantId': participantId},
+      );
+
+  _ida.Future<_i9rgdsem.Participant> checkStatus(int participantId) =>
+      caller.callServerEndpoint<_i9rgdsem.Participant>(
+        'room',
+        'checkStatus',
+        {'participantId': participantId},
       );
 }
 
@@ -303,24 +441,36 @@ class Client extends _isc.ServerpodClientShared {
          httpClientOverride: httpClientOverride,
        ) {
     emailIdp = EndpointEmailIdp(this);
+    googleIdp = EndpointGoogleIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
+    canvas = EndpointCanvas(this);
     greeting = EndpointGreeting(this);
+    room = EndpointRoom(this);
     modules = Modules(this);
   }
 
   late final EndpointEmailIdp emailIdp;
 
+  late final EndpointGoogleIdp googleIdp;
+
   late final EndpointJwtRefresh jwtRefresh;
 
+  late final EndpointCanvas canvas;
+
   late final EndpointGreeting greeting;
+
+  late final EndpointRoom room;
 
   late final Modules modules;
 
   @override
   Map<String, _isc.EndpointRef> get endpointRefLookup => {
     'emailIdp': emailIdp,
+    'googleIdp': googleIdp,
     'jwtRefresh': jwtRefresh,
+    'canvas': canvas,
     'greeting': greeting,
+    'room': room,
   };
 
   @override

@@ -10,6 +10,7 @@
 // ignore_for_file: invalid_use_of_internal_member
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:pairspace_server/src/generated/stroke.dart' as _iziyni4f;
 import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _iacs;
@@ -18,6 +19,7 @@ import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
 import '../auth/email_idp_endpoint.dart' as _iuc1hd5t;
 import '../auth/google_idp_endpoint.dart' as _i71axiz0;
 import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
+import '../canvas/canvas_endpoint.dart' as _iexkumfq;
 import '../greetings/greeting_endpoint.dart' as _il624ik7;
 import '../rooms/room_endpoint.dart' as _idkvzxf4;
 
@@ -41,6 +43,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'jwtRefresh',
+          null,
+        ),
+      'canvas': _iexkumfq.CanvasEndpoint()
+        ..initialize(
+          server,
+          'canvas',
           null,
         ),
       'greeting': _il624ik7.GreetingEndpoint()
@@ -331,6 +339,59 @@ class Endpoints extends _is.EndpointDispatch {
                         session,
                         refreshToken: params['refreshToken'],
                       ),
+        ),
+      },
+    );
+    connectors['canvas'] = _is.EndpointConnector(
+      name: 'canvas',
+      endpoint: endpoints['canvas']!,
+      methodConnectors: {
+        'getStrokes': _is.MethodConnector(
+          name: 'getStrokes',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['canvas'] as _iexkumfq.CanvasEndpoint).getStrokes(
+                    session,
+                    params['roomId'],
+                  ),
+        ),
+        'strokeStream': _is.MethodStreamConnector(
+          name: 'strokeStream',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          streamParams: {
+            'strokes': _is.StreamParameterDescription<_iziyni4f.Stroke>(
+              name: 'strokes',
+              nullable: false,
+            ),
+          },
+          returnType: _is.MethodStreamReturnType.streamType,
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+                Map<String, Stream> streamParams,
+              ) => (endpoints['canvas'] as _iexkumfq.CanvasEndpoint)
+                  .strokeStream(
+                    session,
+                    params['roomId'],
+                    streamParams['strokes']!.cast<_iziyni4f.Stroke>(),
+                  ),
         ),
       },
     );

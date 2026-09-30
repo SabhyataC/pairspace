@@ -17,12 +17,14 @@ abstract class Room
   Room._({
     this.id,
     required this.code,
+    required this.createdBy,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
   factory Room({
     int? id,
     required String code,
+    required _isc.UuidValue createdBy,
     DateTime? createdAt,
   }) = _RoomImpl;
 
@@ -30,6 +32,9 @@ abstract class Room
     return Room(
       id: jsonSerialization['id'] as int?,
       code: jsonSerialization['code'] as String,
+      createdBy: _isc.UuidValueJsonExtension.fromJson(
+        jsonSerialization['createdBy'],
+      ),
       createdAt: jsonSerialization['createdAt'] == null
           ? null
           : _isc.DateTimeJsonExtension.fromJson(jsonSerialization['createdAt']),
@@ -43,6 +48,8 @@ abstract class Room
 
   String code;
 
+  _isc.UuidValue createdBy;
+
   DateTime createdAt;
 
   /// Returns a shallow copy of this [Room]
@@ -51,6 +58,7 @@ abstract class Room
   Room copyWith({
     int? id,
     String? code,
+    _isc.UuidValue? createdBy,
     DateTime? createdAt,
   });
   @override
@@ -59,6 +67,7 @@ abstract class Room
       '__className__': 'Room',
       if (id != null) 'id': id,
       'code': code,
+      'createdBy': createdBy.toJson(),
       'createdAt': createdAt.toJson(),
     };
   }
@@ -69,6 +78,7 @@ abstract class Room
       '__className__': 'Room',
       if (id != null) 'id': id,
       'code': code,
+      'createdBy': createdBy.toJson(),
       'createdAt': createdAt.toJson(),
     };
   }
@@ -85,10 +95,12 @@ class _RoomImpl extends Room {
   _RoomImpl({
     int? id,
     required String code,
+    required _isc.UuidValue createdBy,
     DateTime? createdAt,
   }) : super._(
          id: id,
          code: code,
+         createdBy: createdBy,
          createdAt: createdAt,
        );
 
@@ -99,11 +111,13 @@ class _RoomImpl extends Room {
   Room copyWith({
     Object? id = _Undefined,
     String? code,
+    _isc.UuidValue? createdBy,
     DateTime? createdAt,
   }) {
     return Room(
       id: id is int? ? id : this.id,
       code: code ?? this.code,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
     );
   }
