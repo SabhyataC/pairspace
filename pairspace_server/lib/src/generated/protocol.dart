@@ -21,6 +21,8 @@ import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _iais;
 import 'access_denied.dart' as _icyx6leh;
 import 'code_snapshot.dart' as _ixhe19s2;
+import 'future_calls_generated_models/end_empty_room_future_call_end_model.dart'
+    as _iotrfso8;
 import 'greetings/greeting.dart' as _izw8z7ou;
 import 'participant.dart' as _ih83ei55;
 import 'participant_role.dart' as _i5kza8cj;
@@ -228,6 +230,12 @@ class Protocol extends _is.DatabaseSerializationManager {
           dartType: 'DateTime',
           columnDefault: 'now',
         ),
+        _isp.ColumnDefinition(
+          name: 'endedAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
       ],
       foreignKeys: [],
       indexes: [
@@ -359,6 +367,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _ixhe19s2.CodeSnapshot) {
       return _ixhe19s2.CodeSnapshot.fromJson(data) as T;
     }
+    if (t == _iotrfso8.EndEmptyRoomFutureCallEndModel) {
+      return _iotrfso8.EndEmptyRoomFutureCallEndModel.fromJson(data) as T;
+    }
     if (t == _izw8z7ou.Greeting) {
       return _izw8z7ou.Greeting.fromJson(data) as T;
     }
@@ -385,6 +396,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _is.getType<_ixhe19s2.CodeSnapshot?>()) {
       return (data != null ? _ixhe19s2.CodeSnapshot.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_iotrfso8.EndEmptyRoomFutureCallEndModel?>()) {
+      return (data != null
+              ? _iotrfso8.EndEmptyRoomFutureCallEndModel.fromJson(data)
+              : null)
+          as T;
     }
     if (t == _is.getType<_izw8z7ou.Greeting?>()) {
       return (data != null ? _izw8z7ou.Greeting.fromJson(data) : null) as T;
@@ -437,6 +454,8 @@ class Protocol extends _is.DatabaseSerializationManager {
     return switch (type) {
       _icyx6leh.AccessDeniedException => 'AccessDeniedException',
       _ixhe19s2.CodeSnapshot => 'CodeSnapshot',
+      _iotrfso8.EndEmptyRoomFutureCallEndModel =>
+        'EndEmptyRoomFutureCallEndModel',
       _izw8z7ou.Greeting => 'Greeting',
       _ih83ei55.Participant => 'Participant',
       _i5kza8cj.ParticipantRole => 'ParticipantRole',
@@ -461,6 +480,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'AccessDeniedException';
       case _ixhe19s2.CodeSnapshot():
         return 'CodeSnapshot';
+      case _iotrfso8.EndEmptyRoomFutureCallEndModel():
+        return 'EndEmptyRoomFutureCallEndModel';
       case _izw8z7ou.Greeting():
         return 'Greeting';
       case _ih83ei55.Participant():
@@ -504,6 +525,11 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (dataClassName == 'CodeSnapshot') {
       return deserialize<_ixhe19s2.CodeSnapshot>(data['data']);
+    }
+    if (dataClassName == 'EndEmptyRoomFutureCallEndModel') {
+      return deserialize<_iotrfso8.EndEmptyRoomFutureCallEndModel>(
+        data['data'],
+      );
     }
     if (dataClassName == 'Greeting') {
       return deserialize<_izw8z7ou.Greeting>(data['data']);

@@ -10,6 +10,7 @@
 // ignore_for_file: invalid_use_of_internal_member
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:pairspace_server/src/generated/future_calls.dart' as _i400ijtc;
 import 'package:pairspace_server/src/generated/stroke.dart' as _iziyni4f;
 import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
@@ -22,6 +23,7 @@ import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
 import '../canvas/canvas_endpoint.dart' as _iexkumfq;
 import '../greetings/greeting_endpoint.dart' as _il624ik7;
 import '../rooms/room_endpoint.dart' as _idkvzxf4;
+export 'future_calls.dart' show ServerpodFutureCallsGetter;
 
 class Endpoints extends _is.EndpointDispatch {
   @override
@@ -426,19 +428,43 @@ class Endpoints extends _is.EndpointDispatch {
       methodConnectors: {
         'createRoom': _is.MethodConnector(
           name: 'createRoom',
+          params: {
+            'displayName': _is.ParameterDescription(
+              name: 'displayName',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['room'] as _idkvzxf4.RoomEndpoint).createRoom(
+                    session,
+                    params['displayName'],
+                  ),
+        ),
+        'myActiveRoom': _is.MethodConnector(
+          name: 'myActiveRoom',
           params: {},
           call:
               (
                 _is.Session session,
                 Map<String, dynamic> params,
               ) async => (endpoints['room'] as _idkvzxf4.RoomEndpoint)
-                  .createRoom(session),
+                  .myActiveRoom(session),
         ),
         'joinRoom': _is.MethodConnector(
           name: 'joinRoom',
           params: {
             'code': _is.ParameterDescription(
               name: 'code',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'displayName': _is.ParameterDescription(
+              name: 'displayName',
               type: _is.getType<String>(),
               nullable: false,
             ),
@@ -450,6 +476,7 @@ class Endpoints extends _is.EndpointDispatch {
               ) async => (endpoints['room'] as _idkvzxf4.RoomEndpoint).joinRoom(
                 session,
                 params['code'],
+                params['displayName'],
               ),
         ),
         'pendingParticipants': _is.MethodConnector(
@@ -467,6 +494,25 @@ class Endpoints extends _is.EndpointDispatch {
                 Map<String, dynamic> params,
               ) async => (endpoints['room'] as _idkvzxf4.RoomEndpoint)
                   .pendingParticipants(
+                    session,
+                    params['roomId'],
+                  ),
+        ),
+        'admittedParticipants': _is.MethodConnector(
+          name: 'admittedParticipants',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['room'] as _idkvzxf4.RoomEndpoint)
+                  .admittedParticipants(
                     session,
                     params['roomId'],
                   ),
@@ -528,11 +574,72 @@ class Endpoints extends _is.EndpointDispatch {
                     params['participantId'],
                   ),
         ),
+        'leaveRoom': _is.MethodConnector(
+          name: 'leaveRoom',
+          params: {
+            'participantId': _is.ParameterDescription(
+              name: 'participantId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['room'] as _idkvzxf4.RoomEndpoint).leaveRoom(
+                    session,
+                    params['participantId'],
+                  ),
+        ),
+        'endRoom': _is.MethodConnector(
+          name: 'endRoom',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['room'] as _idkvzxf4.RoomEndpoint).endRoom(
+                session,
+                params['roomId'],
+              ),
+        ),
+        'isRoomEnded': _is.MethodConnector(
+          name: 'isRoomEnded',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['room'] as _idkvzxf4.RoomEndpoint).isRoomEnded(
+                    session,
+                    params['roomId'],
+                  ),
+        ),
       },
     );
     modules['serverpod_auth_idp'] = _iais.Endpoints()
       ..initializeEndpoints(server);
     modules['serverpod_auth_core'] = _iacs.Endpoints()
       ..initializeEndpoints(server);
+  }
+
+  @override
+  _is.FutureCallDispatch? get futureCalls {
+    return _i400ijtc.FutureCalls();
   }
 }

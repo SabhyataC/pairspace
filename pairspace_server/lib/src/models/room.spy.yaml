@@ -4,6 +4,7 @@ fields:
   code: String
   createdBy: UuidValue
   createdAt: DateTime, default=now
+  endedAt: DateTime?
 indexes:
   room_code_idx:
     fields: code
