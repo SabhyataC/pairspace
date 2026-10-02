@@ -11,6 +11,8 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:pairspace_server/src/generated/future_calls.dart' as _i400ijtc;
+import 'package:pairspace_server/src/generated/signal_message.dart'
+    as _i4itcfai;
 import 'package:pairspace_server/src/generated/stroke.dart' as _iziyni4f;
 import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
@@ -23,6 +25,7 @@ import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
 import '../canvas/canvas_endpoint.dart' as _iexkumfq;
 import '../greetings/greeting_endpoint.dart' as _il624ik7;
 import '../rooms/room_endpoint.dart' as _idkvzxf4;
+import '../video/video_signal_endpoint.dart' as _i1o3hvfx;
 export 'future_calls.dart' show ServerpodFutureCallsGetter;
 
 class Endpoints extends _is.EndpointDispatch {
@@ -63,6 +66,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'room',
+          null,
+        ),
+      'videoSignal': _i1o3hvfx.VideoSignalEndpoint()
+        ..initialize(
+          server,
+          'videoSignal',
           null,
         ),
     };
@@ -628,6 +637,46 @@ class Endpoints extends _is.EndpointDispatch {
                   (endpoints['room'] as _idkvzxf4.RoomEndpoint).isRoomEnded(
                     session,
                     params['roomId'],
+                  ),
+        ),
+      },
+    );
+    connectors['videoSignal'] = _is.EndpointConnector(
+      name: 'videoSignal',
+      endpoint: endpoints['videoSignal']!,
+      methodConnectors: {
+        'signalStream': _is.MethodStreamConnector(
+          name: 'signalStream',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'myParticipantId': _is.ParameterDescription(
+              name: 'myParticipantId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          streamParams: {
+            'outgoing': _is.StreamParameterDescription<_i4itcfai.SignalMessage>(
+              name: 'outgoing',
+              nullable: false,
+            ),
+          },
+          returnType: _is.MethodStreamReturnType.streamType,
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+                Map<String, Stream> streamParams,
+              ) => (endpoints['videoSignal'] as _i1o3hvfx.VideoSignalEndpoint)
+                  .signalStream(
+                    session,
+                    params['roomId'],
+                    params['myParticipantId'],
+                    streamParams['outgoing']!.cast<_i4itcfai.SignalMessage>(),
                   ),
         ),
       },

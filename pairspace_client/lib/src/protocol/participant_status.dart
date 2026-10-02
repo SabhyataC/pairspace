@@ -15,7 +15,8 @@ import 'package:serverpod_client/serverpod_client.dart' as _isc;
 enum ParticipantStatus implements _isc.SerializableModel {
   pending,
   admitted,
-  denied;
+  denied,
+  left;
 
   static ParticipantStatus fromJson(String name) {
     switch (name) {
@@ -25,6 +26,8 @@ enum ParticipantStatus implements _isc.SerializableModel {
         return ParticipantStatus.admitted;
       case 'denied':
         return ParticipantStatus.denied;
+      case 'left':
+        return ParticipantStatus.left;
       default:
         throw ArgumentError(
           'Value "$name" cannot be converted to "ParticipantStatus"',

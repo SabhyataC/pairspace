@@ -28,6 +28,7 @@ import 'participant.dart' as _ih83ei55;
 import 'participant_role.dart' as _i5kza8cj;
 import 'participant_status.dart' as _idcdy19m;
 import 'room.dart' as _ieflxecy;
+import 'signal_message.dart' as _i6c8vmrx;
 import 'stroke.dart' as _ikjj7mbr;
 export 'access_denied.dart';
 export 'code_snapshot.dart';
@@ -36,6 +37,7 @@ export 'participant.dart';
 export 'participant_role.dart';
 export 'participant_status.dart';
 export 'room.dart';
+export 'signal_message.dart';
 export 'stroke.dart';
 
 class Protocol extends _is.DatabaseSerializationManager {
@@ -385,6 +387,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _ieflxecy.Room) {
       return _ieflxecy.Room.fromJson(data) as T;
     }
+    if (t == _i6c8vmrx.SignalMessage) {
+      return _i6c8vmrx.SignalMessage.fromJson(data) as T;
+    }
     if (t == _ikjj7mbr.Stroke) {
       return _ikjj7mbr.Stroke.fromJson(data) as T;
     }
@@ -419,6 +424,10 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _is.getType<_ieflxecy.Room?>()) {
       return (data != null ? _ieflxecy.Room.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_i6c8vmrx.SignalMessage?>()) {
+      return (data != null ? _i6c8vmrx.SignalMessage.fromJson(data) : null)
+          as T;
     }
     if (t == _is.getType<_ikjj7mbr.Stroke?>()) {
       return (data != null ? _ikjj7mbr.Stroke.fromJson(data) : null) as T;
@@ -461,6 +470,7 @@ class Protocol extends _is.DatabaseSerializationManager {
       _i5kza8cj.ParticipantRole => 'ParticipantRole',
       _idcdy19m.ParticipantStatus => 'ParticipantStatus',
       _ieflxecy.Room => 'Room',
+      _i6c8vmrx.SignalMessage => 'SignalMessage',
       _ikjj7mbr.Stroke => 'Stroke',
       _ => null,
     };
@@ -492,6 +502,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'ParticipantStatus';
       case _ieflxecy.Room():
         return 'Room';
+      case _i6c8vmrx.SignalMessage():
+        return 'SignalMessage';
       case _ikjj7mbr.Stroke():
         return 'Stroke';
     }
@@ -545,6 +557,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (dataClassName == 'Room') {
       return deserialize<_ieflxecy.Room>(data['data']);
+    }
+    if (dataClassName == 'SignalMessage') {
+      return deserialize<_i6c8vmrx.SignalMessage>(data['data']);
     }
     if (dataClassName == 'Stroke') {
       return deserialize<_ikjj7mbr.Stroke>(data['data']);

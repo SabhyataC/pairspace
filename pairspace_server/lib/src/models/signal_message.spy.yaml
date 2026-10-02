@@ -1,0 +1,8 @@
+class: SignalMessage
+fields:
+  senderParticipantId: int
+  type: String
+  sdp: String?
+  candidate: String?
+  sdpMid: String?
+  sdpMLineIndex: int?

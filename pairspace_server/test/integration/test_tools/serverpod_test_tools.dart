@@ -20,6 +20,8 @@ import 'package:pairspace_server/src/generated/greetings/greeting.dart'
     as _if7scw4c;
 import 'package:pairspace_server/src/generated/participant.dart' as _ibvon4z2;
 import 'package:pairspace_server/src/generated/room.dart' as _it3k3a2g;
+import 'package:pairspace_server/src/generated/signal_message.dart'
+    as _i4itcfai;
 import 'package:pairspace_server/src/generated/stroke.dart' as _iziyni4f;
 import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
@@ -171,6 +173,8 @@ class TestEndpoints {
   late final _GreetingEndpoint greeting;
 
   late final _RoomEndpoint room;
+
+  late final _VideoSignalEndpoint videoSignal;
 }
 
 class _InternalTestEndpoints extends TestEndpoints
@@ -201,6 +205,10 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
     room = _RoomEndpoint(
+      endpoints,
+      serializationManager,
+    );
+    videoSignal = _VideoSignalEndpoint(
       endpoints,
       serializationManager,
     );
@@ -1109,6 +1117,55 @@ class _RoomEndpoint {
         await _localUniqueSession.close();
       }
     });
+  }
+}
+
+class _VideoSignalEndpoint {
+  _VideoSignalEndpoint(
+    this._endpointDispatch,
+    this._serializationManager,
+  );
+
+  final _is.EndpointDispatch _endpointDispatch;
+
+  final _is.SerializationManager _serializationManager;
+
+  _ida.Stream<_i4itcfai.SignalMessage> signalStream(
+    _ist.TestSessionBuilder sessionBuilder,
+    int roomId,
+    int myParticipantId,
+    _ida.Stream<_i4itcfai.SignalMessage> outgoing,
+  ) {
+    var _localTestStreamManager =
+        _ist.TestStreamManager<_i4itcfai.SignalMessage>();
+    _ist.callStreamFunctionAndHandleExceptions(
+      () async {
+        var _localUniqueSession =
+            (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+              endpoint: 'videoSignal',
+              method: 'signalStream',
+            );
+        var _localCallContext = await _endpointDispatch
+            .getMethodStreamCallContext(
+              createSessionCallback: (_) => _localUniqueSession,
+              endpointPath: 'videoSignal',
+              methodName: 'signalStream',
+              arguments: {
+                'roomId': roomId,
+                'myParticipantId': myParticipantId,
+              },
+              requestedInputStreams: ['outgoing'],
+              serializationManager: _serializationManager,
+            );
+        await _localTestStreamManager.callStreamMethod(
+          _localCallContext,
+          _localUniqueSession,
+          {'outgoing': outgoing},
+        );
+      },
+      _localTestStreamManager.outputStreamController,
+    );
+    return _localTestStreamManager.outputStreamController.stream;
   }
 }
 

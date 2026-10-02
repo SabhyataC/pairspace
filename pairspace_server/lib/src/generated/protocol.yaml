@@ -30,3 +30,5 @@ room:
   - leaveRoom:
   - endRoom:
   - isRoomEnded:
+videoSignal:
+  - signalStream:

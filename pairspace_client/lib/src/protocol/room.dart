@@ -19,6 +19,7 @@ abstract class Room
     required this.code,
     required this.createdBy,
     DateTime? createdAt,
+    this.endedAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
   factory Room({
@@ -26,6 +27,7 @@ abstract class Room
     required String code,
     required _isc.UuidValue createdBy,
     DateTime? createdAt,
+    DateTime? endedAt,
   }) = _RoomImpl;
 
   factory Room.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -38,6 +40,9 @@ abstract class Room
       createdAt: jsonSerialization['createdAt'] == null
           ? null
           : _isc.DateTimeJsonExtension.fromJson(jsonSerialization['createdAt']),
+      endedAt: jsonSerialization['endedAt'] == null
+          ? null
+          : _isc.DateTimeJsonExtension.fromJson(jsonSerialization['endedAt']),
     );
   }
 
@@ -52,6 +57,8 @@ abstract class Room
 
   DateTime createdAt;
 
+  DateTime? endedAt;
+
   /// Returns a shallow copy of this [Room]
   /// with some or all fields replaced by the given arguments.
   @_isc.useResult
@@ -60,6 +67,7 @@ abstract class Room
     String? code,
     _isc.UuidValue? createdBy,
     DateTime? createdAt,
+    DateTime? endedAt,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -69,6 +77,7 @@ abstract class Room
       'code': code,
       'createdBy': createdBy.toJson(),
       'createdAt': createdAt.toJson(),
+      if (endedAt != null) 'endedAt': endedAt?.toJson(),
     };
   }
 
@@ -80,6 +89,7 @@ abstract class Room
       'code': code,
       'createdBy': createdBy.toJson(),
       'createdAt': createdAt.toJson(),
+      if (endedAt != null) 'endedAt': endedAt?.toJson(),
     };
   }
 
@@ -97,11 +107,13 @@ class _RoomImpl extends Room {
     required String code,
     required _isc.UuidValue createdBy,
     DateTime? createdAt,
+    DateTime? endedAt,
   }) : super._(
          id: id,
          code: code,
          createdBy: createdBy,
          createdAt: createdAt,
+         endedAt: endedAt,
        );
 
   /// Returns a shallow copy of this [Room]
@@ -113,12 +125,14 @@ class _RoomImpl extends Room {
     String? code,
     _isc.UuidValue? createdBy,
     DateTime? createdAt,
+    Object? endedAt = _Undefined,
   }) {
     return Room(
       id: id is int? ? id : this.id,
       code: code ?? this.code,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
+      endedAt: endedAt is DateTime? ? endedAt : this.endedAt,
     );
   }
 }

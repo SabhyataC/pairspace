@@ -16,6 +16,7 @@ import 'package:pairspace_client/src/protocol/greetings/greeting.dart'
     as _ig9dsi4a;
 import 'package:pairspace_client/src/protocol/participant.dart' as _i9rgdsem;
 import 'package:pairspace_client/src/protocol/room.dart' as _iiu20v5l;
+import 'package:pairspace_client/src/protocol/signal_message.dart' as _iusw7bjw;
 import 'package:pairspace_client/src/protocol/stroke.dart' as _is7tpwzz;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _iacc;
@@ -359,24 +360,46 @@ class EndpointRoom extends _isc.EndpointRef {
   @override
   String get name => 'room';
 
-  _ida.Future<_iiu20v5l.Room> createRoom() =>
+  _ida.Future<_iiu20v5l.Room> createRoom(String displayName) =>
       caller.callServerEndpoint<_iiu20v5l.Room>(
         'room',
         'createRoom',
+        {'displayName': displayName},
+      );
+
+  /// The caller's own active (not-ended) room, if they created one.
+  _ida.Future<_iiu20v5l.Room?> myActiveRoom() =>
+      caller.callServerEndpoint<_iiu20v5l.Room?>(
+        'room',
+        'myActiveRoom',
         {},
       );
 
-  _ida.Future<_i9rgdsem.Participant> joinRoom(String code) =>
-      caller.callServerEndpoint<_i9rgdsem.Participant>(
-        'room',
-        'joinRoom',
-        {'code': code},
-      );
+  _ida.Future<_i9rgdsem.Participant> joinRoom(
+    String code,
+    String displayName,
+  ) => caller.callServerEndpoint<_i9rgdsem.Participant>(
+    'room',
+    'joinRoom',
+    {
+      'code': code,
+      'displayName': displayName,
+    },
+  );
 
   _ida.Future<List<_i9rgdsem.Participant>> pendingParticipants(int roomId) =>
       caller.callServerEndpoint<List<_i9rgdsem.Participant>>(
         'room',
         'pendingParticipants',
+        {'roomId': roomId},
+      );
+
+  /// Everyone currently admitted and present in the room — for a
+  /// Meet-style "who's here" list. Any admitted participant can call this.
+  _ida.Future<List<_i9rgdsem.Participant>> admittedParticipants(int roomId) =>
+      caller.callServerEndpoint<List<_i9rgdsem.Participant>>(
+        'room',
+        'admittedParticipants',
         {'roomId': roomId},
       );
 
@@ -399,6 +422,59 @@ class EndpointRoom extends _isc.EndpointRef {
         'room',
         'checkStatus',
         {'participantId': participantId},
+      );
+
+  /// Either side leaving voluntarily. The room keeps existing; an
+  /// interviewer leaving does NOT end it — use endRoom for that.
+  _ida.Future<void> leaveRoom(int participantId) =>
+      caller.callServerEndpoint<void>(
+        'room',
+        'leaveRoom',
+        {'participantId': participantId},
+      );
+
+  /// Interviewer-only: ends the room for everyone. Existing room/stroke
+  /// data is kept (for Day 7's recap page later); no one can join after.
+  _ida.Future<void> endRoom(int roomId) => caller.callServerEndpoint<void>(
+    'room',
+    'endRoom',
+    {'roomId': roomId},
+  );
+
+  /// Lets a client know if the room has ended (for candidates to detect
+  /// the interviewer ending the meeting while they're still in it).
+  _ida.Future<bool> isRoomEnded(int roomId) => caller.callServerEndpoint<bool>(
+    'room',
+    'isRoomEnded',
+    {'roomId': roomId},
+  );
+}
+
+/// {@category Endpoint}
+class EndpointVideoSignal extends _isc.EndpointRef {
+  EndpointVideoSignal(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'videoSignal';
+
+  /// Relays WebRTC signaling messages (offers/answers/ICE candidates)
+  /// between the two participants in a room. Nothing is persisted.
+  _ida.Stream<_iusw7bjw.SignalMessage> signalStream(
+    int roomId,
+    int myParticipantId,
+    _ida.Stream<_iusw7bjw.SignalMessage> outgoing,
+  ) =>
+      caller.callStreamingServerEndpoint<
+        _ida.Stream<_iusw7bjw.SignalMessage>,
+        _iusw7bjw.SignalMessage
+      >(
+        'videoSignal',
+        'signalStream',
+        {
+          'roomId': roomId,
+          'myParticipantId': myParticipantId,
+        },
+        {'outgoing': outgoing},
       );
 }
 
@@ -446,6 +522,7 @@ class Client extends _isc.ServerpodClientShared {
     canvas = EndpointCanvas(this);
     greeting = EndpointGreeting(this);
     room = EndpointRoom(this);
+    videoSignal = EndpointVideoSignal(this);
     modules = Modules(this);
   }
 
@@ -461,6 +538,8 @@ class Client extends _isc.ServerpodClientShared {
 
   late final EndpointRoom room;
 
+  late final EndpointVideoSignal videoSignal;
+
   late final Modules modules;
 
   @override
@@ -471,6 +550,7 @@ class Client extends _isc.ServerpodClientShared {
     'canvas': canvas,
     'greeting': greeting,
     'room': room,
+    'videoSignal': videoSignal,
   };
 
   @override

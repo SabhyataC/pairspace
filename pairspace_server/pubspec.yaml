@@ -9,6 +9,7 @@ environment:
 resolution: workspace
 
 dependencies:
+  flutter_webrtc: ^1.6.2+hotfix.3
   serverpod: 4.0.3
   serverpod_auth_idp_server: 4.0.3
   serverpod_cloud_storage: 4.0.3
