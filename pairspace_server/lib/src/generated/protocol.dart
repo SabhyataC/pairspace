@@ -21,6 +21,7 @@ import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _iais;
 import 'access_denied.dart' as _icyx6leh;
 import 'code_snapshot.dart' as _ixhe19s2;
+import 'code_update.dart' as _i4nm3yea;
 import 'future_calls_generated_models/end_empty_room_future_call_end_model.dart'
     as _iotrfso8;
 import 'greetings/greeting.dart' as _izw8z7ou;
@@ -32,6 +33,7 @@ import 'signal_message.dart' as _i6c8vmrx;
 import 'stroke.dart' as _ikjj7mbr;
 export 'access_denied.dart';
 export 'code_snapshot.dart';
+export 'code_update.dart';
 export 'greetings/greeting.dart';
 export 'participant.dart';
 export 'participant_role.dart';
@@ -369,6 +371,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _ixhe19s2.CodeSnapshot) {
       return _ixhe19s2.CodeSnapshot.fromJson(data) as T;
     }
+    if (t == _i4nm3yea.CodeUpdate) {
+      return _i4nm3yea.CodeUpdate.fromJson(data) as T;
+    }
     if (t == _iotrfso8.EndEmptyRoomFutureCallEndModel) {
       return _iotrfso8.EndEmptyRoomFutureCallEndModel.fromJson(data) as T;
     }
@@ -401,6 +406,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _is.getType<_ixhe19s2.CodeSnapshot?>()) {
       return (data != null ? _ixhe19s2.CodeSnapshot.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_i4nm3yea.CodeUpdate?>()) {
+      return (data != null ? _i4nm3yea.CodeUpdate.fromJson(data) : null) as T;
     }
     if (t == _is.getType<_iotrfso8.EndEmptyRoomFutureCallEndModel?>()) {
       return (data != null
@@ -463,6 +471,7 @@ class Protocol extends _is.DatabaseSerializationManager {
     return switch (type) {
       _icyx6leh.AccessDeniedException => 'AccessDeniedException',
       _ixhe19s2.CodeSnapshot => 'CodeSnapshot',
+      _i4nm3yea.CodeUpdate => 'CodeUpdate',
       _iotrfso8.EndEmptyRoomFutureCallEndModel =>
         'EndEmptyRoomFutureCallEndModel',
       _izw8z7ou.Greeting => 'Greeting',
@@ -490,6 +499,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'AccessDeniedException';
       case _ixhe19s2.CodeSnapshot():
         return 'CodeSnapshot';
+      case _i4nm3yea.CodeUpdate():
+        return 'CodeUpdate';
       case _iotrfso8.EndEmptyRoomFutureCallEndModel():
         return 'EndEmptyRoomFutureCallEndModel';
       case _izw8z7ou.Greeting():
@@ -537,6 +548,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (dataClassName == 'CodeSnapshot') {
       return deserialize<_ixhe19s2.CodeSnapshot>(data['data']);
+    }
+    if (dataClassName == 'CodeUpdate') {
+      return deserialize<_i4nm3yea.CodeUpdate>(data['data']);
     }
     if (dataClassName == 'EndEmptyRoomFutureCallEndModel') {
       return deserialize<_iotrfso8.EndEmptyRoomFutureCallEndModel>(

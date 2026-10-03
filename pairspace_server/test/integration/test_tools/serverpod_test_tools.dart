@@ -13,6 +13,8 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _ida;
 import 'dart:io' as _idi;
+import 'package:pairspace_server/src/generated/code_snapshot.dart' as _if4ssah3;
+import 'package:pairspace_server/src/generated/code_update.dart' as _iin39ph8;
 import 'package:pairspace_server/src/generated/future_calls.dart' as _i400ijtc;
 import 'package:pairspace_server/src/generated/future_calls_generated_models/end_empty_room_future_call_end_model.dart'
     as _i8sp2kyr;
@@ -170,6 +172,8 @@ class TestEndpoints {
 
   late final _CanvasEndpoint canvas;
 
+  late final _CodeEndpoint code;
+
   late final _GreetingEndpoint greeting;
 
   late final _RoomEndpoint room;
@@ -197,6 +201,10 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
     canvas = _CanvasEndpoint(
+      endpoints,
+      serializationManager,
+    );
+    code = _CodeEndpoint(
       endpoints,
       serializationManager,
     );
@@ -715,6 +723,82 @@ class _CanvasEndpoint {
                   _localCallContext.arguments,
                 )
                 as _ida.Future<List<_iziyni4f.Stroke>>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+}
+
+class _CodeEndpoint {
+  _CodeEndpoint(
+    this._endpointDispatch,
+    this._serializationManager,
+  );
+
+  final _is.EndpointDispatch _endpointDispatch;
+
+  final _is.SerializationManager _serializationManager;
+
+  _ida.Stream<_iin39ph8.CodeUpdate> codeStream(
+    _ist.TestSessionBuilder sessionBuilder,
+    int roomId,
+    _ida.Stream<_iin39ph8.CodeUpdate> updates,
+  ) {
+    var _localTestStreamManager =
+        _ist.TestStreamManager<_iin39ph8.CodeUpdate>();
+    _ist.callStreamFunctionAndHandleExceptions(
+      () async {
+        var _localUniqueSession =
+            (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+              endpoint: 'code',
+              method: 'codeStream',
+            );
+        var _localCallContext = await _endpointDispatch
+            .getMethodStreamCallContext(
+              createSessionCallback: (_) => _localUniqueSession,
+              endpointPath: 'code',
+              methodName: 'codeStream',
+              arguments: {'roomId': roomId},
+              requestedInputStreams: ['updates'],
+              serializationManager: _serializationManager,
+            );
+        await _localTestStreamManager.callStreamMethod(
+          _localCallContext,
+          _localUniqueSession,
+          {'updates': updates},
+        );
+      },
+      _localTestStreamManager.outputStreamController,
+    );
+    return _localTestStreamManager.outputStreamController.stream;
+  }
+
+  _ida.Future<_if4ssah3.CodeSnapshot?> getCode(
+    _ist.TestSessionBuilder sessionBuilder,
+    int roomId,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'code',
+            method: 'getCode',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'code',
+          methodName: 'getCode',
+          parameters: _ist.testObjectToJson({'roomId': roomId}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_if4ssah3.CodeSnapshot?>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

@@ -12,6 +12,8 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _ida;
 import 'package:http/http.dart' as _i85jenna;
+import 'package:pairspace_client/src/protocol/code_snapshot.dart' as _ie6pu14k;
+import 'package:pairspace_client/src/protocol/code_update.dart' as _i606xhqr;
 import 'package:pairspace_client/src/protocol/greetings/greeting.dart'
     as _ig9dsi4a;
 import 'package:pairspace_client/src/protocol/participant.dart' as _i9rgdsem;
@@ -335,6 +337,38 @@ class EndpointCanvas extends _isc.EndpointRef {
       );
 }
 
+/// {@category Endpoint}
+class EndpointCode extends _isc.EndpointRef {
+  EndpointCode(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'code';
+
+  /// Client sends its code updates in, and receives every update in the room.
+  _ida.Stream<_i606xhqr.CodeUpdate> codeStream(
+    int roomId,
+    _ida.Stream<_i606xhqr.CodeUpdate> updates,
+  ) =>
+      caller.callStreamingServerEndpoint<
+        _ida.Stream<_i606xhqr.CodeUpdate>,
+        _i606xhqr.CodeUpdate
+      >(
+        'code',
+        'codeStream',
+        {'roomId': roomId},
+        {'updates': updates},
+      );
+
+  /// Latest saved code of a room, or null if nothing was typed yet.
+  /// Admitted participants only.
+  _ida.Future<_ie6pu14k.CodeSnapshot?> getCode(int roomId) =>
+      caller.callServerEndpoint<_ie6pu14k.CodeSnapshot?>(
+        'code',
+        'getCode',
+        {'roomId': roomId},
+      );
+}
+
 /// This is an example endpoint that returns a greeting message through
 /// its [hello] method.
 /// {@category Endpoint}
@@ -520,6 +554,7 @@ class Client extends _isc.ServerpodClientShared {
     googleIdp = EndpointGoogleIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
     canvas = EndpointCanvas(this);
+    code = EndpointCode(this);
     greeting = EndpointGreeting(this);
     room = EndpointRoom(this);
     videoSignal = EndpointVideoSignal(this);
@@ -533,6 +568,8 @@ class Client extends _isc.ServerpodClientShared {
   late final EndpointJwtRefresh jwtRefresh;
 
   late final EndpointCanvas canvas;
+
+  late final EndpointCode code;
 
   late final EndpointGreeting greeting;
 
@@ -548,6 +585,7 @@ class Client extends _isc.ServerpodClientShared {
     'googleIdp': googleIdp,
     'jwtRefresh': jwtRefresh,
     'canvas': canvas,
+    'code': code,
     'greeting': greeting,
     'room': room,
     'videoSignal': videoSignal,

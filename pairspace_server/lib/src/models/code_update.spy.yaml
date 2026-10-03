@@ -1,0 +1,7 @@
+class: CodeUpdate
+fields:
+  roomId: int
+  senderId: String
+  version: int
+  text: String
+  language: String

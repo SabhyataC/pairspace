@@ -7,6 +7,7 @@ import 'package:web/web.dart' as web;
 
 import '../client.dart';
 import 'canvas_section.dart';
+import 'code_editor_panel.dart';
 
 class RoomScreen extends StatefulWidget {
   const RoomScreen({super.key, required this.onSignOut});
@@ -329,7 +330,28 @@ class _RoomScreenState extends State<RoomScreen> {
     setState(() => _ended = true);
   }
 
+  // Monaco's iframe swallows clicks meant for dialogs, so pause it while one is open.
   Future<bool?> _confirmDialog({
+    required String title,
+    required String body,
+    required String confirmLabel,
+    bool danger = false,
+  }) async {
+    final monaco = activeMonacoController;
+    await monaco?.setInteractionEnabled(false);
+    try {
+      return await _showConfirmDialog(
+        title: title,
+        body: body,
+        confirmLabel: confirmLabel,
+        danger: danger,
+      );
+    } finally {
+      await monaco?.setInteractionEnabled(true);
+    }
+  }
+
+  Future<bool?> _showConfirmDialog({
     required String title,
     required String body,
     required String confirmLabel,
@@ -467,7 +489,21 @@ class _RoomScreenState extends State<RoomScreen> {
                 isCaller: _isInterviewer,
               ),
               const SizedBox(height: 12),
-              Expanded(child: CanvasSection(roomId: _roomId!)),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, c) {
+                    final workspace = <Widget>[
+                      Expanded(child: CodeEditorPanel(roomId: _roomId!)),
+                      const SizedBox(width: 12, height: 12),
+                      Expanded(child: CanvasSection(roomId: _roomId!)),
+                    ];
+                    // Side by side when there's room, stacked otherwise.
+                    return c.maxWidth >= 700
+                        ? Row(children: workspace)
+                        : Column(children: workspace);
+                  },
+                ),
+              ),
             ],
           ),
         );

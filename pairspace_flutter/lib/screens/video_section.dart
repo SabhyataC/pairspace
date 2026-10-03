@@ -39,6 +39,9 @@ class _VideoSectionState extends State<VideoSection> {
 
   bool _micOn = true;
   bool _camOn = true;
+  bool _hasCamera = false;
+  bool _hasMic = false;
+  bool _collapsed = false;
   bool _connecting = true;
   String? _error;
 
@@ -56,6 +59,39 @@ class _VideoSectionState extends State<VideoSection> {
     _start();
   }
 
+  Future<MediaStream?> _acquireLocalMedia() async {
+    final attempts = <(Map<String, dynamic>, bool, bool)>[
+      (
+        {
+          'audio': true,
+          'video': {'facingMode': 'user'},
+        },
+        true,
+        true,
+      ),
+      ({'audio': true, 'video': false}, true, false),
+      (
+        {
+          'audio': false,
+          'video': {'facingMode': 'user'},
+        },
+        false,
+        true,
+      ),
+    ];
+    for (final (constraints, mic, cam) in attempts) {
+      try {
+        final stream = await navigator.mediaDevices.getUserMedia(constraints);
+        _hasMic = mic;
+        _hasCamera = cam;
+        return stream;
+      } catch (e) {
+        _debug('getUserMedia $constraints failed: $e');
+      }
+    }
+    return null; // no devices, or permission denied
+  }
+
   Future<void> _start() async {
     try {
       _debug(
@@ -68,14 +104,15 @@ class _VideoSectionState extends State<VideoSection> {
       await _localRenderer.initialize();
       await _remoteRenderer.initialize();
 
-      _localStream = await navigator.mediaDevices.getUserMedia({
-        'audio': true,
-        'video': {'facingMode': 'user'},
-      });
+      _localStream = await _acquireLocalMedia();
       _localRenderer.srcObject = _localStream;
-      _debug(
-        'Local media acquired: ${_localStream!.getTracks().length} tracks',
-      );
+      if (mounted) {
+        setState(() {
+          _micOn = _hasMic;
+          _camOn = _hasCamera;
+        });
+      }
+      _debug('Local media: mic=$_hasMic, camera=$_hasCamera');
 
       // Keep forcing the <video> elements visible for the lifetime of this
       // widget. flutter_webrtc's web renderer sometimes leaves video
@@ -90,8 +127,29 @@ class _VideoSectionState extends State<VideoSection> {
       _pc = await createPeerConnection(_iceServers);
       _debug('Peer connection created');
 
-      for (final track in _localStream!.getTracks()) {
-        await _pc!.addTrack(track, _localStream!);
+      final stream = _localStream;
+      for (final kind in [
+        RTCRtpMediaType.RTCRtpMediaTypeAudio,
+        RTCRtpMediaType.RTCRtpMediaTypeVideo,
+      ]) {
+        final isAudio = kind == RTCRtpMediaType.RTCRtpMediaTypeAudio;
+        final tracks = isAudio
+            ? stream?.getAudioTracks()
+            : stream?.getVideoTracks();
+
+        if (stream != null && tracks != null && tracks.isNotEmpty) {
+          // We have this device: send it (and receive too).
+          await _pc!.addTrack(tracks.first, stream);
+        } else {
+          // We don't have this device: still reserve a receive-only slot so the
+          // offer/answer includes it and we can see/hear the other person.
+          await _pc!.addTransceiver(
+            kind: kind,
+            init: RTCRtpTransceiverInit(
+              direction: TransceiverDirection.RecvOnly,
+            ),
+          );
+        }
       }
 
       _pc!.onTrack = (event) {
@@ -311,37 +369,60 @@ class _VideoSectionState extends State<VideoSection> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: 160,
-          child: Row(
-            children: [
-              Expanded(
-                child: _videoTile(
-                  _remoteRenderer,
-                  _connecting ? 'Waiting for video…' : null,
-                ),
+        ClipRect(
+          child: Align(
+            alignment: Alignment.topCenter,
+            heightFactor: _collapsed ? 0.0 : 1.0,
+            child: Center(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 240,
+                    height: 135,
+                    child: _videoTile(
+                      _remoteRenderer,
+                      _connecting ? 'Waiting for video…' : null,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 240,
+                    height: 135,
+                    child: _videoTile(
+                      _localRenderer,
+                      _hasCamera ? null : 'No camera',
+                      mirror: true,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 4),
-              SizedBox(
-                width: 120,
-                child: _videoTile(_localRenderer, null, mirror: true),
-              ),
-            ],
+            ),
           ),
         ),
         const SizedBox(height: 4),
         Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
+              tooltip: _collapsed ? 'Show video' : 'Hide video',
+              icon: Icon(_collapsed ? Icons.expand_more : Icons.expand_less),
+              onPressed: () => setState(() => _collapsed = !_collapsed),
+            ),
+            IconButton(
               icon: Icon(_micOn ? Icons.mic : Icons.mic_off),
-              onPressed: _toggleMic,
-              tooltip: _micOn ? 'Mute' : 'Unmute',
+              onPressed: _hasMic ? _toggleMic : null,
+              tooltip: _hasMic
+                  ? (_micOn ? 'Mute' : 'Unmute')
+                  : 'No microphone found',
             ),
             IconButton(
               icon: Icon(_camOn ? Icons.videocam : Icons.videocam_off),
-              onPressed: _toggleCam,
-              tooltip: _camOn ? 'Turn off camera' : 'Turn on camera',
+              onPressed: _hasCamera ? _toggleCam : null,
+              tooltip: _hasCamera
+                  ? (_camOn ? 'Turn off camera' : 'Turn on camera')
+                  : 'No camera found',
             ),
           ],
         ),

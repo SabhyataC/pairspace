@@ -16,6 +16,9 @@ jwtRefresh:
 canvas:
   - strokeStream:
   - getStrokes:
+code:
+  - codeStream:
+  - getCode:
 greeting:
   - hello:
 room:

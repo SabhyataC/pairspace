@@ -10,6 +10,7 @@
 // ignore_for_file: invalid_use_of_internal_member
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:pairspace_server/src/generated/code_update.dart' as _iin39ph8;
 import 'package:pairspace_server/src/generated/future_calls.dart' as _i400ijtc;
 import 'package:pairspace_server/src/generated/signal_message.dart'
     as _i4itcfai;
@@ -23,6 +24,7 @@ import '../auth/email_idp_endpoint.dart' as _iuc1hd5t;
 import '../auth/google_idp_endpoint.dart' as _i71axiz0;
 import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
 import '../canvas/canvas_endpoint.dart' as _iexkumfq;
+import '../code/code_endpoint.dart' as _iaw4ytph;
 import '../greetings/greeting_endpoint.dart' as _il624ik7;
 import '../rooms/room_endpoint.dart' as _idkvzxf4;
 import '../video/video_signal_endpoint.dart' as _i1o3hvfx;
@@ -54,6 +56,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'canvas',
+          null,
+        ),
+      'code': _iaw4ytph.CodeEndpoint()
+        ..initialize(
+          server,
+          'code',
           null,
         ),
       'greeting': _il624ik7.GreetingEndpoint()
@@ -403,6 +411,57 @@ class Endpoints extends _is.EndpointDispatch {
                     params['roomId'],
                     streamParams['strokes']!.cast<_iziyni4f.Stroke>(),
                   ),
+        ),
+      },
+    );
+    connectors['code'] = _is.EndpointConnector(
+      name: 'code',
+      endpoint: endpoints['code']!,
+      methodConnectors: {
+        'getCode': _is.MethodConnector(
+          name: 'getCode',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['code'] as _iaw4ytph.CodeEndpoint).getCode(
+                session,
+                params['roomId'],
+              ),
+        ),
+        'codeStream': _is.MethodStreamConnector(
+          name: 'codeStream',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          streamParams: {
+            'updates': _is.StreamParameterDescription<_iin39ph8.CodeUpdate>(
+              name: 'updates',
+              nullable: false,
+            ),
+          },
+          returnType: _is.MethodStreamReturnType.streamType,
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+                Map<String, Stream> streamParams,
+              ) => (endpoints['code'] as _iaw4ytph.CodeEndpoint).codeStream(
+                session,
+                params['roomId'],
+                streamParams['updates']!.cast<_iin39ph8.CodeUpdate>(),
+              ),
         ),
       },
     );
