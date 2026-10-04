@@ -37,6 +37,7 @@ dependencies:
   serverpod_flutter: 4.0.3
   flutter_webrtc: ^1.6.2+hotfix.3
   flutter_monaco: ^3.4.3
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   # Used for agents to drive the app through the Dart MCP

@@ -51,6 +51,12 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
   StreamSubscription<CodeUpdate>? _incomingSub;
   StreamSubscription<dynamic>? _contentSub;
   Timer? _debounce;
+  Timer? _reconnectTimer;
+  int _retry = 0;
+  bool _disposed = false;
+  Timer? _syncTimer;
+  int _remoteApplies = 0;
+  String? _unconfirmed;
 
   void _onReady(MonacoController c) => unawaited(_init(c));
 
@@ -79,14 +85,107 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
   }
 
   void _connect() {
+    if (_disposed) return;
+    _incomingSub?.cancel();
     final out = StreamController<CodeUpdate>();
     _outgoing = out;
     _incomingSub = client.code
         .codeStream(widget.roomId, out.stream)
         .listen(
           _onRemote,
-          onError: (Object e) => debugPrint('codeStream error: $e'),
+          onError: (Object e) {
+            debugPrint('codeStream error: $e');
+            _scheduleReconnect();
+          },
+          onDone: _scheduleReconnect,
         );
+    _syncTimer?.cancel();
+    _syncTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
+      if (_outgoing == null || _disposed) {return;} // offline: reconnect handles it
+      try {
+        final pending = _unconfirmed;
+        if (pending != null) {
+          final snap = await client.code.getCode(widget.roomId);
+          if (snap != null && snap.content == pending) {
+            _unconfirmed = null; // the server has it
+          } else if (_outgoing != null) {
+            debugPrint('code: server missing our edit, resending');
+            await _sendNow(force: true);
+          }
+          return;
+        }
+        await _resync();
+      } catch (e) {
+        debugPrint('code: periodic sync error: $e');
+      }
+    });
+  }
+
+  void _scheduleReconnect() {
+    if (_disposed || !mounted) return;
+    if (_reconnectTimer?.isActive ?? false) return; // error + done both fire
+
+    // Drop the dead outgoing stream. While it is null, _sendNow() returns
+    // early and keeps _lastSyncedText unchanged, so edits typed while offline
+    // are still treated as "unsent".
+    _outgoing?.close();
+    _outgoing = null;
+
+    final seconds = min(1 << min(_retry, 4), 10); // 1, 2, 4, 8, 10, 10...
+    _retry++;
+    _reconnectTimer = Timer(Duration(seconds: seconds), () async {
+      try {
+        await _resync(); // throws if the server is still unreachable
+        _retry = 0;
+        _connect();
+
+        // Give the server a moment to register the new stream, then fetch the
+        // saved code once more so nothing sent in that gap is missed.
+        await Future<void>.delayed(const Duration(seconds: 2));
+        if (_disposed) return;
+        await _resync();
+
+        debugPrint('code: reconnected, sending held edit');
+        await _sendNow(); // push anything typed while offline
+      } catch (e) {
+        debugPrint('code reconnect failed: $e');
+        _scheduleReconnect();
+      }
+    });
+    debugPrint('code stream dropped, scheduling reconnect (retry $_retry)');
+  }
+
+  /// Pull the saved code from the server after a drop, unless the user has
+  /// typed something that hasn't been sent yet (then keep their text).
+  Future<void> _resync() async {
+    final c = _controller;
+    if (c == null) return;
+    final applies = _remoteApplies;
+    final sentVersion = _version;
+    final snap = await client.code.getCode(widget.roomId);
+    if (snap == null) return;
+    if (applies != _remoteApplies || sentVersion != _version) {
+      debugPrint('code: resync skipped (changed while fetching)');
+      return;
+    }
+
+    final current = await c.document.getText();
+    if (current != _lastSyncedText) {
+      debugPrint('code: resync skipped (editor differs from last synced)');
+      return;
+    }
+
+    if (snap.language != _selected && _languages.containsKey(snap.language)) {
+      if (mounted) setState(() => _selected = snap.language);
+      await c.document.setLanguage(_languages[snap.language]!);
+    }
+    if (snap.content != current) {
+      _unconfirmed = null;
+      _lastSyncedText = snap.content; // set first so no echo is sent
+      final sel = await c.getSelection();
+      await c.document.setText(snap.content);
+      if (sel != null) await c.setSelection(sel);
+    }
   }
 
   void _scheduleSend() {
@@ -96,11 +195,16 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
 
   Future<void> _sendNow({bool force = false}) async {
     final c = _controller;
-    final out = _outgoing;
-    if (c == null || out == null || out.isClosed) return;
+    if (c == null) return;
     final text = await c.document.getText();
+    final out = _outgoing; // read AFTER the await, so it can't be stale
+    if (out == null || out.isClosed) {
+      debugPrint('code: offline, holding edit');
+      return;
+    }
     if (!force && text == _lastSyncedText) return;
     _lastSyncedText = text;
+    _unconfirmed = text;
     out.add(
       CodeUpdate(
         roomId: widget.roomId,
@@ -113,6 +217,7 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
   }
 
   Future<void> _onRemote(CodeUpdate u) async {
+    debugPrint('code: remote update received');
     if (u.senderId == _senderId) return;
     final c = _controller;
     if (c == null) return;
@@ -127,10 +232,17 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
     // If the editor holds text we haven't sent yet, the user is typing right
     // now. Keep their text; their next send will overwrite the remote one.
     final current = await c.document.getText();
-    if (current != _lastSyncedText) return;
+    if (current != _lastSyncedText) {
+      debugPrint(
+        'code: remote update IGNORED (editor differs from last synced)',
+      );
+      return;
+    }
 
     _lastSyncedText =
         u.text; // set first so the resulting change event is ignored
+    _remoteApplies++;
+    _unconfirmed = null;
     final sel = await c.getSelection();
     await c.document.setText(u.text);
     if (sel != null) await c.setSelection(sel);
@@ -144,6 +256,9 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
 
   @override
   void dispose() {
+    _disposed = true;
+    _syncTimer?.cancel();
+    _reconnectTimer?.cancel();
     _debounce?.cancel();
     _contentSub?.cancel();
     _incomingSub?.cancel();
