@@ -409,6 +409,14 @@ class EndpointRoom extends _isc.EndpointRef {
         {},
       );
 
+  /// The caller's finished rooms, newest first, for the "Past meetings" list.
+  _ida.Future<List<_iiu20v5l.Room>> pastRooms() =>
+      caller.callServerEndpoint<List<_iiu20v5l.Room>>(
+        'room',
+        'pastRooms',
+        {},
+      );
+
   _ida.Future<_i9rgdsem.Participant> joinRoom(
     String code,
     String displayName,
@@ -430,6 +438,9 @@ class EndpointRoom extends _isc.EndpointRef {
 
   /// Everyone currently admitted and present in the room — for a
   /// Meet-style "who's here" list. Any admitted participant can call this.
+  /// Everyone admitted AND currently online. Calling this also counts as a
+  /// heartbeat for the caller (clients poll it every few seconds), so a
+  /// refreshed/closed tab drops off once its heartbeat goes stale.
   _ida.Future<List<_i9rgdsem.Participant>> admittedParticipants(int roomId) =>
       caller.callServerEndpoint<List<_i9rgdsem.Participant>>(
         'room',

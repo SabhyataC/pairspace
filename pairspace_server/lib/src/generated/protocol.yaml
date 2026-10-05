@@ -24,6 +24,7 @@ greeting:
 room:
   - createRoom:
   - myActiveRoom:
+  - pastRooms:
   - joinRoom:
   - pendingParticipants:
   - admittedParticipants:

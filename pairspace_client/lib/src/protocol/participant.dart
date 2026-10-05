@@ -24,7 +24,9 @@ abstract class Participant
     required this.status,
     required this.displayName,
     DateTime? joinedAt,
-  }) : joinedAt = joinedAt ?? DateTime.now();
+    DateTime? lastSeenAt,
+  }) : joinedAt = joinedAt ?? DateTime.now(),
+       lastSeenAt = lastSeenAt ?? DateTime.now();
 
   factory Participant({
     int? id,
@@ -34,6 +36,7 @@ abstract class Participant
     required _idcdy19m.ParticipantStatus status,
     required String displayName,
     DateTime? joinedAt,
+    DateTime? lastSeenAt,
   }) = _ParticipantImpl;
 
   factory Participant.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -53,6 +56,11 @@ abstract class Participant
       joinedAt: jsonSerialization['joinedAt'] == null
           ? null
           : _isc.DateTimeJsonExtension.fromJson(jsonSerialization['joinedAt']),
+      lastSeenAt: jsonSerialization['lastSeenAt'] == null
+          ? null
+          : _isc.DateTimeJsonExtension.fromJson(
+              jsonSerialization['lastSeenAt'],
+            ),
     );
   }
 
@@ -73,6 +81,8 @@ abstract class Participant
 
   DateTime joinedAt;
 
+  DateTime lastSeenAt;
+
   /// Returns a shallow copy of this [Participant]
   /// with some or all fields replaced by the given arguments.
   @_isc.useResult
@@ -84,6 +94,7 @@ abstract class Participant
     _idcdy19m.ParticipantStatus? status,
     String? displayName,
     DateTime? joinedAt,
+    DateTime? lastSeenAt,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -96,6 +107,7 @@ abstract class Participant
       'status': status.toJson(),
       'displayName': displayName,
       'joinedAt': joinedAt.toJson(),
+      'lastSeenAt': lastSeenAt.toJson(),
     };
   }
 
@@ -110,6 +122,7 @@ abstract class Participant
       'status': status.toJson(),
       'displayName': displayName,
       'joinedAt': joinedAt.toJson(),
+      'lastSeenAt': lastSeenAt.toJson(),
     };
   }
 
@@ -130,6 +143,7 @@ class _ParticipantImpl extends Participant {
     required _idcdy19m.ParticipantStatus status,
     required String displayName,
     DateTime? joinedAt,
+    DateTime? lastSeenAt,
   }) : super._(
          id: id,
          roomId: roomId,
@@ -138,6 +152,7 @@ class _ParticipantImpl extends Participant {
          status: status,
          displayName: displayName,
          joinedAt: joinedAt,
+         lastSeenAt: lastSeenAt,
        );
 
   /// Returns a shallow copy of this [Participant]
@@ -152,6 +167,7 @@ class _ParticipantImpl extends Participant {
     _idcdy19m.ParticipantStatus? status,
     String? displayName,
     DateTime? joinedAt,
+    DateTime? lastSeenAt,
   }) {
     return Participant(
       id: id is int? ? id : this.id,
@@ -161,6 +177,7 @@ class _ParticipantImpl extends Participant {
       status: status ?? this.status,
       displayName: displayName ?? this.displayName,
       joinedAt: joinedAt ?? this.joinedAt,
+      lastSeenAt: lastSeenAt ?? this.lastSeenAt,
     );
   }
 }

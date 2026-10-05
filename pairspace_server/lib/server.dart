@@ -114,6 +114,7 @@ import 'src/cache_busting.dart';
 import 'src/generated/serverpod.dart';
 import 'src/web/routes/app_config_route.dart';
 import 'package:serverpod_auth_idp_server/providers/email.dart';
+import 'src/web/routes/recap_route.dart';
 
 void run(List<String> args) async {
   final pod = Serverpod(args);
@@ -141,6 +142,11 @@ void run(List<String> args) async {
   pod.webServer.addRoute(
     AppConfigRoute(apiConfig: pod.config.apiServer),
     '/assets/assets/config.json',
+  );
+
+  pod.webServer.addRoute(
+    RecapRoute(),
+    '/recap/:code',
   );
 
   final appDir = Directory(Uri(path: 'web/app').toFilePath());

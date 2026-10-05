@@ -3,6 +3,7 @@ import 'video_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pairspace_client/pairspace_client.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web/web.dart' as web;
 
 import '../client.dart';
@@ -31,6 +32,7 @@ class _RoomScreenState extends State<RoomScreen> {
   String? _pendingRoomCode;
 
   Room? _myActiveRoom;
+  List<Room> _pastRooms = [];
   bool _checkingActiveRoom = true;
 
   bool _showPanel = true;
@@ -47,10 +49,10 @@ class _RoomScreenState extends State<RoomScreen> {
     if (roomCode != null && roomCode.isNotEmpty) {
       _pendingRoomCode = roomCode;
       WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _promptJoin(roomCode),
+        (_) => _joinFromLink(roomCode),
       );
     } else {
-      _checkActiveRoom();
+      _restoreSession();
     }
   }
 
@@ -65,16 +67,89 @@ class _RoomScreenState extends State<RoomScreen> {
     try {
       final room = await client.room.myActiveRoom();
       if (!mounted) return;
-      setState(() {
-        _myActiveRoom = room;
-        _checkingActiveRoom = false;
-      });
-    } catch (_) {
+      setState(() => _myActiveRoom = room);
+    } catch (_) {}
+
+    try {
+      final past = await client.room.pastRooms();
       if (!mounted) return;
-      setState(() => _checkingActiveRoom = false);
+      setState(() => _pastRooms = past);
+    } catch (_) {}
+
+    if (!mounted) return;
+    setState(() => _checkingActiveRoom = false);
+  }
+
+  // ---------- Saved session (survives refresh) ----------
+
+  static const _kRoomCode = 'pairspace_roomCode';
+  static const _kDisplayName = 'pairspace_displayName';
+
+  Future<void> _saveSession(String code, String name) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_kRoomCode, code);
+      await prefs.setString(_kDisplayName, name);
+    } catch (_) {}
+  }
+
+  Future<void> _clearSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_kRoomCode);
+      await prefs.remove(_kDisplayName);
+    } catch (_) {}
+  }
+
+  /// On startup with no ?room= link: rejoin the saved room if there is one,
+  /// otherwise fall back to the normal "my active room" check.
+  Future<void> _restoreSession() async {
+    String? code;
+    String? name;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      code = prefs.getString(_kRoomCode);
+      name = prefs.getString(_kDisplayName);
+    } catch (e) {
+      debugPrint('restore: prefs read failed: $e');
+    }
+    debugPrint('restore(no link): saved=$code name=$name');
+
+    if (code == null || name == null) {
+      _checkActiveRoom();
+      return;
+    }
+    final ok = await _joinRoom(code, name);
+    debugPrint('restore(no link): join ok=$ok');
+    if (!ok) {
+      await _clearSession();
+      if (mounted) _checkActiveRoom();
     }
   }
 
+  Future<void> _joinFromLink(String linkCode) async {
+    String? savedCode;
+    String? savedName;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      savedCode = prefs.getString(_kRoomCode);
+      savedName = prefs.getString(_kDisplayName);
+    } catch (e) {
+      debugPrint('restore: prefs read failed: $e');
+    }
+    debugPrint(
+      'restore(link): link=$linkCode saved=$savedCode name=$savedName',
+    );
+
+    if (savedCode == linkCode && savedName != null) {
+      final ok = await _joinRoom(linkCode, savedName);
+      debugPrint('restore(link): join ok=$ok');
+      if (ok) return;
+      await _clearSession();
+      if (!mounted) return;
+    }
+    _promptJoin(linkCode);
+  }
   // ---------- Name prompts ----------
 
   Future<void> _promptCreate() async {
@@ -137,6 +212,7 @@ class _RoomScreenState extends State<RoomScreen> {
       // createRoom only returns the Room — fetch our own Participant row
       // (already created server-side) to get a real participantId.
       final participant = await client.room.joinRoom(room.code, name);
+      _saveSession(room.code, name);
       if (!mounted) return;
 
       setState(() {
@@ -154,11 +230,12 @@ class _RoomScreenState extends State<RoomScreen> {
     }
   }
 
-  Future<void> _joinRoom(String code, String name) async {
+  Future<bool> _joinRoom(String code, String name) async {
     setState(() => _loading = true);
     try {
       final participant = await client.room.joinRoom(code, name);
-      if (!mounted) return;
+      if (!mounted) return false;
+      _saveSession(code, name);
 
       if (participant.status == ParticipantStatus.pending) {
         setState(() {
@@ -171,7 +248,7 @@ class _RoomScreenState extends State<RoomScreen> {
           _loading = false;
         });
         _pollForAdmission();
-        return;
+        return true;
       }
 
       setState(() {
@@ -184,10 +261,12 @@ class _RoomScreenState extends State<RoomScreen> {
         _loading = false;
       });
       _startPolling();
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() => _loading = false);
       _showMessage('Failed to join room: $e');
+      return false;
     }
   }
 
@@ -215,6 +294,7 @@ class _RoomScreenState extends State<RoomScreen> {
       final ended = await client.room.isRoomEnded(_roomId!);
       if (!mounted) return;
       if (ended) {
+        _clearSession();
         setState(() {
           _isPending = false;
           _ended = true;
@@ -231,6 +311,7 @@ class _RoomScreenState extends State<RoomScreen> {
         return;
       }
       if (participant.status == ParticipantStatus.denied) {
+        _clearSession();
         setState(() {
           _isPending = false;
           _roomCode = null;
@@ -253,6 +334,7 @@ class _RoomScreenState extends State<RoomScreen> {
       if (!mounted) return;
       if (ended) {
         _pollTimer?.cancel();
+        _clearSession();
         setState(() => _ended = true);
         return;
       }
@@ -302,6 +384,7 @@ class _RoomScreenState extends State<RoomScreen> {
     if (confirmed != true) return;
 
     _pollTimer?.cancel();
+    _clearSession();
     try {
       if (_participantId != null) await client.room.leaveRoom(_participantId!);
     } catch (_) {}
@@ -327,6 +410,7 @@ class _RoomScreenState extends State<RoomScreen> {
       return;
     }
     if (!mounted) return;
+    _clearSession();
     setState(() => _ended = true);
   }
 
@@ -470,6 +554,39 @@ class _RoomScreenState extends State<RoomScreen> {
               onPressed: _loading ? null : _promptCreate,
               child: const Text('Create room'),
             ),
+            if (_pastRooms.isNotEmpty) ...[
+              const SizedBox(height: 32),
+              const Text(
+                'Past meetings',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 420,
+                  maxHeight: 320,
+                ),
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    for (final r in _pastRooms)
+                      ListTile(
+                        dense: true,
+                        leading: const Icon(Icons.history, size: 18),
+                        title: Text(_fmtDate(r.createdAt)),
+                        subtitle: Text(
+                          '${r.endedAt!.difference(r.createdAt).inMinutes} min',
+                        ),
+                        trailing: TextButton(
+                          onPressed: () =>
+                              web.window.open('/recap/${r.code}', '_blank'),
+                          child: const Text('View recap'),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       );
@@ -587,6 +704,14 @@ class _RoomScreenState extends State<RoomScreen> {
         children: [
           const Text('This meeting has ended.'),
           const SizedBox(height: 16),
+          if (_isInterviewer && _roomCode != null) ...[
+            FilledButton.icon(
+              onPressed: () => web.window.open('/recap/$_roomCode', '_blank'),
+              icon: const Icon(Icons.description_outlined),
+              label: const Text('View recap'),
+            ),
+            const SizedBox(height: 8),
+          ],
           if (_isInterviewer)
             TextButton(
               onPressed: () {
@@ -604,6 +729,12 @@ class _RoomScreenState extends State<RoomScreen> {
         ],
       ),
     );
+  }
+
+  String _fmtDate(DateTime d) {
+    final l = d.toLocal();
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${l.year}-${two(l.month)}-${two(l.day)} ${two(l.hour)}:${two(l.minute)}';
   }
 
   Widget _buildInfoPanel() {

@@ -10,6 +10,7 @@ import 'room_lifecycle.dart';
 class RoomEndpoint extends Endpoint {
   @override
   bool get requireLogin => true;
+  static const _presenceWindow = Duration(seconds: 5);
 
   Future<Room> createRoom(Session session, String displayName) async {
     final userId = session.authenticated!.authUserId;
@@ -27,6 +28,7 @@ class RoomEndpoint extends Endpoint {
         role: ParticipantRole.interviewer,
         status: ParticipantStatus.admitted,
         displayName: _sanitizeName(displayName, fallback: 'Interviewer'),
+        lastSeenAt: DateTime.now().toUtc(),
       ),
     );
 
@@ -41,6 +43,17 @@ class RoomEndpoint extends Endpoint {
       session,
       where: (t) => t.createdBy.equals(userId) & t.endedAt.equals(null),
       orderBy: (t) => t.createdAt.desc(),
+    );
+  }
+
+    /// The caller's finished rooms, newest first, for the "Past meetings" list.
+  Future<List<Room>> pastRooms(Session session) async {
+    final userId = session.authenticated!.authUserId;
+    return Room.db.find(
+      session,
+      where: (t) => t.createdBy.equals(userId) & t.endedAt.notEquals(null),
+      orderBy: (t) => t.endedAt.desc(),
+      limit: 20,
     );
   }
 
@@ -74,6 +87,7 @@ class RoomEndpoint extends Endpoint {
       if (existing.status == ParticipantStatus.left) {
         existing.status = ParticipantStatus.admitted;
       }
+      existing.lastSeenAt = DateTime.now().toUtc();
       final updated = await Participant.db.updateRow(session, existing);
       await syncEmptyRoomExpiry(session, room.id!);
       return updated;
@@ -96,6 +110,7 @@ class RoomEndpoint extends Endpoint {
           displayName,
           fallback: isInterviewer ? 'Interviewer' : 'Candidate',
         ),
+        lastSeenAt: DateTime.now().toUtc(),
       ),
     );
     if (isInterviewer) await syncEmptyRoomExpiry(session, room.id!);
@@ -117,15 +132,25 @@ class RoomEndpoint extends Endpoint {
 
   /// Everyone currently admitted and present in the room — for a
   /// Meet-style "who's here" list. Any admitted participant can call this.
+    /// Everyone admitted AND currently online. Calling this also counts as a
+  /// heartbeat for the caller (clients poll it every few seconds), so a
+  /// refreshed/closed tab drops off once its heartbeat goes stale.
   Future<List<Participant>> admittedParticipants(
     Session session,
     int roomId,
   ) async {
-    await _requireAdmitted(session, roomId);
+    final me = await _requireAdmitted(session, roomId);
+    final now = DateTime.now().toUtc();
+    me.lastSeenAt = now;
+    await Participant.db.updateRow(session, me, columns: (t) => [t.lastSeenAt]);
+
+    final cutoff = now.subtract(_presenceWindow);
     return Participant.db.find(
       session,
       where: (t) =>
-          t.roomId.equals(roomId) & t.status.equals(ParticipantStatus.admitted),
+          t.roomId.equals(roomId) &
+          t.status.equals(ParticipantStatus.admitted) &
+          (t.lastSeenAt >= cutoff),
       orderBy: (t) => t.joinedAt,
     );
   }
@@ -141,6 +166,7 @@ class RoomEndpoint extends Endpoint {
     await _requireOwnedRoom(session, participant.roomId);
 
     participant.status = ParticipantStatus.admitted;
+    participant.lastSeenAt = DateTime.now().toUtc();
     final updated = await Participant.db.updateRow(session, participant);
     await syncEmptyRoomExpiry(session, updated.roomId);
     return updated;
@@ -198,7 +224,19 @@ class RoomEndpoint extends Endpoint {
     return room?.endedAt != null;
   }
 
-  Future<void> _requireAdmitted(Session session, int roomId) async {
+  // Future<void> _requireAdmitted(Session session, int roomId) async {
+  //   final userId = session.authenticated!.authUserId;
+  //   final participant = await Participant.db.findFirstRow(
+  //     session,
+  //     where: (t) => t.roomId.equals(roomId) & t.authUserId.equals(userId),
+  //   );
+  //   if (participant == null ||
+  //       participant.status != ParticipantStatus.admitted) {
+  //     throw AccessDeniedException(message: 'Not admitted to this room');
+  //   }
+  // }
+
+  Future<Participant> _requireAdmitted(Session session, int roomId) async {
     final userId = session.authenticated!.authUserId;
     final participant = await Participant.db.findFirstRow(
       session,
@@ -208,6 +246,7 @@ class RoomEndpoint extends Endpoint {
         participant.status != ParticipantStatus.admitted) {
       throw AccessDeniedException(message: 'Not admitted to this room');
     }
+    return participant;
   }
 
   Future<Room> _requireOwnedRoom(Session session, int roomId) async {

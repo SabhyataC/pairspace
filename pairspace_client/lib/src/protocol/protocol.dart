@@ -12,6 +12,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:pairspace_client/src/protocol/participant.dart' as _i9rgdsem;
+import 'package:pairspace_client/src/protocol/room.dart' as _iiu20v5l;
 import 'package:pairspace_client/src/protocol/stroke.dart' as _is7tpwzz;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _iacc;
@@ -147,6 +148,10 @@ class Protocol extends _isc.SerializationManager {
       return (data as List)
               .map((e) => deserialize<_is7tpwzz.Stroke>(e))
               .toList()
+          as T;
+    }
+    if (t == List<_iiu20v5l.Room>) {
+      return (data as List).map((e) => deserialize<_iiu20v5l.Room>(e)).toList()
           as T;
     }
     if (t == List<_i9rgdsem.Participant>) {

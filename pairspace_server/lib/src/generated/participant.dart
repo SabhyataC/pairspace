@@ -24,7 +24,9 @@ abstract class Participant
     required this.status,
     required this.displayName,
     DateTime? joinedAt,
-  }) : joinedAt = joinedAt ?? DateTime.now();
+    DateTime? lastSeenAt,
+  }) : joinedAt = joinedAt ?? DateTime.now(),
+       lastSeenAt = lastSeenAt ?? DateTime.now();
 
   factory Participant({
     int? id,
@@ -34,6 +36,7 @@ abstract class Participant
     required _idcdy19m.ParticipantStatus status,
     required String displayName,
     DateTime? joinedAt,
+    DateTime? lastSeenAt,
   }) = _ParticipantImpl;
 
   factory Participant.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -53,6 +56,9 @@ abstract class Participant
       joinedAt: jsonSerialization['joinedAt'] == null
           ? null
           : _is.DateTimeJsonExtension.fromJson(jsonSerialization['joinedAt']),
+      lastSeenAt: jsonSerialization['lastSeenAt'] == null
+          ? null
+          : _is.DateTimeJsonExtension.fromJson(jsonSerialization['lastSeenAt']),
     );
   }
 
@@ -75,6 +81,8 @@ abstract class Participant
 
   DateTime joinedAt;
 
+  DateTime lastSeenAt;
+
   @override
   _is.Table<int?> get table => t;
 
@@ -89,6 +97,7 @@ abstract class Participant
     _idcdy19m.ParticipantStatus? status,
     String? displayName,
     DateTime? joinedAt,
+    DateTime? lastSeenAt,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -101,6 +110,7 @@ abstract class Participant
       'status': status.toJson(),
       'displayName': displayName,
       'joinedAt': joinedAt.toJson(),
+      'lastSeenAt': lastSeenAt.toJson(),
     };
   }
 
@@ -115,6 +125,7 @@ abstract class Participant
       'status': status.toJson(),
       'displayName': displayName,
       'joinedAt': joinedAt.toJson(),
+      'lastSeenAt': lastSeenAt.toJson(),
     };
   }
 
@@ -157,6 +168,7 @@ class _ParticipantImpl extends Participant {
     required _idcdy19m.ParticipantStatus status,
     required String displayName,
     DateTime? joinedAt,
+    DateTime? lastSeenAt,
   }) : super._(
          id: id,
          roomId: roomId,
@@ -165,6 +177,7 @@ class _ParticipantImpl extends Participant {
          status: status,
          displayName: displayName,
          joinedAt: joinedAt,
+         lastSeenAt: lastSeenAt,
        );
 
   /// Returns a shallow copy of this [Participant]
@@ -179,6 +192,7 @@ class _ParticipantImpl extends Participant {
     _idcdy19m.ParticipantStatus? status,
     String? displayName,
     DateTime? joinedAt,
+    DateTime? lastSeenAt,
   }) {
     return Participant(
       id: id is int? ? id : this.id,
@@ -188,6 +202,7 @@ class _ParticipantImpl extends Participant {
       status: status ?? this.status,
       displayName: displayName ?? this.displayName,
       joinedAt: joinedAt ?? this.joinedAt,
+      lastSeenAt: lastSeenAt ?? this.lastSeenAt,
     );
   }
 }
@@ -230,6 +245,12 @@ class ParticipantUpdateTable extends _is.UpdateTable<ParticipantTable> {
         table.joinedAt,
         value,
       );
+
+  _is.ColumnValue<DateTime, DateTime> lastSeenAt(DateTime value) =>
+      _is.ColumnValue(
+        table.lastSeenAt,
+        value,
+      );
 }
 
 class ParticipantTable extends _is.Table<int?> {
@@ -262,6 +283,11 @@ class ParticipantTable extends _is.Table<int?> {
       this,
       hasDefault: true,
     );
+    lastSeenAt = _is.ColumnDateTime(
+      'lastSeenAt',
+      this,
+      hasDefault: true,
+    );
   }
 
   late final ParticipantUpdateTable updateTable;
@@ -278,6 +304,8 @@ class ParticipantTable extends _is.Table<int?> {
 
   late final _is.ColumnDateTime joinedAt;
 
+  late final _is.ColumnDateTime lastSeenAt;
+
   @override
   List<_is.Column> get columns => [
     id,
@@ -287,6 +315,7 @@ class ParticipantTable extends _is.Table<int?> {
     status,
     displayName,
     joinedAt,
+    lastSeenAt,
   ];
 }
 

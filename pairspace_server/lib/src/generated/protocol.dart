@@ -12,6 +12,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:pairspace_server/src/generated/participant.dart' as _ibvon4z2;
+import 'package:pairspace_server/src/generated/room.dart' as _it3k3a2g;
 import 'package:pairspace_server/src/generated/stroke.dart' as _iziyni4f;
 import 'package:serverpod/protocol.dart' as _isp;
 import 'package:serverpod/serverpod.dart' as _is;
@@ -163,6 +164,13 @@ class Protocol extends _is.DatabaseSerializationManager {
         ),
         _isp.ColumnDefinition(
           name: 'joinedAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+        _isp.ColumnDefinition(
+          name: 'lastSeenAt',
           columnType: _isp.ColumnType.timestampWithoutTimeZone,
           isNullable: false,
           dartType: 'DateTime',
@@ -447,6 +455,10 @@ class Protocol extends _is.DatabaseSerializationManager {
       return (data as List)
               .map((e) => deserialize<_iziyni4f.Stroke>(e))
               .toList()
+          as T;
+    }
+    if (t == List<_it3k3a2g.Room>) {
+      return (data as List).map((e) => deserialize<_it3k3a2g.Room>(e)).toList()
           as T;
     }
     if (t == List<_ibvon4z2.Participant>) {

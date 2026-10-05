@@ -523,6 +523,16 @@ class Endpoints extends _is.EndpointDispatch {
               ) async => (endpoints['room'] as _idkvzxf4.RoomEndpoint)
                   .myActiveRoom(session),
         ),
+        'pastRooms': _is.MethodConnector(
+          name: 'pastRooms',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['room'] as _idkvzxf4.RoomEndpoint)
+                  .pastRooms(session),
+        ),
         'joinRoom': _is.MethodConnector(
           name: 'joinRoom',
           params: {

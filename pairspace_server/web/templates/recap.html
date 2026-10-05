@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PairSpace recap</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; max-width: 960px;
+           margin: 0 auto; padding: 24px; color: #222; background: #fafafa; }
+    h1 { font-size: 24px; margin-bottom: 4px; }
+    h2 { font-size: 18px; margin: 28px 0 8px; }
+    .meta { color: #666; }
+    ul { list-style: disc; padding-left: 20px; }
+    pre { background: #1e1e1e; color: #eee; padding: 16px;
+          border-radius: 6px; overflow-x: auto; font-size: 13px; }
+    .badge { display: inline-block; background: #e8e8e8; border-radius: 4px;
+             padding: 2px 8px; font-size: 12px; margin-left: 8px; }
+  </style>
+</head>
+<body>
+{{#available}}
+  <h1>Interview recap</h1>
+  <p class="meta">Started {{started}} · Ended {{ended}} · Duration {{duration}}</p>
+
+  <h2>Participants</h2>
+  <ul>
+    {{#participants}}<li>{{name}} <span class="badge">{{role}}</span></li>{{/participants}}
+  </ul>
+
+  <h2>Final code <span class="badge">{{language}}</span></h2>
+  {{#hasCode}}<pre><code>{{code}}</code></pre>{{/hasCode}}
+  {{^hasCode}}<p class="meta">No code was written.</p>{{/hasCode}}
+
+  <h2>Canvas</h2>
+  {{#hasDrawing}}{{{svg}}}{{/hasDrawing}}
+  {{^hasDrawing}}<p class="meta">Nothing was drawn.</p>{{/hasDrawing}}
+{{/available}}
+{{^available}}
+  <h1>Recap not available yet</h1>
+  <p class="meta">The recap appears once the interviewer ends the meeting.</p>
+{{/available}}
+</body>
+</html>
