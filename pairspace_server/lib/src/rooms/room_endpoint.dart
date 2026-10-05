@@ -46,7 +46,7 @@ class RoomEndpoint extends Endpoint {
     );
   }
 
-    /// The caller's finished rooms, newest first, for the "Past meetings" list.
+  /// The caller's finished rooms, newest first, for the "Past meetings" list.
   Future<List<Room>> pastRooms(Session session) async {
     final userId = session.authenticated!.authUserId;
     return Room.db.find(
@@ -132,7 +132,7 @@ class RoomEndpoint extends Endpoint {
 
   /// Everyone currently admitted and present in the room — for a
   /// Meet-style "who's here" list. Any admitted participant can call this.
-    /// Everyone admitted AND currently online. Calling this also counts as a
+  /// Everyone admitted AND currently online. Calling this also counts as a
   /// heartbeat for the caller (clients poll it every few seconds), so a
   /// refreshed/closed tab drops off once its heartbeat goes stale.
   Future<List<Participant>> admittedParticipants(

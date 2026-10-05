@@ -101,7 +101,9 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
         );
     _syncTimer?.cancel();
     _syncTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
-      if (_outgoing == null || _disposed) {return;} // offline: reconnect handles it
+      if (_outgoing == null || _disposed) {
+        return;
+      } // offline: reconnect handles it
       try {
         final pending = _unconfirmed;
         if (pending != null) {
