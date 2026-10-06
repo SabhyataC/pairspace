@@ -11,6 +11,7 @@ import 'canvas_section.dart';
 import 'code_editor_panel.dart';
 import 'integrity_monitor.dart';
 import 'integrity_log_panel.dart';
+import 'countdown_timer.dart';
 
 class RoomScreen extends StatefulWidget {
   const RoomScreen({super.key, required this.onSignOut});
@@ -38,6 +39,7 @@ class _RoomScreenState extends State<RoomScreen> {
   bool _checkingActiveRoom = true;
 
   bool _showPanel = true;
+  bool _timeUpShown = false;
 
   List<Participant> _pending = [];
   List<Participant> _present = [];
@@ -155,12 +157,9 @@ class _RoomScreenState extends State<RoomScreen> {
   // ---------- Name prompts ----------
 
   Future<void> _promptCreate() async {
-    final name = await _askName(
-      title: 'Your name',
-      hint: 'How candidates will see you',
-    );
-    if (name == null) return;
-    _createRoom(name);
+    final details = await _askCreateDetails();
+    if (details == null) return;
+    _createRoom(details.name, details.minutes);
   }
 
   Future<void> _promptJoin(String code) async {
@@ -203,12 +202,68 @@ class _RoomScreenState extends State<RoomScreen> {
     );
   }
 
+  Future<({String name, int minutes})?> _askCreateDetails() {
+    final controller = TextEditingController();
+    int minutes = 60;
+    return showDialog<({String name, int minutes})>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setLocal) => AlertDialog(
+          title: const Text('New interview'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: controller,
+                autofocus: true,
+                maxLength: 40,
+                decoration: const InputDecoration(
+                  hintText: 'How candidates will see you',
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text('Duration'),
+              DropdownButton<int>(
+                value: minutes,
+                isExpanded: true,
+                items: const [
+                  DropdownMenuItem(value: 5, child: Text('5 minutes')),
+                  DropdownMenuItem(value: 15, child: Text('15 minutes')),
+                  DropdownMenuItem(value: 30, child: Text('30 minutes')),
+                  DropdownMenuItem(value: 45, child: Text('45 minutes')),
+                  DropdownMenuItem(value: 60, child: Text('1 hour')),
+                  DropdownMenuItem(value: 90, child: Text('1.5 hours')),
+                ],
+                onChanged: (v) => setLocal(() => minutes = v ?? 60),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, (
+                name: controller.text,
+                minutes: minutes,
+              )),
+              child: const Text('Create'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ---------- Core actions ----------
 
-  Future<void> _createRoom(String name) async {
+  Future<void> _createRoom(String name, int minutes) async {
     setState(() => _loading = true);
     try {
-      final room = await client.room.createRoom(name);
+      final room = await client.room.createRoom(name, minutes);
       if (!mounted) return;
 
       // createRoom only returns the Room — fetch our own Participant row
@@ -403,7 +458,10 @@ class _RoomScreenState extends State<RoomScreen> {
       danger: true,
     );
     if (confirmed != true) return;
+    await _endNow();
+  }
 
+  Future<void> _endNow() async {
     _pollTimer?.cancel();
     try {
       await client.room.endRoom(_roomId!);
@@ -414,6 +472,48 @@ class _RoomScreenState extends State<RoomScreen> {
     if (!mounted) return;
     _clearSession();
     setState(() => _ended = true);
+  }
+
+  Future<void> _onTimeUp() async {
+    if (!mounted || _timeUpShown || _ended || _left) return;
+    _timeUpShown = true;
+
+    final monaco = activeMonacoController;
+    await monaco?.setInteractionEnabled(false);
+    bool endNow = false;
+    try {
+      final result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          icon: const Icon(Icons.timer_off_outlined, size: 40),
+          title: const Text("Time's up"),
+          content: Text(
+            _isInterviewer
+                ? 'The scheduled time for this interview has ended. '
+                      'You can keep going or end the meeting for everyone.'
+                : 'The scheduled time for this interview has ended. '
+                      'The interviewer may wrap up shortly.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(_isInterviewer ? 'Keep going' : 'OK'),
+            ),
+            if (_isInterviewer)
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('End meeting'),
+              ),
+          ],
+        ),
+      );
+      endNow = result == true;
+    } finally {
+      await monaco?.setInteractionEnabled(true);
+    }
+    if (endNow && mounted) await _endNow();
   }
 
   // Monaco's iframe swallows clicks meant for dialogs, so pause it while one is open.
@@ -498,7 +598,15 @@ class _RoomScreenState extends State<RoomScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PairSpace'),
+        title: Row(
+          children: [
+            const Text('PairSpace'),
+            if (inRoom && _roomId != null) ...[
+              const SizedBox(width: 24),
+              CountdownTimer(roomId: _roomId!, onTimeUp: _onTimeUp),
+            ],
+          ],
+        ),
         actions: [
           if (inRoom)
             IconButton(

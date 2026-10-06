@@ -24,6 +24,7 @@ import 'package:pairspace_server/src/generated/integrity_event.dart'
     as _iihiao09;
 import 'package:pairspace_server/src/generated/participant.dart' as _ibvon4z2;
 import 'package:pairspace_server/src/generated/room.dart' as _it3k3a2g;
+import 'package:pairspace_server/src/generated/room_timing.dart' as _i6w8xnej;
 import 'package:pairspace_server/src/generated/signal_message.dart'
     as _i4itcfai;
 import 'package:pairspace_server/src/generated/stroke.dart' as _iziyni4f;
@@ -949,6 +950,7 @@ class _RoomEndpoint {
   _ida.Future<_it3k3a2g.Room> createRoom(
     _ist.TestSessionBuilder sessionBuilder,
     String displayName,
+    int durationMinutes,
   ) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -961,7 +963,10 @@ class _RoomEndpoint {
           createSessionCallback: (_) => _localUniqueSession,
           endpointPath: 'room',
           methodName: 'createRoom',
-          parameters: _ist.testObjectToJson({'displayName': displayName}),
+          parameters: _ist.testObjectToJson({
+            'displayName': displayName,
+            'durationMinutes': durationMinutes,
+          }),
           serializationManager: _serializationManager,
         );
         var _localReturnValue =
@@ -1313,6 +1318,37 @@ class _RoomEndpoint {
                   _localCallContext.arguments,
                 )
                 as _ida.Future<bool>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_i6w8xnej.RoomTiming> getRoomTiming(
+    _ist.TestSessionBuilder sessionBuilder,
+    int roomId,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'room',
+            method: 'getRoomTiming',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'room',
+          methodName: 'getRoomTiming',
+          parameters: _ist.testObjectToJson({'roomId': roomId}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_i6w8xnej.RoomTiming>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

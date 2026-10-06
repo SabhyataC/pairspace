@@ -12,12 +12,25 @@ class RoomEndpoint extends Endpoint {
   bool get requireLogin => true;
   static const _presenceWindow = Duration(seconds: 5);
 
-  Future<Room> createRoom(Session session, String displayName) async {
+  static const _allowedDurations = {5, 15, 30, 45, 60, 90};
+
+  Future<Room> createRoom(
+    Session session,
+    String displayName,
+    int durationMinutes,
+  ) async {
     final userId = session.authenticated!.authUserId;
+    if (!_allowedDurations.contains(durationMinutes)) {
+      throw ArgumentError('Unsupported duration: $durationMinutes');
+    }
 
     final room = await Room.db.insertRow(
       session,
-      Room(code: _generateCode(), createdBy: userId),
+      Room(
+        code: _generateCode(),
+        createdBy: userId,
+        durationMinutes: durationMinutes,
+      ),
     );
 
     await Participant.db.insertRow(
@@ -222,6 +235,20 @@ class RoomEndpoint extends Endpoint {
   Future<bool> isRoomEnded(Session session, int roomId) async {
     final room = await Room.db.findById(session, roomId);
     return room?.endedAt != null;
+  }
+
+  /// Start time and length of the room, for the countdown. Both roles, admitted only.
+  Future<RoomTiming> getRoomTiming(Session session, int roomId) async {
+    await _requireAdmitted(session, roomId);
+    final room = await Room.db.findById(session, roomId);
+    if (room == null) {
+      throw AccessDeniedException(message: 'Room not found');
+    }
+    return RoomTiming(
+      startedAt: room.createdAt,
+      durationMinutes: room.durationMinutes,
+      serverNow: DateTime.now().toUtc(),
+    );
   }
 
   // Future<void> _requireAdmitted(Session session, int roomId) async {

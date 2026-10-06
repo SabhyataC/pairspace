@@ -1,0 +1,5 @@
+class: RoomTiming
+fields:
+  startedAt: DateTime
+  durationMinutes: int
+  serverNow: DateTime

@@ -30,6 +30,7 @@ import 'participant.dart' as _ih83ei55;
 import 'participant_role.dart' as _i5kza8cj;
 import 'participant_status.dart' as _idcdy19m;
 import 'room.dart' as _ieflxecy;
+import 'room_timing.dart' as _i4ch8j3m;
 import 'signal_message.dart' as _i6c8vmrx;
 import 'stroke.dart' as _ikjj7mbr;
 export 'access_denied.dart';
@@ -41,6 +42,7 @@ export 'participant.dart';
 export 'participant_role.dart';
 export 'participant_status.dart';
 export 'room.dart';
+export 'room_timing.dart';
 export 'signal_message.dart';
 export 'stroke.dart';
 export 'client.dart';
@@ -106,6 +108,9 @@ class Protocol extends _isc.SerializationManager {
     if (t == _ieflxecy.Room) {
       return _ieflxecy.Room.fromJson(data) as T;
     }
+    if (t == _i4ch8j3m.RoomTiming) {
+      return _i4ch8j3m.RoomTiming.fromJson(data) as T;
+    }
     if (t == _i6c8vmrx.SignalMessage) {
       return _i6c8vmrx.SignalMessage.fromJson(data) as T;
     }
@@ -144,6 +149,9 @@ class Protocol extends _isc.SerializationManager {
     }
     if (t == _isc.getType<_ieflxecy.Room?>()) {
       return (data != null ? _ieflxecy.Room.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_i4ch8j3m.RoomTiming?>()) {
+      return (data != null ? _i4ch8j3m.RoomTiming.fromJson(data) : null) as T;
     }
     if (t == _isc.getType<_i6c8vmrx.SignalMessage?>()) {
       return (data != null ? _i6c8vmrx.SignalMessage.fromJson(data) : null)
@@ -197,6 +205,7 @@ class Protocol extends _isc.SerializationManager {
       _i5kza8cj.ParticipantRole => 'ParticipantRole',
       _idcdy19m.ParticipantStatus => 'ParticipantStatus',
       _ieflxecy.Room => 'Room',
+      _i4ch8j3m.RoomTiming => 'RoomTiming',
       _i6c8vmrx.SignalMessage => 'SignalMessage',
       _ikjj7mbr.Stroke => 'Stroke',
       _ => null,
@@ -231,6 +240,8 @@ class Protocol extends _isc.SerializationManager {
         return 'ParticipantStatus';
       case _ieflxecy.Room():
         return 'Room';
+      case _i4ch8j3m.RoomTiming():
+        return 'RoomTiming';
       case _i6c8vmrx.SignalMessage():
         return 'SignalMessage';
       case _ikjj7mbr.Stroke():
@@ -283,6 +294,9 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'Room') {
       return deserialize<_ieflxecy.Room>(data['data']);
+    }
+    if (dataClassName == 'RoomTiming') {
+      return deserialize<_i4ch8j3m.RoomTiming>(data['data']);
     }
     if (dataClassName == 'SignalMessage') {
       return deserialize<_i6c8vmrx.SignalMessage>(data['data']);

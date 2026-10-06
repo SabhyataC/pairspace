@@ -20,7 +20,9 @@ abstract class Room
     required this.createdBy,
     DateTime? createdAt,
     this.endedAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+    int? durationMinutes,
+  }) : createdAt = createdAt ?? DateTime.now(),
+       durationMinutes = durationMinutes ?? 60;
 
   factory Room({
     int? id,
@@ -28,6 +30,7 @@ abstract class Room
     required _isc.UuidValue createdBy,
     DateTime? createdAt,
     DateTime? endedAt,
+    int? durationMinutes,
   }) = _RoomImpl;
 
   factory Room.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -43,6 +46,7 @@ abstract class Room
       endedAt: jsonSerialization['endedAt'] == null
           ? null
           : _isc.DateTimeJsonExtension.fromJson(jsonSerialization['endedAt']),
+      durationMinutes: jsonSerialization['durationMinutes'] as int?,
     );
   }
 
@@ -59,6 +63,8 @@ abstract class Room
 
   DateTime? endedAt;
 
+  int durationMinutes;
+
   /// Returns a shallow copy of this [Room]
   /// with some or all fields replaced by the given arguments.
   @_isc.useResult
@@ -68,6 +74,7 @@ abstract class Room
     _isc.UuidValue? createdBy,
     DateTime? createdAt,
     DateTime? endedAt,
+    int? durationMinutes,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -78,6 +85,7 @@ abstract class Room
       'createdBy': createdBy.toJson(),
       'createdAt': createdAt.toJson(),
       if (endedAt != null) 'endedAt': endedAt?.toJson(),
+      'durationMinutes': durationMinutes,
     };
   }
 
@@ -90,6 +98,7 @@ abstract class Room
       'createdBy': createdBy.toJson(),
       'createdAt': createdAt.toJson(),
       if (endedAt != null) 'endedAt': endedAt?.toJson(),
+      'durationMinutes': durationMinutes,
     };
   }
 
@@ -108,12 +117,14 @@ class _RoomImpl extends Room {
     required _isc.UuidValue createdBy,
     DateTime? createdAt,
     DateTime? endedAt,
+    int? durationMinutes,
   }) : super._(
          id: id,
          code: code,
          createdBy: createdBy,
          createdAt: createdAt,
          endedAt: endedAt,
+         durationMinutes: durationMinutes,
        );
 
   /// Returns a shallow copy of this [Room]
@@ -126,6 +137,7 @@ class _RoomImpl extends Room {
     _isc.UuidValue? createdBy,
     DateTime? createdAt,
     Object? endedAt = _Undefined,
+    int? durationMinutes,
   }) {
     return Room(
       id: id is int? ? id : this.id,
@@ -133,6 +145,7 @@ class _RoomImpl extends Room {
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       endedAt: endedAt is DateTime? ? endedAt : this.endedAt,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
     );
   }
 }

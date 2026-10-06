@@ -565,6 +565,11 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<String>(),
               nullable: false,
             ),
+            'durationMinutes': _is.ParameterDescription(
+              name: 'durationMinutes',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
           },
           call:
               (
@@ -574,6 +579,7 @@ class Endpoints extends _is.EndpointDispatch {
                   (endpoints['room'] as _idkvzxf4.RoomEndpoint).createRoom(
                     session,
                     params['displayName'],
+                    params['durationMinutes'],
                   ),
         ),
         'myActiveRoom': _is.MethodConnector(
@@ -767,6 +773,25 @@ class Endpoints extends _is.EndpointDispatch {
                 Map<String, dynamic> params,
               ) async =>
                   (endpoints['room'] as _idkvzxf4.RoomEndpoint).isRoomEnded(
+                    session,
+                    params['roomId'],
+                  ),
+        ),
+        'getRoomTiming': _is.MethodConnector(
+          name: 'getRoomTiming',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['room'] as _idkvzxf4.RoomEndpoint).getRoomTiming(
                     session,
                     params['roomId'],
                   ),

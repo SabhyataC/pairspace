@@ -19,7 +19,9 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
     required this.createdBy,
     DateTime? createdAt,
     this.endedAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+    int? durationMinutes,
+  }) : createdAt = createdAt ?? DateTime.now(),
+       durationMinutes = durationMinutes ?? 60;
 
   factory Room({
     int? id,
@@ -27,6 +29,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
     required _is.UuidValue createdBy,
     DateTime? createdAt,
     DateTime? endedAt,
+    int? durationMinutes,
   }) = _RoomImpl;
 
   factory Room.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -42,6 +45,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
       endedAt: jsonSerialization['endedAt'] == null
           ? null
           : _is.DateTimeJsonExtension.fromJson(jsonSerialization['endedAt']),
+      durationMinutes: jsonSerialization['durationMinutes'] as int?,
     );
   }
 
@@ -60,6 +64,8 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
 
   DateTime? endedAt;
 
+  int durationMinutes;
+
   @override
   _is.Table<int?> get table => t;
 
@@ -72,6 +78,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
     _is.UuidValue? createdBy,
     DateTime? createdAt,
     DateTime? endedAt,
+    int? durationMinutes,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -82,6 +89,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
       'createdBy': createdBy.toJson(),
       'createdAt': createdAt.toJson(),
       if (endedAt != null) 'endedAt': endedAt?.toJson(),
+      'durationMinutes': durationMinutes,
     };
   }
 
@@ -94,6 +102,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
       'createdBy': createdBy.toJson(),
       'createdAt': createdAt.toJson(),
       if (endedAt != null) 'endedAt': endedAt?.toJson(),
+      'durationMinutes': durationMinutes,
     };
   }
 
@@ -134,12 +143,14 @@ class _RoomImpl extends Room {
     required _is.UuidValue createdBy,
     DateTime? createdAt,
     DateTime? endedAt,
+    int? durationMinutes,
   }) : super._(
          id: id,
          code: code,
          createdBy: createdBy,
          createdAt: createdAt,
          endedAt: endedAt,
+         durationMinutes: durationMinutes,
        );
 
   /// Returns a shallow copy of this [Room]
@@ -152,6 +163,7 @@ class _RoomImpl extends Room {
     _is.UuidValue? createdBy,
     DateTime? createdAt,
     Object? endedAt = _Undefined,
+    int? durationMinutes,
   }) {
     return Room(
       id: id is int? ? id : this.id,
@@ -159,6 +171,7 @@ class _RoomImpl extends Room {
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       endedAt: endedAt is DateTime? ? endedAt : this.endedAt,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
     );
   }
 }
@@ -189,6 +202,11 @@ class RoomUpdateTable extends _is.UpdateTable<RoomTable> {
         table.endedAt,
         value,
       );
+
+  _is.ColumnValue<int, int> durationMinutes(int value) => _is.ColumnValue(
+    table.durationMinutes,
+    value,
+  );
 }
 
 class RoomTable extends _is.Table<int?> {
@@ -211,6 +229,11 @@ class RoomTable extends _is.Table<int?> {
       'endedAt',
       this,
     );
+    durationMinutes = _is.ColumnInt(
+      'durationMinutes',
+      this,
+      hasDefault: true,
+    );
   }
 
   late final RoomUpdateTable updateTable;
@@ -223,6 +246,8 @@ class RoomTable extends _is.Table<int?> {
 
   late final _is.ColumnDateTime endedAt;
 
+  late final _is.ColumnInt durationMinutes;
+
   @override
   List<_is.Column> get columns => [
     id,
@@ -230,6 +255,7 @@ class RoomTable extends _is.Table<int?> {
     createdBy,
     createdAt,
     endedAt,
+    durationMinutes,
   ];
 }
 
