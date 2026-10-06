@@ -1,0 +1,11 @@
+class: IntegrityEvent
+table: integrity_event
+fields:
+  roomId: int, relation(parent=room, onDelete=Cascade)
+  participantId: int
+  type: String
+  detail: String?
+  createdAt: DateTime, default=now
+indexes:
+  integrity_event_room_idx:
+    fields: roomId

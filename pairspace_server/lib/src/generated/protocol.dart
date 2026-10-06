@@ -11,6 +11,8 @@
 // ignore_for_file: dead_code, unnecessary_type_check
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:pairspace_server/src/generated/integrity_event.dart'
+    as _iihiao09;
 import 'package:pairspace_server/src/generated/participant.dart' as _ibvon4z2;
 import 'package:pairspace_server/src/generated/room.dart' as _it3k3a2g;
 import 'package:pairspace_server/src/generated/stroke.dart' as _iziyni4f;
@@ -26,6 +28,7 @@ import 'code_update.dart' as _i4nm3yea;
 import 'future_calls_generated_models/end_empty_room_future_call_end_model.dart'
     as _iotrfso8;
 import 'greetings/greeting.dart' as _izw8z7ou;
+import 'integrity_event.dart' as _inmjytxd;
 import 'participant.dart' as _ih83ei55;
 import 'participant_role.dart' as _i5kza8cj;
 import 'participant_status.dart' as _idcdy19m;
@@ -36,6 +39,7 @@ export 'access_denied.dart';
 export 'code_snapshot.dart';
 export 'code_update.dart';
 export 'greetings/greeting.dart';
+export 'integrity_event.dart';
 export 'participant.dart';
 export 'participant_role.dart';
 export 'participant_status.dart';
@@ -114,6 +118,80 @@ class Protocol extends _is.DatabaseSerializationManager {
           ],
           type: 'btree',
           isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'integrity_event',
+      dartName: 'IntegrityEvent',
+      schema: 'public',
+      module: 'pairspace',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'roomId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'participantId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'type',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'detail',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'integrity_event_fk_0',
+          columns: ['roomId'],
+          referenceTable: 'room',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'integrity_event_room_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'roomId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
           isPrimary: false,
         ),
       ],
@@ -388,6 +466,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _izw8z7ou.Greeting) {
       return _izw8z7ou.Greeting.fromJson(data) as T;
     }
+    if (t == _inmjytxd.IntegrityEvent) {
+      return _inmjytxd.IntegrityEvent.fromJson(data) as T;
+    }
     if (t == _ih83ei55.Participant) {
       return _ih83ei55.Participant.fromJson(data) as T;
     }
@@ -427,6 +508,10 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _is.getType<_izw8z7ou.Greeting?>()) {
       return (data != null ? _izw8z7ou.Greeting.fromJson(data) : null) as T;
     }
+    if (t == _is.getType<_inmjytxd.IntegrityEvent?>()) {
+      return (data != null ? _inmjytxd.IntegrityEvent.fromJson(data) : null)
+          as T;
+    }
     if (t == _is.getType<_ih83ei55.Participant?>()) {
       return (data != null ? _ih83ei55.Participant.fromJson(data) : null) as T;
     }
@@ -454,6 +539,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == List<_iziyni4f.Stroke>) {
       return (data as List)
               .map((e) => deserialize<_iziyni4f.Stroke>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_iihiao09.IntegrityEvent>) {
+      return (data as List)
+              .map((e) => deserialize<_iihiao09.IntegrityEvent>(e))
               .toList()
           as T;
     }
@@ -487,6 +578,7 @@ class Protocol extends _is.DatabaseSerializationManager {
       _iotrfso8.EndEmptyRoomFutureCallEndModel =>
         'EndEmptyRoomFutureCallEndModel',
       _izw8z7ou.Greeting => 'Greeting',
+      _inmjytxd.IntegrityEvent => 'IntegrityEvent',
       _ih83ei55.Participant => 'Participant',
       _i5kza8cj.ParticipantRole => 'ParticipantRole',
       _idcdy19m.ParticipantStatus => 'ParticipantStatus',
@@ -517,6 +609,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'EndEmptyRoomFutureCallEndModel';
       case _izw8z7ou.Greeting():
         return 'Greeting';
+      case _inmjytxd.IntegrityEvent():
+        return 'IntegrityEvent';
       case _ih83ei55.Participant():
         return 'Participant';
       case _i5kza8cj.ParticipantRole():
@@ -571,6 +665,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (dataClassName == 'Greeting') {
       return deserialize<_izw8z7ou.Greeting>(data['data']);
+    }
+    if (dataClassName == 'IntegrityEvent') {
+      return deserialize<_inmjytxd.IntegrityEvent>(data['data']);
     }
     if (dataClassName == 'Participant') {
       return deserialize<_ih83ei55.Participant>(data['data']);
@@ -633,6 +730,8 @@ class Protocol extends _is.DatabaseSerializationManager {
     switch (t) {
       case _ixhe19s2.CodeSnapshot:
         return _ixhe19s2.CodeSnapshot.t;
+      case _inmjytxd.IntegrityEvent:
+        return _inmjytxd.IntegrityEvent.t;
       case _ih83ei55.Participant:
         return _ih83ei55.Participant.t;
       case _ieflxecy.Room:

@@ -9,6 +9,8 @@ import 'package:web/web.dart' as web;
 import '../client.dart';
 import 'canvas_section.dart';
 import 'code_editor_panel.dart';
+import 'integrity_monitor.dart';
+import 'integrity_log_panel.dart';
 
 class RoomScreen extends StatefulWidget {
   const RoomScreen({super.key, required this.onSignOut});
@@ -600,12 +602,17 @@ class _RoomScreenState extends State<RoomScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
+              if (!_isInterviewer) IntegrityMonitorHost(roomId: _roomId!),
               VideoSection(
                 roomId: _roomId!,
                 participantId: _participantId!,
                 isCaller: _isInterviewer,
               ),
               const SizedBox(height: 12),
+              if (_isInterviewer) ...[
+                IntegrityLogPanel(roomId: _roomId!),
+                const SizedBox(height: 12),
+              ],
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, c) {

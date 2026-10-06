@@ -16,6 +16,8 @@ import 'package:pairspace_client/src/protocol/code_snapshot.dart' as _ie6pu14k;
 import 'package:pairspace_client/src/protocol/code_update.dart' as _i606xhqr;
 import 'package:pairspace_client/src/protocol/greetings/greeting.dart'
     as _ig9dsi4a;
+import 'package:pairspace_client/src/protocol/integrity_event.dart'
+    as _ivbyloxl;
 import 'package:pairspace_client/src/protocol/participant.dart' as _i9rgdsem;
 import 'package:pairspace_client/src/protocol/room.dart' as _iiu20v5l;
 import 'package:pairspace_client/src/protocol/signal_message.dart' as _iusw7bjw;
@@ -388,6 +390,38 @@ class EndpointGreeting extends _isc.EndpointRef {
 }
 
 /// {@category Endpoint}
+class EndpointIntegrity extends _isc.EndpointRef {
+  EndpointIntegrity(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'integrity';
+
+  /// Any admitted participant can report their own focus/paste events.
+  /// The participant id is derived server-side, never taken from the client.
+  _ida.Future<void> report(
+    int roomId,
+    String type,
+    String? detail,
+  ) => caller.callServerEndpoint<void>(
+    'integrity',
+    'report',
+    {
+      'roomId': roomId,
+      'type': type,
+      'detail': detail,
+    },
+  );
+
+  /// Interviewer-only. Checked server-side against the participant role.
+  _ida.Future<List<_ivbyloxl.IntegrityEvent>> getEvents(int roomId) =>
+      caller.callServerEndpoint<List<_ivbyloxl.IntegrityEvent>>(
+        'integrity',
+        'getEvents',
+        {'roomId': roomId},
+      );
+}
+
+/// {@category Endpoint}
 class EndpointRoom extends _isc.EndpointRef {
   EndpointRoom(_isc.EndpointCaller caller) : super(caller);
 
@@ -567,6 +601,7 @@ class Client extends _isc.ServerpodClientShared {
     canvas = EndpointCanvas(this);
     code = EndpointCode(this);
     greeting = EndpointGreeting(this);
+    integrity = EndpointIntegrity(this);
     room = EndpointRoom(this);
     videoSignal = EndpointVideoSignal(this);
     modules = Modules(this);
@@ -584,6 +619,8 @@ class Client extends _isc.ServerpodClientShared {
 
   late final EndpointGreeting greeting;
 
+  late final EndpointIntegrity integrity;
+
   late final EndpointRoom room;
 
   late final EndpointVideoSignal videoSignal;
@@ -598,6 +635,7 @@ class Client extends _isc.ServerpodClientShared {
     'canvas': canvas,
     'code': code,
     'greeting': greeting,
+    'integrity': integrity,
     'room': room,
     'videoSignal': videoSignal,
   };

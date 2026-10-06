@@ -21,6 +21,9 @@ code:
   - getCode:
 greeting:
   - hello:
+integrity:
+  - report:
+  - getEvents:
 room:
   - createRoom:
   - myActiveRoom:

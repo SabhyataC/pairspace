@@ -26,6 +26,7 @@ import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
 import '../canvas/canvas_endpoint.dart' as _iexkumfq;
 import '../code/code_endpoint.dart' as _iaw4ytph;
 import '../greetings/greeting_endpoint.dart' as _il624ik7;
+import '../integrity/integrity_endpoint.dart' as _idk20h1k;
 import '../rooms/room_endpoint.dart' as _idkvzxf4;
 import '../video/video_signal_endpoint.dart' as _i1o3hvfx;
 export 'future_calls.dart' show ServerpodFutureCallsGetter;
@@ -68,6 +69,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'greeting',
+          null,
+        ),
+      'integrity': _idk20h1k.IntegrityEndpoint()
+        ..initialize(
+          server,
+          'integrity',
           null,
         ),
       'room': _idkvzxf4.RoomEndpoint()
@@ -486,6 +493,62 @@ class Endpoints extends _is.EndpointDispatch {
                   (endpoints['greeting'] as _il624ik7.GreetingEndpoint).hello(
                     session,
                     params['name'],
+                  ),
+        ),
+      },
+    );
+    connectors['integrity'] = _is.EndpointConnector(
+      name: 'integrity',
+      endpoint: endpoints['integrity']!,
+      methodConnectors: {
+        'report': _is.MethodConnector(
+          name: 'report',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'type': _is.ParameterDescription(
+              name: 'type',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'detail': _is.ParameterDescription(
+              name: 'detail',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['integrity'] as _idk20h1k.IntegrityEndpoint)
+                  .report(
+                    session,
+                    params['roomId'],
+                    params['type'],
+                    params['detail'],
+                  ),
+        ),
+        'getEvents': _is.MethodConnector(
+          name: 'getEvents',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['integrity'] as _idk20h1k.IntegrityEndpoint)
+                  .getEvents(
+                    session,
+                    params['roomId'],
                   ),
         ),
       },

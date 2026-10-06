@@ -11,6 +11,8 @@
 // ignore_for_file: dead_code, unnecessary_type_check
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:pairspace_client/src/protocol/integrity_event.dart'
+    as _ivbyloxl;
 import 'package:pairspace_client/src/protocol/participant.dart' as _i9rgdsem;
 import 'package:pairspace_client/src/protocol/room.dart' as _iiu20v5l;
 import 'package:pairspace_client/src/protocol/stroke.dart' as _is7tpwzz;
@@ -23,6 +25,7 @@ import 'access_denied.dart' as _icyx6leh;
 import 'code_snapshot.dart' as _ixhe19s2;
 import 'code_update.dart' as _i4nm3yea;
 import 'greetings/greeting.dart' as _izw8z7ou;
+import 'integrity_event.dart' as _inmjytxd;
 import 'participant.dart' as _ih83ei55;
 import 'participant_role.dart' as _i5kza8cj;
 import 'participant_status.dart' as _idcdy19m;
@@ -33,6 +36,7 @@ export 'access_denied.dart';
 export 'code_snapshot.dart';
 export 'code_update.dart';
 export 'greetings/greeting.dart';
+export 'integrity_event.dart';
 export 'participant.dart';
 export 'participant_role.dart';
 export 'participant_status.dart';
@@ -87,6 +91,9 @@ class Protocol extends _isc.SerializationManager {
     if (t == _izw8z7ou.Greeting) {
       return _izw8z7ou.Greeting.fromJson(data) as T;
     }
+    if (t == _inmjytxd.IntegrityEvent) {
+      return _inmjytxd.IntegrityEvent.fromJson(data) as T;
+    }
     if (t == _ih83ei55.Participant) {
       return _ih83ei55.Participant.fromJson(data) as T;
     }
@@ -120,6 +127,10 @@ class Protocol extends _isc.SerializationManager {
     if (t == _isc.getType<_izw8z7ou.Greeting?>()) {
       return (data != null ? _izw8z7ou.Greeting.fromJson(data) : null) as T;
     }
+    if (t == _isc.getType<_inmjytxd.IntegrityEvent?>()) {
+      return (data != null ? _inmjytxd.IntegrityEvent.fromJson(data) : null)
+          as T;
+    }
     if (t == _isc.getType<_ih83ei55.Participant?>()) {
       return (data != null ? _ih83ei55.Participant.fromJson(data) : null) as T;
     }
@@ -150,6 +161,12 @@ class Protocol extends _isc.SerializationManager {
               .toList()
           as T;
     }
+    if (t == List<_ivbyloxl.IntegrityEvent>) {
+      return (data as List)
+              .map((e) => deserialize<_ivbyloxl.IntegrityEvent>(e))
+              .toList()
+          as T;
+    }
     if (t == List<_iiu20v5l.Room>) {
       return (data as List).map((e) => deserialize<_iiu20v5l.Room>(e)).toList()
           as T;
@@ -175,6 +192,7 @@ class Protocol extends _isc.SerializationManager {
       _ixhe19s2.CodeSnapshot => 'CodeSnapshot',
       _i4nm3yea.CodeUpdate => 'CodeUpdate',
       _izw8z7ou.Greeting => 'Greeting',
+      _inmjytxd.IntegrityEvent => 'IntegrityEvent',
       _ih83ei55.Participant => 'Participant',
       _i5kza8cj.ParticipantRole => 'ParticipantRole',
       _idcdy19m.ParticipantStatus => 'ParticipantStatus',
@@ -203,6 +221,8 @@ class Protocol extends _isc.SerializationManager {
         return 'CodeUpdate';
       case _izw8z7ou.Greeting():
         return 'Greeting';
+      case _inmjytxd.IntegrityEvent():
+        return 'IntegrityEvent';
       case _ih83ei55.Participant():
         return 'Participant';
       case _i5kza8cj.ParticipantRole():
@@ -248,6 +268,9 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'Greeting') {
       return deserialize<_izw8z7ou.Greeting>(data['data']);
+    }
+    if (dataClassName == 'IntegrityEvent') {
+      return deserialize<_inmjytxd.IntegrityEvent>(data['data']);
     }
     if (dataClassName == 'Participant') {
       return deserialize<_ih83ei55.Participant>(data['data']);

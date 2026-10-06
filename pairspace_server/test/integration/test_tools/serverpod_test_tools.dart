@@ -20,6 +20,8 @@ import 'package:pairspace_server/src/generated/future_calls_generated_models/end
     as _i8sp2kyr;
 import 'package:pairspace_server/src/generated/greetings/greeting.dart'
     as _if7scw4c;
+import 'package:pairspace_server/src/generated/integrity_event.dart'
+    as _iihiao09;
 import 'package:pairspace_server/src/generated/participant.dart' as _ibvon4z2;
 import 'package:pairspace_server/src/generated/room.dart' as _it3k3a2g;
 import 'package:pairspace_server/src/generated/signal_message.dart'
@@ -176,6 +178,8 @@ class TestEndpoints {
 
   late final _GreetingEndpoint greeting;
 
+  late final _IntegrityEndpoint integrity;
+
   late final _RoomEndpoint room;
 
   late final _VideoSignalEndpoint videoSignal;
@@ -209,6 +213,10 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
     greeting = _GreetingEndpoint(
+      endpoints,
+      serializationManager,
+    );
+    integrity = _IntegrityEndpoint(
       endpoints,
       serializationManager,
     );
@@ -841,6 +849,85 @@ class _GreetingEndpoint {
                   _localCallContext.arguments,
                 )
                 as _ida.Future<_if7scw4c.Greeting>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+}
+
+class _IntegrityEndpoint {
+  _IntegrityEndpoint(
+    this._endpointDispatch,
+    this._serializationManager,
+  );
+
+  final _is.EndpointDispatch _endpointDispatch;
+
+  final _is.SerializationManager _serializationManager;
+
+  _ida.Future<void> report(
+    _ist.TestSessionBuilder sessionBuilder,
+    int roomId,
+    String type,
+    String? detail,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'integrity',
+            method: 'report',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'integrity',
+          methodName: 'report',
+          parameters: _ist.testObjectToJson({
+            'roomId': roomId,
+            'type': type,
+            'detail': detail,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<void>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<List<_iihiao09.IntegrityEvent>> getEvents(
+    _ist.TestSessionBuilder sessionBuilder,
+    int roomId,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'integrity',
+            method: 'getEvents',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'integrity',
+          methodName: 'getEvents',
+          parameters: _ist.testObjectToJson({'roomId': roomId}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<List<_iihiao09.IntegrityEvent>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
