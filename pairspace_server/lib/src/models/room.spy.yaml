@@ -6,6 +6,7 @@ fields:
   createdAt: DateTime, default=now
   endedAt: DateTime?
   durationMinutes: int, default=60
+  recapToken: String?, scope=serverOnly
 indexes:
   room_code_idx:
     fields: code

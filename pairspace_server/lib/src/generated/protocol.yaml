@@ -28,6 +28,7 @@ room:
   - createRoom:
   - myActiveRoom:
   - pastRooms:
+  - recapUrl:
   - joinRoom:
   - pendingParticipants:
   - admittedParticipants:

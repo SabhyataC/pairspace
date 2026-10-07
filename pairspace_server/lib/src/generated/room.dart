@@ -20,6 +20,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
     DateTime? createdAt,
     this.endedAt,
     int? durationMinutes,
+    this.recapToken,
   }) : createdAt = createdAt ?? DateTime.now(),
        durationMinutes = durationMinutes ?? 60;
 
@@ -30,6 +31,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
     DateTime? createdAt,
     DateTime? endedAt,
     int? durationMinutes,
+    String? recapToken,
   }) = _RoomImpl;
 
   factory Room.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -46,6 +48,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
           ? null
           : _is.DateTimeJsonExtension.fromJson(jsonSerialization['endedAt']),
       durationMinutes: jsonSerialization['durationMinutes'] as int?,
+      recapToken: jsonSerialization['recapToken'] as String?,
     );
   }
 
@@ -66,6 +69,8 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
 
   int durationMinutes;
 
+  String? recapToken;
+
   @override
   _is.Table<int?> get table => t;
 
@@ -79,6 +84,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
     DateTime? createdAt,
     DateTime? endedAt,
     int? durationMinutes,
+    String? recapToken,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -90,6 +96,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
       'createdAt': createdAt.toJson(),
       if (endedAt != null) 'endedAt': endedAt?.toJson(),
       'durationMinutes': durationMinutes,
+      if (recapToken != null) 'recapToken': recapToken,
     };
   }
 
@@ -144,6 +151,7 @@ class _RoomImpl extends Room {
     DateTime? createdAt,
     DateTime? endedAt,
     int? durationMinutes,
+    String? recapToken,
   }) : super._(
          id: id,
          code: code,
@@ -151,6 +159,7 @@ class _RoomImpl extends Room {
          createdAt: createdAt,
          endedAt: endedAt,
          durationMinutes: durationMinutes,
+         recapToken: recapToken,
        );
 
   /// Returns a shallow copy of this [Room]
@@ -164,6 +173,7 @@ class _RoomImpl extends Room {
     DateTime? createdAt,
     Object? endedAt = _Undefined,
     int? durationMinutes,
+    Object? recapToken = _Undefined,
   }) {
     return Room(
       id: id is int? ? id : this.id,
@@ -172,6 +182,7 @@ class _RoomImpl extends Room {
       createdAt: createdAt ?? this.createdAt,
       endedAt: endedAt is DateTime? ? endedAt : this.endedAt,
       durationMinutes: durationMinutes ?? this.durationMinutes,
+      recapToken: recapToken is String? ? recapToken : this.recapToken,
     );
   }
 }
@@ -207,6 +218,11 @@ class RoomUpdateTable extends _is.UpdateTable<RoomTable> {
     table.durationMinutes,
     value,
   );
+
+  _is.ColumnValue<String, String> recapToken(String? value) => _is.ColumnValue(
+    table.recapToken,
+    value,
+  );
 }
 
 class RoomTable extends _is.Table<int?> {
@@ -234,6 +250,10 @@ class RoomTable extends _is.Table<int?> {
       this,
       hasDefault: true,
     );
+    recapToken = _is.ColumnString(
+      'recapToken',
+      this,
+    );
   }
 
   late final RoomUpdateTable updateTable;
@@ -248,6 +268,8 @@ class RoomTable extends _is.Table<int?> {
 
   late final _is.ColumnInt durationMinutes;
 
+  late final _is.ColumnString recapToken;
+
   @override
   List<_is.Column> get columns => [
     id,
@@ -256,6 +278,7 @@ class RoomTable extends _is.Table<int?> {
     createdAt,
     endedAt,
     durationMinutes,
+    recapToken,
   ];
 }
 

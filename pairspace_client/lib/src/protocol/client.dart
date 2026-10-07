@@ -316,7 +316,6 @@ class EndpointCanvas extends _isc.EndpointRef {
   @override
   String get name => 'canvas';
 
-  /// Client sends its strokes in, and receives every stroke drawn in the room.
   _ida.Stream<_is7tpwzz.Stroke> strokeStream(
     int roomId,
     _ida.Stream<_is7tpwzz.Stroke> strokes,
@@ -456,6 +455,13 @@ class EndpointRoom extends _isc.EndpointRef {
         'pastRooms',
         {},
       );
+
+  /// Interviewer-only: the private recap link of one of the caller's rooms.
+  _ida.Future<String> recapUrl(int roomId) => caller.callServerEndpoint<String>(
+    'room',
+    'recapUrl',
+    {'roomId': roomId},
+  );
 
   _ida.Future<_i9rgdsem.Participant> joinRoom(
     String code,

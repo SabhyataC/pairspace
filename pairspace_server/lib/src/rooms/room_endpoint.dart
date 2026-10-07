@@ -70,6 +70,22 @@ class RoomEndpoint extends Endpoint {
     );
   }
 
+  /// Interviewer-only: the private recap link of one of the caller's rooms.
+  Future<String> recapUrl(Session session, int roomId) async {
+    final room = await _requireOwnedRoom(session, roomId);
+    var token = room.recapToken;
+    if (token == null || token.isEmpty) {
+      token = _generateCode(); // random, same generator as room codes
+      room.recapToken = token;
+      await Room.db.updateRow(
+        session,
+        room,
+        columns: (t) => [t.recapToken],
+      );
+    }
+    return '/recap/${room.code}?k=$token';
+  }
+
   Future<Participant> joinRoom(
     Session session,
     String code,

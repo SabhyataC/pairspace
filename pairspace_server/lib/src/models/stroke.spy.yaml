@@ -5,7 +5,13 @@ fields:
   points: List<double>
   color: int
   width: double
+  kind: String, default='pen'      # pen | line | arrow | rect | ellipse | text
+  text: String?                    # only for kind == 'text'
+  clientId: String, default=''     # id made by the drawing client
+  isDeleted: bool, default=false   # eraser = soft delete
   createdAt: DateTime, default=now
 indexes:
   stroke_room_idx:
     fields: roomId
+  stroke_client_idx:
+    fields: roomId, clientId

@@ -20,8 +20,15 @@ abstract class Stroke implements _is.TableRow<int?>, _is.ProtocolSerialization {
     required this.points,
     required this.color,
     required this.width,
+    String? kind,
+    this.text,
+    String? clientId,
+    bool? isDeleted,
     DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+  }) : kind = kind ?? 'pen',
+       clientId = clientId ?? '',
+       isDeleted = isDeleted ?? false,
+       createdAt = createdAt ?? DateTime.now();
 
   factory Stroke({
     int? id,
@@ -29,6 +36,10 @@ abstract class Stroke implements _is.TableRow<int?>, _is.ProtocolSerialization {
     required List<double> points,
     required int color,
     required double width,
+    String? kind,
+    String? text,
+    String? clientId,
+    bool? isDeleted,
     DateTime? createdAt,
   }) = _StrokeImpl;
 
@@ -41,6 +52,12 @@ abstract class Stroke implements _is.TableRow<int?>, _is.ProtocolSerialization {
       ),
       color: jsonSerialization['color'] as int,
       width: (jsonSerialization['width'] as num).toDouble(),
+      kind: jsonSerialization['kind'] as String?,
+      text: jsonSerialization['text'] as String?,
+      clientId: jsonSerialization['clientId'] as String?,
+      isDeleted: jsonSerialization['isDeleted'] == null
+          ? null
+          : _is.BoolJsonExtension.fromJson(jsonSerialization['isDeleted']),
       createdAt: jsonSerialization['createdAt'] == null
           ? null
           : _is.DateTimeJsonExtension.fromJson(jsonSerialization['createdAt']),
@@ -62,6 +79,14 @@ abstract class Stroke implements _is.TableRow<int?>, _is.ProtocolSerialization {
 
   double width;
 
+  String kind;
+
+  String? text;
+
+  String clientId;
+
+  bool isDeleted;
+
   DateTime createdAt;
 
   @override
@@ -76,6 +101,10 @@ abstract class Stroke implements _is.TableRow<int?>, _is.ProtocolSerialization {
     List<double>? points,
     int? color,
     double? width,
+    String? kind,
+    String? text,
+    String? clientId,
+    bool? isDeleted,
     DateTime? createdAt,
   });
   @override
@@ -87,6 +116,10 @@ abstract class Stroke implements _is.TableRow<int?>, _is.ProtocolSerialization {
       'points': points.toJson(),
       'color': color,
       'width': width,
+      'kind': kind,
+      if (text != null) 'text': text,
+      'clientId': clientId,
+      'isDeleted': isDeleted,
       'createdAt': createdAt.toJson(),
     };
   }
@@ -100,6 +133,10 @@ abstract class Stroke implements _is.TableRow<int?>, _is.ProtocolSerialization {
       'points': points.toJson(),
       'color': color,
       'width': width,
+      'kind': kind,
+      if (text != null) 'text': text,
+      'clientId': clientId,
+      'isDeleted': isDeleted,
       'createdAt': createdAt.toJson(),
     };
   }
@@ -141,6 +178,10 @@ class _StrokeImpl extends Stroke {
     required List<double> points,
     required int color,
     required double width,
+    String? kind,
+    String? text,
+    String? clientId,
+    bool? isDeleted,
     DateTime? createdAt,
   }) : super._(
          id: id,
@@ -148,6 +189,10 @@ class _StrokeImpl extends Stroke {
          points: points,
          color: color,
          width: width,
+         kind: kind,
+         text: text,
+         clientId: clientId,
+         isDeleted: isDeleted,
          createdAt: createdAt,
        );
 
@@ -161,6 +206,10 @@ class _StrokeImpl extends Stroke {
     List<double>? points,
     int? color,
     double? width,
+    String? kind,
+    Object? text = _Undefined,
+    String? clientId,
+    bool? isDeleted,
     DateTime? createdAt,
   }) {
     return Stroke(
@@ -169,6 +218,10 @@ class _StrokeImpl extends Stroke {
       points: points ?? this.points.map((e0) => e0).toList(),
       color: color ?? this.color,
       width: width ?? this.width,
+      kind: kind ?? this.kind,
+      text: text is String? ? text : this.text,
+      clientId: clientId ?? this.clientId,
+      isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -198,6 +251,26 @@ class StrokeUpdateTable extends _is.UpdateTable<StrokeTable> {
     value,
   );
 
+  _is.ColumnValue<String, String> kind(String value) => _is.ColumnValue(
+    table.kind,
+    value,
+  );
+
+  _is.ColumnValue<String, String> text(String? value) => _is.ColumnValue(
+    table.text,
+    value,
+  );
+
+  _is.ColumnValue<String, String> clientId(String value) => _is.ColumnValue(
+    table.clientId,
+    value,
+  );
+
+  _is.ColumnValue<bool, bool> isDeleted(bool value) => _is.ColumnValue(
+    table.isDeleted,
+    value,
+  );
+
   _is.ColumnValue<DateTime, DateTime> createdAt(DateTime value) =>
       _is.ColumnValue(
         table.createdAt,
@@ -224,6 +297,25 @@ class StrokeTable extends _is.Table<int?> {
       'width',
       this,
     );
+    kind = _is.ColumnString(
+      'kind',
+      this,
+      hasDefault: true,
+    );
+    text = _is.ColumnString(
+      'text',
+      this,
+    );
+    clientId = _is.ColumnString(
+      'clientId',
+      this,
+      hasDefault: true,
+    );
+    isDeleted = _is.ColumnBool(
+      'isDeleted',
+      this,
+      hasDefault: true,
+    );
     createdAt = _is.ColumnDateTime(
       'createdAt',
       this,
@@ -241,6 +333,14 @@ class StrokeTable extends _is.Table<int?> {
 
   late final _is.ColumnDouble width;
 
+  late final _is.ColumnString kind;
+
+  late final _is.ColumnString text;
+
+  late final _is.ColumnString clientId;
+
+  late final _is.ColumnBool isDeleted;
+
   late final _is.ColumnDateTime createdAt;
 
   @override
@@ -250,6 +350,10 @@ class StrokeTable extends _is.Table<int?> {
     points,
     color,
     width,
+    kind,
+    text,
+    clientId,
+    isDeleted,
     createdAt,
   ];
 }

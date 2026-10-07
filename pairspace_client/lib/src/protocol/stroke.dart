@@ -21,8 +21,15 @@ abstract class Stroke
     required this.points,
     required this.color,
     required this.width,
+    String? kind,
+    this.text,
+    String? clientId,
+    bool? isDeleted,
     DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+  }) : kind = kind ?? 'pen',
+       clientId = clientId ?? '',
+       isDeleted = isDeleted ?? false,
+       createdAt = createdAt ?? DateTime.now();
 
   factory Stroke({
     int? id,
@@ -30,6 +37,10 @@ abstract class Stroke
     required List<double> points,
     required int color,
     required double width,
+    String? kind,
+    String? text,
+    String? clientId,
+    bool? isDeleted,
     DateTime? createdAt,
   }) = _StrokeImpl;
 
@@ -42,6 +53,12 @@ abstract class Stroke
       ),
       color: jsonSerialization['color'] as int,
       width: (jsonSerialization['width'] as num).toDouble(),
+      kind: jsonSerialization['kind'] as String?,
+      text: jsonSerialization['text'] as String?,
+      clientId: jsonSerialization['clientId'] as String?,
+      isDeleted: jsonSerialization['isDeleted'] == null
+          ? null
+          : _isc.BoolJsonExtension.fromJson(jsonSerialization['isDeleted']),
       createdAt: jsonSerialization['createdAt'] == null
           ? null
           : _isc.DateTimeJsonExtension.fromJson(jsonSerialization['createdAt']),
@@ -61,6 +78,14 @@ abstract class Stroke
 
   double width;
 
+  String kind;
+
+  String? text;
+
+  String clientId;
+
+  bool isDeleted;
+
   DateTime createdAt;
 
   /// Returns a shallow copy of this [Stroke]
@@ -72,6 +97,10 @@ abstract class Stroke
     List<double>? points,
     int? color,
     double? width,
+    String? kind,
+    String? text,
+    String? clientId,
+    bool? isDeleted,
     DateTime? createdAt,
   });
   @override
@@ -83,6 +112,10 @@ abstract class Stroke
       'points': points.toJson(),
       'color': color,
       'width': width,
+      'kind': kind,
+      if (text != null) 'text': text,
+      'clientId': clientId,
+      'isDeleted': isDeleted,
       'createdAt': createdAt.toJson(),
     };
   }
@@ -96,6 +129,10 @@ abstract class Stroke
       'points': points.toJson(),
       'color': color,
       'width': width,
+      'kind': kind,
+      if (text != null) 'text': text,
+      'clientId': clientId,
+      'isDeleted': isDeleted,
       'createdAt': createdAt.toJson(),
     };
   }
@@ -115,6 +152,10 @@ class _StrokeImpl extends Stroke {
     required List<double> points,
     required int color,
     required double width,
+    String? kind,
+    String? text,
+    String? clientId,
+    bool? isDeleted,
     DateTime? createdAt,
   }) : super._(
          id: id,
@@ -122,6 +163,10 @@ class _StrokeImpl extends Stroke {
          points: points,
          color: color,
          width: width,
+         kind: kind,
+         text: text,
+         clientId: clientId,
+         isDeleted: isDeleted,
          createdAt: createdAt,
        );
 
@@ -135,6 +180,10 @@ class _StrokeImpl extends Stroke {
     List<double>? points,
     int? color,
     double? width,
+    String? kind,
+    Object? text = _Undefined,
+    String? clientId,
+    bool? isDeleted,
     DateTime? createdAt,
   }) {
     return Stroke(
@@ -143,6 +192,10 @@ class _StrokeImpl extends Stroke {
       points: points ?? this.points.map((e0) => e0).toList(),
       color: color ?? this.color,
       width: width ?? this.width,
+      kind: kind ?? this.kind,
+      text: text is String? ? text : this.text,
+      clientId: clientId ?? this.clientId,
+      isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt ?? this.createdAt,
     );
   }

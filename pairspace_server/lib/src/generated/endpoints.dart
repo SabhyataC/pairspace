@@ -602,6 +602,24 @@ class Endpoints extends _is.EndpointDispatch {
               ) async => (endpoints['room'] as _idkvzxf4.RoomEndpoint)
                   .pastRooms(session),
         ),
+        'recapUrl': _is.MethodConnector(
+          name: 'recapUrl',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['room'] as _idkvzxf4.RoomEndpoint).recapUrl(
+                session,
+                params['roomId'],
+              ),
+        ),
         'joinRoom': _is.MethodConnector(
           name: 'joinRoom',
           params: {

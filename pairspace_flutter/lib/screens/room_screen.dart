@@ -84,6 +84,21 @@ class _RoomScreenState extends State<RoomScreen> {
     setState(() => _checkingActiveRoom = false);
   }
 
+  Future<void> _openRecap(int roomId) async {
+    // Open the tab first (inside the click), or the browser may block it.
+    final tab = web.window.open('about:blank', '_blank');
+    try {
+      final url = await client.room.recapUrl(roomId);
+      tab?.location.href = url;
+    } catch (_) {
+      tab?.close();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the recap')),
+      );
+    }
+  }
+
   // ---------- Saved session (survives refresh) ----------
 
   static const _kRoomCode = 'pairspace_roomCode';
@@ -688,8 +703,7 @@ class _RoomScreenState extends State<RoomScreen> {
                           '${r.endedAt!.difference(r.createdAt).inMinutes} min',
                         ),
                         trailing: TextButton(
-                          onPressed: () =>
-                              web.window.open('/recap/${r.code}', '_blank'),
+                          onPressed: () => _openRecap(r.id!),
                           child: const Text('View recap'),
                         ),
                       ),
@@ -821,7 +835,10 @@ class _RoomScreenState extends State<RoomScreen> {
           const SizedBox(height: 16),
           if (_isInterviewer && _roomCode != null) ...[
             FilledButton.icon(
-              onPressed: () => web.window.open('/recap/$_roomCode', '_blank'),
+              onPressed: () {
+                final id = _roomId;
+                if (id != null) _openRecap(id);
+              },
               icon: const Icon(Icons.description_outlined),
               label: const Text('View recap'),
             ),
