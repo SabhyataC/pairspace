@@ -81,26 +81,34 @@ class _CountdownTimerState extends State<CountdownTimer> {
     final over = r.isNegative || r == Duration.zero;
     final warn = !over && r < const Duration(minutes: 5);
     final color = over
-        ? Colors.red
+        ? const Color(0xFFEF4444)
         : warn
-        ? Colors.orange.shade800
-        : null;
+        ? const Color(0xFFF59E0B)
+        : Colors.white;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.timer_outlined, size: 18, color: color),
-        const SizedBox(width: 4),
-        Text(
-          over ? "Time's up" : _fmt(r),
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: color,
-            fontFeatures: const [FontFeature.tabularFigures()],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFF334155)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.timer_outlined, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(
+            over ? "Time's up" : _fmt(r),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

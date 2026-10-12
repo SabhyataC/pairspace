@@ -12,6 +12,10 @@ import 'code_editor_panel.dart';
 import 'integrity_monitor.dart';
 import 'integrity_log_panel.dart';
 import 'countdown_timer.dart';
+import 'room_setup_screen.dart';
+import 'session_recap_screen.dart';
+import '../widgets/pairspace_logo.dart';
+import '../theme/pairspace_colors.dart';
 
 class RoomScreen extends StatefulWidget {
   const RoomScreen({super.key, required this.onSignOut});
@@ -40,6 +44,9 @@ class _RoomScreenState extends State<RoomScreen> {
 
   bool _showPanel = true;
   bool _timeUpShown = false;
+  String _activeWorkspaceView = 'split'; // 'split', 'code', 'board'
+  bool _leftSidebarExpanded = true;
+  bool _showVideoStrip = true;
 
   List<Participant> _pending = [];
   List<Participant> _present = [];
@@ -171,11 +178,7 @@ class _RoomScreenState extends State<RoomScreen> {
   }
   // ---------- Name prompts ----------
 
-  Future<void> _promptCreate() async {
-    final details = await _askCreateDetails();
-    if (details == null) return;
-    _createRoom(details.name, details.minutes);
-  }
+
 
   Future<void> _promptJoin(String code) async {
     final name = await _askName(
@@ -217,61 +220,7 @@ class _RoomScreenState extends State<RoomScreen> {
     );
   }
 
-  Future<({String name, int minutes})?> _askCreateDetails() {
-    final controller = TextEditingController();
-    int minutes = 60;
-    return showDialog<({String name, int minutes})>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setLocal) => AlertDialog(
-          title: const Text('New interview'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: controller,
-                autofocus: true,
-                maxLength: 40,
-                decoration: const InputDecoration(
-                  hintText: 'How candidates will see you',
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text('Duration'),
-              DropdownButton<int>(
-                value: minutes,
-                isExpanded: true,
-                items: const [
-                  DropdownMenuItem(value: 5, child: Text('5 minutes')),
-                  DropdownMenuItem(value: 15, child: Text('15 minutes')),
-                  DropdownMenuItem(value: 30, child: Text('30 minutes')),
-                  DropdownMenuItem(value: 45, child: Text('45 minutes')),
-                  DropdownMenuItem(value: 60, child: Text('1 hour')),
-                  DropdownMenuItem(value: 90, child: Text('1.5 hours')),
-                ],
-                onChanged: (v) => setLocal(() => minutes = v ?? 60),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, (
-                name: controller.text,
-                minutes: minutes,
-              )),
-              child: const Text('Create'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   // ---------- Core actions ----------
 
@@ -611,30 +560,25 @@ class _RoomScreenState extends State<RoomScreen> {
     final inRoom =
         !_loading && !_isPending && !_ended && !_left && _roomCode != null;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Text('PairSpace'),
-            if (inRoom && _roomId != null) ...[
-              const SizedBox(width: 24),
-              CountdownTimer(roomId: _roomId!, onTimeUp: _onTimeUp),
-            ],
-          ],
-        ),
-        actions: [
-          if (inRoom)
-            IconButton(
-              tooltip: _showPanel ? 'Show canvas' : 'Show room info',
-              icon: Icon(_showPanel ? Icons.brush : Icons.people),
-              onPressed: () => setState(() => _showPanel = !_showPanel),
-            ),
-          TextButton(
-            onPressed: widget.onSignOut,
-            child: const Text('Sign out'),
+    if (inRoom) {
+      return Theme(
+        data: ThemeData.dark().copyWith(
+          scaffoldBackgroundColor: const Color(0xFF0F172A),
+          colorScheme: const ColorScheme.dark(
+            primary: PairSpaceColors.primary,
+            surface: Color(0xFF1E293B),
           ),
-        ],
-      ),
+          dividerColor: const Color(0xFF334155),
+        ),
+        child: Scaffold(
+          backgroundColor: const Color(0xFF0F172A),
+          body: _buildBody(),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       body: _buildBody(),
     );
   }
@@ -661,129 +605,638 @@ class _RoomScreenState extends State<RoomScreen> {
       if (_checkingActiveRoom) {
         return const Center(child: CircularProgressIndicator());
       }
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_myActiveRoom != null) ...[
-              ElevatedButton.icon(
-                onPressed: _loading ? null : _rejoinOwnActiveRoom,
-                icon: const Icon(Icons.login),
-                label: Text('Rejoin your room (${_myActiveRoom!.code})'),
-              ),
-              const SizedBox(height: 12),
-              const Text('or'),
-              const SizedBox(height: 12),
-            ],
-            ElevatedButton(
-              onPressed: _loading ? null : _promptCreate,
-              child: const Text('Create room'),
+      return RoomSetupScreen(
+        myActiveRoom: _myActiveRoom,
+        pastRooms: _pastRooms,
+        onRejoinActiveRoom: _rejoinOwnActiveRoom,
+        onOpenRecap: _openRecap,
+        onCreateRoom: (name, minutes) async {
+          await _createRoom(name, minutes);
+        },
+        onJoinRoom: (code, name) async {
+          return await _joinRoom(code, name);
+        },
+      );
+    }
+
+    return Row(
+      children: [
+        // 1. Left Animated Navigation Sidebar
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeInOutCubic,
+          width: _leftSidebarExpanded ? 210 : 64,
+          decoration: const BoxDecoration(
+            color: Color(0xFF0F172A),
+            border: Border(
+              right: BorderSide(color: Color(0xFF1E293B), width: 1.2),
             ),
-            if (_pastRooms.isNotEmpty) ...[
-              const SizedBox(height: 32),
-              const Text(
-                'Past meetings',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: 420,
-                  maxHeight: 320,
-                ),
-                child: ListView(
-                  shrinkWrap: true,
+          ),
+          child: _buildLeftSidebar(),
+        ),
+
+        // 2. Main Area (Top Meeting Bar + Workspace Panels + Animated Right Panel)
+        Expanded(
+          child: Column(
+            children: [
+              _buildTopMeetingToolbar(),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    for (final r in _pastRooms)
-                      ListTile(
-                        dense: true,
-                        leading: const Icon(Icons.history, size: 18),
-                        title: Text(_fmtDate(r.createdAt)),
-                        subtitle: Text(
-                          '${r.endedAt!.difference(r.createdAt).inMinutes} min',
-                        ),
-                        trailing: TextButton(
-                          onPressed: () => _openRecap(r.id!),
-                          child: const Text('View recap'),
+                    // Center Workspace Canvas
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          children: [
+                            if (!_isInterviewer)
+                              IntegrityMonitorHost(roomId: _roomId!),
+                            AnimatedSize(
+                              duration: const Duration(milliseconds: 280),
+                              curve: Curves.easeInOutCubic,
+                              child: _showVideoStrip
+                                  ? Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        VideoSection(
+                                          roomId: _roomId!,
+                                          participantId: _participantId!,
+                                          isCaller: _isInterviewer,
+                                        ),
+                                        const SizedBox(height: 8),
+                                      ],
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                            if (_isInterviewer) ...[
+                              IntegrityLogPanel(roomId: _roomId!),
+                              const SizedBox(height: 8),
+                            ],
+                            Expanded(child: _buildActiveWorkspace()),
+                          ],
                         ),
                       ),
+                    ),
+
+                    // 3. Right Animated Side Panel (Participants & Lobby)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 320),
+                      curve: Curves.easeInOutCubic,
+                      width: _showPanel ? 340 : 0,
+                      child: ClipRect(
+                        child: OverflowBox(
+                          minWidth: 340,
+                          maxWidth: 340,
+                          alignment: Alignment.topRight,
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF1E293B),
+                              border: Border(
+                                left: BorderSide(color: Color(0xFF334155)),
+                              ),
+                            ),
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(16),
+                              child: _buildInfoPanel(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
-          ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLeftSidebar() {
+    return Container(
+      color: const Color(0xFF0F172A),
+      padding: EdgeInsets.symmetric(
+        horizontal: _leftSidebarExpanded ? 14 : 10,
+        vertical: 14,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Logo & Collapse/Expand Toggle
+          Row(
+            mainAxisAlignment: _leftSidebarExpanded
+                ? MainAxisAlignment.spaceBetween
+                : MainAxisAlignment.center,
+            children: [
+              if (_leftSidebarExpanded) ...[
+                const PairSpaceLogo(size: 24, fontSize: 16, isDark: true),
+                IconButton(
+                  tooltip: 'Collapse sidebar',
+                  icon: const Icon(
+                    Icons.menu_open_rounded,
+                    color: Color(0xFF94A3B8),
+                    size: 18,
+                  ),
+                  onPressed: () =>
+                      setState(() => _leftSidebarExpanded = false),
+                ),
+              ] else ...[
+                IconButton(
+                  tooltip: 'Expand sidebar',
+                  icon: const Icon(
+                    Icons.menu_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  onPressed: () =>
+                      setState(() => _leftSidebarExpanded = true),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Connection status & Room Code badge
+          if (_leftSidebarExpanded)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF334155)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF10B981),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'CONNECTED',
+                        style: TextStyle(
+                          color: Color(0xFF10B981),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _roomCode ?? '',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Copy Room Code',
+                        icon: const Icon(
+                          Icons.copy_rounded,
+                          size: 13,
+                          color: Color(0xFF94A3B8),
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: _copyRoomCode,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            )
+          else
+            Center(
+              child: Tooltip(
+                message: 'Connected · Room: $_roomCode',
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF10B981),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(height: 18),
+
+          // Navigation Section
+          _sidebarNavItem(
+            icon: Icons.splitscreen_rounded,
+            label: 'Split View',
+            isActive: _activeWorkspaceView == 'split',
+            onTap: () => setState(() => _activeWorkspaceView = 'split'),
+          ),
+          _sidebarNavItem(
+            icon: Icons.code_rounded,
+            label: 'Code Editor',
+            isActive: _activeWorkspaceView == 'code',
+            onTap: () => setState(() => _activeWorkspaceView = 'code'),
+          ),
+          _sidebarNavItem(
+            icon: Icons.brush_outlined,
+            label: 'Whiteboard',
+            isActive: _activeWorkspaceView == 'board',
+            onTap: () => setState(() => _activeWorkspaceView = 'board'),
+          ),
+          _sidebarNavItem(
+            icon: Icons.people_alt_rounded,
+            label: 'Participants',
+            isActive: _showPanel,
+            badge: _present.isNotEmpty ? '${_present.length}' : null,
+            badgeColor: _pending.isNotEmpty
+                ? const Color(0xFFF59E0B)
+                : const Color(0xFF4F46E5),
+            onTap: () => setState(() => _showPanel = !_showPanel),
+          ),
+          if (_isInterviewer)
+            _sidebarNavItem(
+              icon: Icons.radar_rounded,
+              label: 'Focus Radar',
+              isActive: false,
+              badge: _pending.isNotEmpty ? 'Lobby (${_pending.length})' : null,
+              badgeColor: const Color(0xFFEF4444),
+              onTap: () => setState(() => _showPanel = true),
+            ),
+
+          const Spacer(),
+
+          // Leave Room button
+          if (_leftSidebarExpanded)
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFFEF4444)),
+                  backgroundColor: const Color(0xFF1E293B),
+                  foregroundColor: const Color(0xFFEF4444),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: _confirmLeave,
+                icon: const Icon(Icons.logout_rounded, size: 16),
+                label: const Text(
+                  'Leave Room',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            )
+          else
+            Center(
+              child: IconButton(
+                tooltip: 'Leave Room',
+                icon: const Icon(
+                  Icons.logout_rounded,
+                  color: Color(0xFFEF4444),
+                  size: 20,
+                ),
+                onPressed: _confirmLeave,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sidebarNavItem({
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+    String? badge,
+    Color? badgeColor,
+  }) {
+    if (!_leftSidebarExpanded) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Tooltip(
+          message: label,
+          preferBelow: false,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              height: 40,
+              width: 40,
+              decoration: BoxDecoration(
+                color: isActive ? const Color(0xFF4F46E5) : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    size: 20,
+                    color: isActive ? Colors.white : const Color(0xFF94A3B8),
+                  ),
+                  if (badge != null)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: badgeColor ?? const Color(0xFFEF4444),
+                          shape: BoxShape.circle,
+                        ),
+                        constraints:
+                            const BoxConstraints(minWidth: 8, minHeight: 8),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
         ),
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 900;
-
-        final canvas = Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              if (!_isInterviewer) IntegrityMonitorHost(roomId: _roomId!),
-              VideoSection(
-                roomId: _roomId!,
-                participantId: _participantId!,
-                isCaller: _isInterviewer,
-              ),
-              const SizedBox(height: 12),
-              if (_isInterviewer) ...[
-                IntegrityLogPanel(roomId: _roomId!),
-                const SizedBox(height: 12),
-              ],
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, c) {
-                    final workspace = <Widget>[
-                      Expanded(child: CodeEditorPanel(roomId: _roomId!)),
-                      const SizedBox(width: 12, height: 12),
-                      Expanded(child: CanvasSection(roomId: _roomId!)),
-                    ];
-                    // Side by side when there's room, stacked otherwise.
-                    return c.maxWidth >= 700
-                        ? Row(children: workspace)
-                        : Column(children: workspace);
-                  },
-                ),
-              ),
-            ],
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 3),
+      decoration: BoxDecoration(
+        color: isActive ? const Color(0xFF4F46E5) : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+        visualDensity: const VisualDensity(vertical: -2),
+        onTap: onTap,
+        leading: Icon(
+          icon,
+          size: 18,
+          color: isActive ? Colors.white : const Color(0xFF94A3B8),
+        ),
+        title: Text(
+          label,
+          style: TextStyle(
+            color: isActive ? Colors.white : const Color(0xFFCBD5E1),
+            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+            fontSize: 13,
           ),
-        );
+        ),
+        trailing: badge != null
+            ? Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: badgeColor ?? const Color(0xFF334155),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  badge,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            : null,
+      ),
+    );
+  }
 
-        final panel = SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: _buildInfoPanel(),
-        );
+  Widget _buildTopMeetingToolbar() {
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: const BoxDecoration(
+        color: Color(0xFF0F172A),
+        border: Border(
+          bottom: BorderSide(color: Color(0xFF1E293B), width: 1.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          // View selector pills
+          _topViewPill('split', 'Split View', Icons.splitscreen_rounded),
+          const SizedBox(width: 6),
+          _topViewPill('code', 'Code Editor', Icons.code_rounded),
+          const SizedBox(width: 6),
+          _topViewPill('board', 'Whiteboard', Icons.brush_outlined),
 
-        if (isWide) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(flex: 3, child: canvas),
-              SizedBox(
-                width: 320,
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      left: BorderSide(color: Colors.grey.shade300),
+          const Spacer(),
+
+          // Video Section toggle button
+          IconButton(
+            tooltip: _showVideoStrip ? 'Hide Video Tiles' : 'Show Video Tiles',
+            icon: Icon(
+              _showVideoStrip
+                  ? Icons.videocam_rounded
+                  : Icons.videocam_off_rounded,
+              color: _showVideoStrip ? Colors.white : const Color(0xFF94A3B8),
+              size: 20,
+            ),
+            onPressed: () =>
+                setState(() => _showVideoStrip = !_showVideoStrip),
+          ),
+          const SizedBox(width: 4),
+
+          // Session Timer
+          if (_roomId != null)
+            CountdownTimer(roomId: _roomId!, onTimeUp: _onTimeUp),
+          const SizedBox(width: 10),
+
+          // Share / Invite link
+          IconButton(
+            tooltip: 'Copy Invite Link',
+            icon: const Icon(Icons.share_outlined, color: Colors.white, size: 19),
+            onPressed: _copyInviteLink,
+          ),
+
+          // Side panel toggle button
+          IconButton(
+            tooltip:
+                _showPanel ? 'Hide Side Panel' : 'Show Participants & Info',
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  _showPanel
+                      ? Icons.view_sidebar_rounded
+                      : Icons.view_sidebar_outlined,
+                  color: _showPanel ? const Color(0xFF818CF8) : Colors.white,
+                  size: 20,
+                ),
+                if (_pending.isNotEmpty)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEF4444),
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
-                  child: panel,
+              ],
+            ),
+            onPressed: () => setState(() => _showPanel = !_showPanel),
+          ),
+          const SizedBox(width: 8),
+
+          // Quick Leave / End button
+          if (_isInterviewer)
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFEF4444),
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
-            ],
-          );
-        }
+              onPressed: _confirmEnd,
+              icon: const Icon(Icons.call_end, size: 16),
+              label: const Text(
+                'End',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+            )
+          else
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFEF4444)),
+                backgroundColor: const Color(0xFF1E293B),
+                foregroundColor: const Color(0xFFEF4444),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: _confirmLeave,
+              icon: const Icon(Icons.call_end, size: 16),
+              label: const Text(
+                'Leave',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
-        return IndexedStack(
-          index: _showPanel ? 0 : 1,
-          children: [panel, canvas],
+  Widget _topViewPill(String id, String label, IconData icon) {
+    final active = _activeWorkspaceView == id;
+    return GestureDetector(
+      onTap: () => setState(() => _activeWorkspaceView = id),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFF4F46E5) : const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: active ? const Color(0xFF6366F1) : const Color(0xFF334155),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: active ? Colors.white : const Color(0xFF94A3B8),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: active ? Colors.white : const Color(0xFF94A3B8),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveWorkspace() {
+    switch (_activeWorkspaceView) {
+      case 'code':
+        return _codeCard();
+      case 'board':
+        return _boardCard();
+      case 'split':
+      default:
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 720;
+            if (isWide) {
+              return Row(
+                children: [
+                  Expanded(flex: 5, child: _codeCard()),
+                  const SizedBox(width: 10),
+                  Expanded(flex: 5, child: _boardCard()),
+                ],
+              );
+            } else {
+              return Column(
+                children: [
+                  Expanded(child: _codeCard()),
+                  const SizedBox(height: 10),
+                  Expanded(child: _boardCard()),
+                ],
+              );
+            }
+          },
         );
-      },
+    }
+  }
+
+  Widget _codeCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF334155)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: CodeEditorPanel(roomId: _roomId!),
+    );
+  }
+
+  Widget _boardCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF334155)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: CanvasSection(roomId: _roomId!),
     );
   }
 
@@ -827,47 +1280,28 @@ class _RoomScreenState extends State<RoomScreen> {
   }
 
   Widget _buildEndedScreen() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('This meeting has ended.'),
-          const SizedBox(height: 16),
-          if (_isInterviewer && _roomCode != null) ...[
-            FilledButton.icon(
-              onPressed: () {
-                final id = _roomId;
-                if (id != null) _openRecap(id);
-              },
-              icon: const Icon(Icons.description_outlined),
-              label: const Text('View recap'),
-            ),
-            const SizedBox(height: 8),
-          ],
-          if (_isInterviewer)
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _ended = false;
-                  _roomCode = null;
-                  _roomId = null;
-                });
-                _checkActiveRoom();
-              },
-              child: const Text('Create a new room'),
-            )
-          else
-            const Text('Contact the interviewer for a new invite if needed.'),
-        ],
-      ),
+    return SessionRecapScreen(
+      roomCode: _roomCode ?? 'ABC123',
+      duration: '45:00',
+      participantsCount: _present.isNotEmpty ? _present.length : 2,
+      codeEditsCount: 8,
+      whiteboardActionsCount: 6,
+      onDownload: () {
+        if (_roomId != null) _openRecap(_roomId!);
+      },
+      onShare: _copyInviteLink,
+      onBackToHome: () {
+        setState(() {
+          _ended = false;
+          _roomCode = null;
+          _roomId = null;
+        });
+        _checkActiveRoom();
+      },
     );
   }
 
-  String _fmtDate(DateTime d) {
-    final l = d.toLocal();
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${l.year}-${two(l.month)}-${two(l.day)} ${two(l.hour)}:${two(l.minute)}';
-  }
+
 
   Widget _buildInfoPanel() {
     final interviewerPresent = _present.any(
@@ -879,19 +1313,53 @@ class _RoomScreenState extends State<RoomScreen> {
       children: [
         Text(
           _isInterviewer ? 'Room created' : 'Joined room',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           _isInterviewer ? 'You are the interviewer' : 'You are the candidate',
-        ),
-        const SizedBox(height: 12),
-        SelectableText(
-          _roomCode!,
           style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
+            fontSize: 13,
+            color: Color(0xFF94A3B8),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F172A),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFF334155)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'ROOM CODE',
+                style: TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 4),
+              SelectableText(
+                _roomCode!,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                  color: Colors.white,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
@@ -900,52 +1368,113 @@ class _RoomScreenState extends State<RoomScreen> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              ElevatedButton.icon(
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF0F172A),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
                 onPressed: _copyRoomCode,
-                icon: const Icon(Icons.copy, size: 16),
-                label: const Text('Copy Code'),
+                icon: const Icon(Icons.copy, size: 15),
+                label: const Text('Copy Code', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
               ),
-              ElevatedButton.icon(
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF334155),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
                 onPressed: _copyInviteLink,
-                icon: const Icon(Icons.link, size: 16),
-                label: const Text('Copy Invite Link'),
+                icon: const Icon(Icons.link, size: 15),
+                label: const Text('Copy Invite Link', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
               ),
             ],
           ),
         if (!_isInterviewer && !interviewerPresent) ...[
           const SizedBox(height: 12),
-          const Text(
-            'The interviewer has left the room.',
-            style: TextStyle(color: Colors.orange),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF451A03),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFB45309)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Color(0xFFFBBF24), size: 18),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'The interviewer has left the room.',
+                    style: TextStyle(color: Color(0xFFFDE68A), fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
         const SizedBox(height: 20),
-        const Divider(),
+        const Divider(color: Color(0xFF334155)),
+        const SizedBox(height: 8),
         Text(
           'In this room (${_present.length})',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
         ),
         const SizedBox(height: 8),
         ..._present.map(
-          (p) => ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.person, size: 18),
-            title: Text(p.displayName),
-            trailing: Text(
-              p.role == ParticipantRole.interviewer
-                  ? 'Interviewer'
-                  : 'Candidate',
-              style: const TextStyle(fontSize: 11, color: Colors.grey),
+          (p) => Container(
+            margin: const EdgeInsets.symmetric(vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFF334155)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.person, size: 18, color: Color(0xFF38BDF8)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    p.displayName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E293B),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFF475569)),
+                  ),
+                  child: Text(
+                    p.role == ParticipantRole.interviewer
+                        ? 'Interviewer'
+                        : 'Candidate',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF94A3B8),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
         if (_isInterviewer) ...[
           const SizedBox(height: 16),
-          const Divider(),
+          const Divider(color: Color(0xFF334155)),
+          const SizedBox(height: 8),
           Text(
             'Waiting to join (${_pending.length})',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
           ),
           const SizedBox(height: 8),
           if (_pending.isEmpty)
@@ -953,39 +1482,52 @@ class _RoomScreenState extends State<RoomScreen> {
               padding: EdgeInsets.symmetric(vertical: 4),
               child: Text(
                 'No one is waiting right now.',
-                style: TextStyle(fontSize: 13),
+                style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
               ),
             )
           else
             ..._pending.map(
-              (p) => Card(
+              (p) => Container(
                 margin: const EdgeInsets.symmetric(vertical: 4),
-                child: ListTile(
-                  dense: true,
-                  title: Text(p.displayName),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                          size: 20,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0F172A),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFF334155)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.person_outline, size: 18, color: Color(0xFF94A3B8)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        p.displayName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
                         ),
-                        tooltip: 'Admit',
-                        onPressed: () => _admit(p),
                       ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.cancel,
-                          color: Colors.red,
-                          size: 20,
-                        ),
-                        tooltip: 'Deny',
-                        onPressed: () => _deny(p),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.check_circle,
+                        color: Color(0xFF22C55E),
+                        size: 22,
                       ),
-                    ],
-                  ),
+                      tooltip: 'Admit',
+                      onPressed: () => _admit(p),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.cancel,
+                        color: Color(0xFFEF4444),
+                        size: 22,
+                      ),
+                      tooltip: 'Deny',
+                      onPressed: () => _deny(p),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -993,18 +1535,31 @@ class _RoomScreenState extends State<RoomScreen> {
         const SizedBox(height: 24),
         Wrap(
           spacing: 12,
+          runSpacing: 8,
           children: [
             OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF475569)),
+                foregroundColor: Colors.white,
+                backgroundColor: const Color(0xFF0F172A),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
               onPressed: _confirmLeave,
-              icon: const Icon(Icons.logout, size: 16),
-              label: const Text('Leave'),
+              icon: const Icon(Icons.logout, size: 16, color: Colors.white),
+              label: const Text('Leave', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
             ),
             if (_isInterviewer)
               FilledButton.icon(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFEF4444),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
                 onPressed: _confirmEnd,
-                icon: const Icon(Icons.call_end, size: 16),
-                label: const Text('End meeting'),
+                icon: const Icon(Icons.call_end, size: 16, color: Colors.white),
+                label: const Text('End meeting', style: TextStyle(fontWeight: FontWeight.w600)),
               ),
           ],
         ),

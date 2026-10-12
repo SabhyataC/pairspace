@@ -320,7 +320,7 @@ class _VideoSectionState extends State<VideoSection> {
   }
 
   void _forceVideoVisible() {
-    final videos = web.document.querySelectorAll('video');
+    final videos = web.document.querySelectorAll('flt-platform-view video');
     for (var i = 0; i < videos.length; i++) {
       final el = videos.item(i);
       if (el != null) {
@@ -361,7 +361,7 @@ class _VideoSectionState extends State<VideoSection> {
         padding: const EdgeInsets.all(8),
         child: Text(
           _error!,
-          style: const TextStyle(color: Colors.red, fontSize: 12),
+          style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12),
         ),
       );
     }
@@ -401,30 +401,52 @@ class _VideoSectionState extends State<VideoSection> {
             ),
           ),
         ),
-        const SizedBox(height: 4),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              tooltip: _collapsed ? 'Show video' : 'Hide video',
-              icon: Icon(_collapsed ? Icons.expand_more : Icons.expand_less),
-              onPressed: () => setState(() => _collapsed = !_collapsed),
-            ),
-            IconButton(
-              icon: Icon(_micOn ? Icons.mic : Icons.mic_off),
-              onPressed: _hasMic ? _toggleMic : null,
-              tooltip: _hasMic
-                  ? (_micOn ? 'Mute' : 'Unmute')
-                  : 'No microphone found',
-            ),
-            IconButton(
-              icon: Icon(_camOn ? Icons.videocam : Icons.videocam_off),
-              onPressed: _hasCamera ? _toggleCam : null,
-              tooltip: _hasCamera
-                  ? (_camOn ? 'Turn off camera' : 'Turn on camera')
-                  : 'No camera found',
-            ),
-          ],
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E293B),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFF334155)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: _collapsed ? 'Show video' : 'Hide video',
+                icon: Icon(
+                  _collapsed ? Icons.expand_more : Icons.expand_less,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: () => setState(() => _collapsed = !_collapsed),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                icon: Icon(
+                  _micOn ? Icons.mic : Icons.mic_off,
+                  color: _micOn ? Colors.white : const Color(0xFFEF4444),
+                  size: 20,
+                ),
+                onPressed: _hasMic ? _toggleMic : null,
+                tooltip: _hasMic
+                    ? (_micOn ? 'Mute' : 'Unmute')
+                    : 'No microphone found',
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                icon: Icon(
+                  _camOn ? Icons.videocam : Icons.videocam_off,
+                  color: _camOn ? Colors.white : const Color(0xFFEF4444),
+                  size: 20,
+                ),
+                onPressed: _hasCamera ? _toggleCam : null,
+                tooltip: _hasCamera
+                    ? (_camOn ? 'Turn off camera' : 'Turn on camera')
+                    : 'No camera found',
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -437,8 +459,9 @@ class _VideoSectionState extends State<VideoSection> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black87,
+        color: const Color(0xFF0F172A),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF334155)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -450,9 +473,20 @@ class _VideoSectionState extends State<VideoSection> {
             objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
           ),
           if (overlayText != null)
-            Text(
-              overlayText,
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                overlayText,
+                style: const TextStyle(
+                  color: Color(0xFFE2E8F0),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
         ],
       ),

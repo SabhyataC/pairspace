@@ -276,16 +276,48 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: const BoxDecoration(
+            color: Color(0xFF0F172A),
+            border: Border(bottom: BorderSide(color: Color(0xFF334155))),
+          ),
           child: Row(
             children: [
-              const Icon(Icons.code, size: 18),
+              const Icon(Icons.code, size: 18, color: Color(0xFF818CF8)),
               const SizedBox(width: 8),
-              const Text('Code'),
+              const Text(
+                'Code',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
               const Spacer(),
               SegmentedButton<String>(
                 showSelectedIcon: false,
+                style: ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return Colors.white;
+                    }
+                    return const Color(0xFF1E293B);
+                  }),
+                  foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const Color(0xFF0F172A);
+                    }
+                    return const Color(0xFFE2E8F0);
+                  }),
+                  side: const WidgetStatePropertyAll(
+                    BorderSide(color: Color(0xFF334155)),
+                  ),
+                  textStyle: const WidgetStatePropertyAll(
+                    TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                  ),
+                ),
                 segments: _languages.keys
                     .map((l) => ButtonSegment(value: l, label: Text(l)))
                     .toList(),

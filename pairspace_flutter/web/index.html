@@ -31,6 +31,19 @@
 
   <title>pairspace_flutter</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    /* Prevent flutter_webrtc unparented DOM video element from floating in the top-left corner */
+    body > video {
+      display: none !important;
+      position: absolute !important;
+      width: 0 !important;
+      height: 0 !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      left: -9999px !important;
+      top: -9999px !important;
+    }
+  </style>
 </head>
 <body>
   <!--

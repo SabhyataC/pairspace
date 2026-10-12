@@ -434,51 +434,85 @@ class _Toolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final highlight = Theme.of(context).colorScheme.primaryContainer;
-    return Wrap(
-      spacing: 4,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        for (final (t, icon, label) in _items)
-          IconButton(
-            tooltip: label,
-            icon: Icon(icon),
-            onPressed: () => onChanged(t),
-            style: IconButton.styleFrom(
-              backgroundColor: t == tool ? highlight : null,
-            ),
-          ),
-        if (tool == CanvasTool.text)
-          // TextFieldTapRegion + ExcludeFocus: pressing these buttons must not
-          // count as "clicking outside" the text box, or it would be placed.
-          TextFieldTapRegion(
-            child: ExcludeFocus(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(width: 8),
-                  IconButton(
-                    tooltip: 'Smaller text',
-                    icon: const Icon(Icons.text_decrease),
-                    onPressed: onSmaller,
-                  ),
-                  SizedBox(
-                    width: 32,
-                    child: Text(
-                      '${textSize.round()}',
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Bigger text',
-                    icon: const Icon(Icons.text_increase),
-                    onPressed: onBigger,
-                  ),
-                ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF334155)),
+      ),
+      child: Wrap(
+        spacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          for (final (t, icon, label) in _items)
+            IconButton(
+              tooltip: label,
+              icon: Icon(
+                icon,
+                size: 18,
+                color: t == tool ? const Color(0xFF0F172A) : Colors.white,
+              ),
+              onPressed: () => onChanged(t),
+              style: IconButton.styleFrom(
+                backgroundColor: t == tool ? Colors.white : Colors.transparent,
+                padding: const EdgeInsets.all(8),
+                minimumSize: const Size(36, 36),
               ),
             ),
-          ),
-      ],
+          if (tool == CanvasTool.text)
+            // TextFieldTapRegion + ExcludeFocus: pressing these buttons must not
+            // count as "clicking outside" the text box, or it would be placed.
+            TextFieldTapRegion(
+              child: ExcludeFocus(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(width: 6),
+                    IconButton(
+                      tooltip: 'Smaller text',
+                      icon: const Icon(
+                        Icons.text_decrease,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                      onPressed: onSmaller,
+                      style: IconButton.styleFrom(
+                        padding: const EdgeInsets.all(6),
+                        minimumSize: const Size(32, 32),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 28,
+                      child: Text(
+                        '${textSize.round()}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Bigger text',
+                      icon: const Icon(
+                        Icons.text_increase,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                      onPressed: onBigger,
+                      style: IconButton.styleFrom(
+                        padding: const EdgeInsets.all(6),
+                        minimumSize: const Size(32, 32),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
