@@ -28,6 +28,7 @@ import 'package:pairspace_server/src/generated/room_timing.dart' as _i6w8xnej;
 import 'package:pairspace_server/src/generated/run_result.dart' as _i9mp160k;
 import 'package:pairspace_server/src/generated/signal_message.dart'
     as _i4itcfai;
+import 'package:pairspace_server/src/generated/stdin_update.dart' as _id5hta2p;
 import 'package:pairspace_server/src/generated/stroke.dart' as _iziyni4f;
 import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
@@ -889,6 +890,76 @@ class _RunEndpoint {
               createSessionCallback: (_) => _localUniqueSession,
               endpointPath: 'run',
               methodName: 'runStream',
+              arguments: {'roomId': roomId},
+              requestedInputStreams: [],
+              serializationManager: _serializationManager,
+            );
+        await _localTestStreamManager.callStreamMethod(
+          _localCallContext,
+          _localUniqueSession,
+          {},
+        );
+      },
+      _localTestStreamManager.outputStreamController,
+    );
+    return _localTestStreamManager.outputStreamController.stream;
+  }
+
+  _ida.Future<void> sendStdin(
+    _ist.TestSessionBuilder sessionBuilder,
+    int roomId,
+    String senderId,
+    String text,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'run',
+            method: 'sendStdin',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'run',
+          methodName: 'sendStdin',
+          parameters: _ist.testObjectToJson({
+            'roomId': roomId,
+            'senderId': senderId,
+            'text': text,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<void>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Stream<_id5hta2p.StdinUpdate> stdinStream(
+    _ist.TestSessionBuilder sessionBuilder,
+    int roomId,
+  ) {
+    var _localTestStreamManager =
+        _ist.TestStreamManager<_id5hta2p.StdinUpdate>();
+    _ist.callStreamFunctionAndHandleExceptions(
+      () async {
+        var _localUniqueSession =
+            (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+              endpoint: 'run',
+              method: 'stdinStream',
+            );
+        var _localCallContext = await _endpointDispatch
+            .getMethodStreamCallContext(
+              createSessionCallback: (_) => _localUniqueSession,
+              endpointPath: 'run',
+              methodName: 'stdinStream',
               arguments: {'roomId': roomId},
               requestedInputStreams: [],
               serializationManager: _serializationManager,

@@ -1,0 +1,5 @@
+class: StdinUpdate
+fields:
+  roomId: int
+  senderId: String
+  text: String

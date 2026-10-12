@@ -65,6 +65,9 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
   bool _running = false;
   final TextEditingController _stdinCtrl = TextEditingController();
   double _outputHeight = 235;
+  StreamSubscription<StdinUpdate>? _stdinSub;
+  Timer? _stdinReconnect;
+  Timer? _stdinDebounce;
 
   void _onReady(MonacoController c) => unawaited(_init(c));
 
@@ -91,6 +94,7 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
     _contentSub = c.onContentChanged.listen((_) => _scheduleSend());
     _connect();
     _connectRun();
+    _connectStdin();
   }
 
   void _connect() {
@@ -406,6 +410,7 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
           if (_outputHeight >= 190) ...[
             TextField(
               controller: _stdinCtrl,
+              onChanged: _onStdinChanged,
               maxLines: 2,
               minLines: 2,
               style: const TextStyle(
@@ -456,6 +461,51 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
     );
   }
 
+  void _connectStdin() {
+    if (_disposed) return;
+    _stdinSub?.cancel();
+    _stdinSub = client.run
+        .stdinStream(widget.roomId)
+        .listen(
+          _onRemoteStdin,
+          onError: (Object e) {
+            debugPrint('stdinStream error: $e');
+            _scheduleStdinReconnect();
+          },
+          onDone: _scheduleStdinReconnect,
+        );
+  }
+
+  void _scheduleStdinReconnect() {
+    if (_disposed || !mounted) return;
+    if (_stdinReconnect?.isActive ?? false) return;
+    _stdinReconnect = Timer(const Duration(seconds: 3), _connectStdin);
+  }
+
+  void _onRemoteStdin(StdinUpdate u) {
+    if (!mounted || u.senderId == _senderId) return;
+    if (_stdinCtrl.text == u.text) return;
+    final sel = _stdinCtrl.selection;
+    final offset = sel.isValid
+        ? sel.baseOffset.clamp(0, u.text.length).toInt()
+        : u.text.length;
+    _stdinCtrl.value = TextEditingValue(
+      text: u.text,
+      selection: TextSelection.collapsed(offset: offset),
+    );
+  }
+
+  void _onStdinChanged(String _) {
+    _stdinDebounce?.cancel();
+    _stdinDebounce = Timer(const Duration(milliseconds: 250), () async {
+      try {
+        await client.run.sendStdin(widget.roomId, _senderId, _stdinCtrl.text);
+      } catch (e) {
+        debugPrint('sendStdin failed: $e');
+      }
+    });
+  }
+
   Future<void> _changeLanguage(String name) async {
     setState(() => _selected = name);
     await _controller?.document.setLanguage(_languages[name]!);
@@ -475,6 +525,9 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
     _runTimeout?.cancel();
     _outgoing?.close();
     _stdinCtrl.dispose();
+    _stdinSub?.cancel();
+    _stdinReconnect?.cancel();
+    _stdinDebounce?.cancel();
     if (identical(activeMonacoController, _controller)) {
       activeMonacoController = null;
     }

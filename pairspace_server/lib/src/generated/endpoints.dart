@@ -519,6 +519,36 @@ class Endpoints extends _is.EndpointDispatch {
                 stdin: params['stdin'],
               ),
         ),
+        'sendStdin': _is.MethodConnector(
+          name: 'sendStdin',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'senderId': _is.ParameterDescription(
+              name: 'senderId',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'text': _is.ParameterDescription(
+              name: 'text',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['run'] as _iuqsiqg1.RunEndpoint).sendStdin(
+                session,
+                params['roomId'],
+                params['senderId'],
+                params['text'],
+              ),
+        ),
         'runStream': _is.MethodStreamConnector(
           name: 'runStream',
           params: {
@@ -536,6 +566,27 @@ class Endpoints extends _is.EndpointDispatch {
                 Map<String, dynamic> params,
                 Map<String, Stream> streamParams,
               ) => (endpoints['run'] as _iuqsiqg1.RunEndpoint).runStream(
+                session,
+                params['roomId'],
+              ),
+        ),
+        'stdinStream': _is.MethodStreamConnector(
+          name: 'stdinStream',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          streamParams: {},
+          returnType: _is.MethodStreamReturnType.streamType,
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+                Map<String, Stream> streamParams,
+              ) => (endpoints['run'] as _iuqsiqg1.RunEndpoint).stdinStream(
                 session,
                 params['roomId'],
               ),

@@ -86,6 +86,25 @@ class RunEndpoint extends Endpoint {
     yield* session.messages.createStream<RunResult>('room-run-$roomId');
   }
 
+  Future<void> sendStdin(
+    Session session,
+    int roomId,
+    String senderId,
+    String text,
+  ) async {
+    await _requireAdmitted(session, roomId);
+    if (text.length > 5000 || senderId.length > 64) return;
+    await session.messages.postMessage(
+      'room-stdin-$roomId',
+      StdinUpdate(roomId: roomId, senderId: senderId, text: text),
+    );
+  }
+
+  Stream<StdinUpdate> stdinStream(Session session, int roomId) async* {
+    await _requireAdmitted(session, roomId);
+    yield* session.messages.createStream<StdinUpdate>('room-stdin-$roomId');
+  }
+
   Future<void> _requireAdmitted(Session session, int roomId) async {
     final userId = session.authenticated!.authUserId;
     final participant = await Participant.db.findFirstRow(

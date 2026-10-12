@@ -33,6 +33,7 @@ import 'room.dart' as _ieflxecy;
 import 'room_timing.dart' as _i4ch8j3m;
 import 'run_result.dart' as _i582tvfi;
 import 'signal_message.dart' as _i6c8vmrx;
+import 'stdin_update.dart' as _i7ig3xsd;
 import 'stroke.dart' as _ikjj7mbr;
 export 'access_denied.dart';
 export 'code_snapshot.dart';
@@ -46,6 +47,7 @@ export 'room.dart';
 export 'room_timing.dart';
 export 'run_result.dart';
 export 'signal_message.dart';
+export 'stdin_update.dart';
 export 'stroke.dart';
 export 'client.dart';
 
@@ -119,6 +121,9 @@ class Protocol extends _isc.SerializationManager {
     if (t == _i6c8vmrx.SignalMessage) {
       return _i6c8vmrx.SignalMessage.fromJson(data) as T;
     }
+    if (t == _i7ig3xsd.StdinUpdate) {
+      return _i7ig3xsd.StdinUpdate.fromJson(data) as T;
+    }
     if (t == _ikjj7mbr.Stroke) {
       return _ikjj7mbr.Stroke.fromJson(data) as T;
     }
@@ -164,6 +169,9 @@ class Protocol extends _isc.SerializationManager {
     if (t == _isc.getType<_i6c8vmrx.SignalMessage?>()) {
       return (data != null ? _i6c8vmrx.SignalMessage.fromJson(data) : null)
           as T;
+    }
+    if (t == _isc.getType<_i7ig3xsd.StdinUpdate?>()) {
+      return (data != null ? _i7ig3xsd.StdinUpdate.fromJson(data) : null) as T;
     }
     if (t == _isc.getType<_ikjj7mbr.Stroke?>()) {
       return (data != null ? _ikjj7mbr.Stroke.fromJson(data) : null) as T;
@@ -216,6 +224,7 @@ class Protocol extends _isc.SerializationManager {
       _i4ch8j3m.RoomTiming => 'RoomTiming',
       _i582tvfi.RunResult => 'RunResult',
       _i6c8vmrx.SignalMessage => 'SignalMessage',
+      _i7ig3xsd.StdinUpdate => 'StdinUpdate',
       _ikjj7mbr.Stroke => 'Stroke',
       _ => null,
     };
@@ -255,6 +264,8 @@ class Protocol extends _isc.SerializationManager {
         return 'RunResult';
       case _i6c8vmrx.SignalMessage():
         return 'SignalMessage';
+      case _i7ig3xsd.StdinUpdate():
+        return 'StdinUpdate';
       case _ikjj7mbr.Stroke():
         return 'Stroke';
     }
@@ -314,6 +325,9 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'SignalMessage') {
       return deserialize<_i6c8vmrx.SignalMessage>(data['data']);
+    }
+    if (dataClassName == 'StdinUpdate') {
+      return deserialize<_i7ig3xsd.StdinUpdate>(data['data']);
     }
     if (dataClassName == 'Stroke') {
       return deserialize<_ikjj7mbr.Stroke>(data['data']);

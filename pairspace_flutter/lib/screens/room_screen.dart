@@ -105,6 +105,18 @@ class _RoomScreenState extends State<RoomScreen> {
     }
   }
 
+  Future<void> _goToRecap() async {
+    final roomId = _roomId;
+    if (roomId == null) return;
+    try {
+      final url = await client.room.recapUrl(roomId);
+      if (!mounted) return;
+      web.window.location.href = url;
+    } catch (_) {
+      _showMessage('Could not open the recap');
+    }
+  }
+
   // ---------- Saved session (survives refresh) ----------
 
   static const _kRoomCode = 'pairspace_roomCode';
@@ -421,16 +433,17 @@ class _RoomScreenState extends State<RoomScreen> {
   }
 
   Future<void> _endNow() async {
-    _pollTimer?.cancel();
     try {
       await client.room.endRoom(_roomId!);
     } catch (e) {
       _showMessage('Failed to end meeting: $e');
       return;
     }
+    _pollTimer?.cancel();
     if (!mounted) return;
     _clearSession();
     setState(() => _ended = true);
+    if (_isInterviewer) await _goToRecap();
   }
 
   Future<void> _onTimeUp() async {
@@ -580,6 +593,7 @@ class _RoomScreenState extends State<RoomScreen> {
 
   Widget _buildBody() {
     if (_left) return _buildLeftScreen();
+    if (_ended) return _buildEndedScreen();
     if (_loading) return const Center(child: CircularProgressIndicator());
 
     if (_isPending) {
@@ -1279,6 +1293,45 @@ class _RoomScreenState extends State<RoomScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildEndedScreen() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.check_circle_outline, size: 48),
+          const SizedBox(height: 12),
+          const Text(
+            'The meeting has ended.',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 16),
+          if (_isInterviewer && _roomId != null) ...[
+            // Fallback in case the automatic redirect doesn't happen.
+            FilledButton.icon(
+              onPressed: _goToRecap,
+              icon: const Icon(Icons.description_outlined),
+              label: const Text('View recap'),
+            ),
+            const SizedBox(height: 12),
+          ],
+          OutlinedButton(
+            onPressed: _backToHome,
+            child: const Text('Back to home'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _backToHome() {
+    setState(() {
+      _ended = false;
+      _roomCode = null;
+      _roomId = null;
+    });
+    _checkActiveRoom();
   }
 
   Widget _buildInfoPanel() {

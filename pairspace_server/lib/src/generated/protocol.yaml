@@ -22,6 +22,8 @@ code:
 run:
   - runCode:
   - runStream:
+  - sendStdin:
+  - stdinStream:
 greeting:
   - hello:
 integrity:

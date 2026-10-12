@@ -15,6 +15,10 @@
           border-radius: 6px; overflow-x: auto; font-size: 13px; }
     .badge { display: inline-block; background: #e8e8e8; border-radius: 4px;
              padding: 2px 8px; font-size: 12px; margin-left: 8px; }
+                 .replay { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+    .replay button { padding: 6px 14px; border: 1px solid #bbb; border-radius: 4px;
+                     background: #fff; cursor: pointer; font-size: 14px; }
+    .replay input[type=range] { flex: 1; }
   </style>
 </head>
 <body>
@@ -32,7 +36,79 @@
   {{^hasCode}}<p class="meta">No code was written.</p>{{/hasCode}}
 
   <h2>Canvas</h2>
-  {{#hasDrawing}}{{{svg}}}{{/hasDrawing}}
+  {{#hasDrawing}}
+  <div id="canvas-wrap">{{{svg}}}</div>
+  {{#hasReplay}}
+  <div id="replay" class="replay">
+    <button id="rp-play" type="button">▶ Replay</button>
+    <input id="rp-range" type="range" min="0" max="0" value="0">
+    <span id="rp-label" class="meta"></span>
+  </div>
+  <script id="rp-data" type="application/json">{{{replayJson}}}</script>
+  <script>
+  (function () {
+    var data = JSON.parse(document.getElementById('rp-data').textContent);
+    var svg = document.querySelector('#canvas-wrap svg');
+    var box = document.getElementById('replay');
+    if (!svg || svg.children.length !== data.length) {
+      box.style.display = 'none';
+      return;
+    }
+    var els = Array.prototype.slice.call(svg.children);
+    var btn = document.getElementById('rp-play');
+    var range = document.getElementById('rp-range');
+    var label = document.getElementById('rp-label');
+    var n = els.length;
+    var shown = n;
+    var timer = null;
+
+    range.max = n;
+
+    function render(k) {
+      shown = k;
+      for (var i = 0; i < n; i++) {
+        els[i].style.display = i < k ? '' : 'none';
+      }
+      range.value = k;
+      label.textContent = k + ' / ' + n;
+    }
+
+    function stop() {
+      clearTimeout(timer);
+      timer = null;
+      btn.textContent = '▶ Replay';
+    }
+
+    function step() {
+      render(shown + 1);
+      if (shown >= n) {
+        stop();
+        return;
+      }
+      var gap = data[shown].t - data[shown - 1].t;
+      timer = setTimeout(step, Math.min(Math.max(gap, 120), 800));
+    }
+
+    btn.onclick = function () {
+      if (timer) {
+        stop();
+        return;
+      }
+      if (shown >= n) render(0);
+      btn.textContent = '⏸ Pause';
+      timer = setTimeout(step, 300);
+    };
+
+    range.oninput = function () {
+      stop();
+      render(parseInt(range.value, 10));
+    };
+
+    render(n);
+  })();
+  </script>
+  {{/hasReplay}}
+  {{/hasDrawing}}
   {{^hasDrawing}}<p class="meta">Nothing was drawn.</p>{{/hasDrawing}}
 {{/available}}
 {{^available}}
