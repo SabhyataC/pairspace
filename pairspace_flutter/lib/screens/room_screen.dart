@@ -364,6 +364,7 @@ class _RoomScreenState extends State<RoomScreen> {
         _pollTimer?.cancel();
         _clearSession();
         setState(() => _ended = true);
+        if (_isInterviewer) _goToRecap();
         return;
       }
 
