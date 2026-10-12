@@ -25,6 +25,7 @@ import '../auth/google_idp_endpoint.dart' as _i71axiz0;
 import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
 import '../canvas/canvas_endpoint.dart' as _iexkumfq;
 import '../code/code_endpoint.dart' as _iaw4ytph;
+import '../code/run_endpoint.dart' as _iuqsiqg1;
 import '../greetings/greeting_endpoint.dart' as _il624ik7;
 import '../integrity/integrity_endpoint.dart' as _idk20h1k;
 import '../rooms/room_endpoint.dart' as _idkvzxf4;
@@ -63,6 +64,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'code',
+          null,
+        ),
+      'run': _iuqsiqg1.RunEndpoint()
+        ..initialize(
+          server,
+          'run',
           null,
         ),
       'greeting': _il624ik7.GreetingEndpoint()
@@ -468,6 +475,69 @@ class Endpoints extends _is.EndpointDispatch {
                 session,
                 params['roomId'],
                 streamParams['updates']!.cast<_iin39ph8.CodeUpdate>(),
+              ),
+        ),
+      },
+    );
+    connectors['run'] = _is.EndpointConnector(
+      name: 'run',
+      endpoint: endpoints['run']!,
+      methodConnectors: {
+        'runCode': _is.MethodConnector(
+          name: 'runCode',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'language': _is.ParameterDescription(
+              name: 'language',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'code': _is.ParameterDescription(
+              name: 'code',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'stdin': _is.ParameterDescription(
+              name: 'stdin',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['run'] as _iuqsiqg1.RunEndpoint).runCode(
+                session,
+                params['roomId'],
+                params['language'],
+                params['code'],
+                stdin: params['stdin'],
+              ),
+        ),
+        'runStream': _is.MethodStreamConnector(
+          name: 'runStream',
+          params: {
+            'roomId': _is.ParameterDescription(
+              name: 'roomId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          streamParams: {},
+          returnType: _is.MethodStreamReturnType.streamType,
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+                Map<String, Stream> streamParams,
+              ) => (endpoints['run'] as _iuqsiqg1.RunEndpoint).runStream(
+                session,
+                params['roomId'],
               ),
         ),
       },

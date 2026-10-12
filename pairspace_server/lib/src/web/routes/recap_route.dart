@@ -83,6 +83,8 @@ class RecapRoute extends WidgetRoute {
       'language': snapshot?.language ?? '',
       'hasDrawing': strokes.isNotEmpty,
       'svg': _strokesToSvg(strokes),
+      'hasReplay': strokes.length >= 2,
+      'replayJson': _replayJson(strokes),
     });
   }
 
@@ -94,6 +96,29 @@ class RecapRoute extends WidgetRoute {
   }
 
   static String _n(num v) => v.isFinite ? v.toStringAsFixed(1) : '0';
+
+  /// One stroke's SVG element (reuses the existing renderer, strips the <svg> wrapper).
+  static String _strokeInner(Stroke s) {
+    final full = _strokesToSvg([s]);
+    final start = full.indexOf('>') + 1;
+    return full.substring(start, full.length - '</svg>'.length);
+  }
+
+  /// [{t: ms since first stroke, svg: "<polyline .../>"}, ...] for the replay.
+  static String _replayJson(List<Stroke> strokes) {
+    if (strokes.isEmpty) return '[]';
+    final t0 = strokes.first.createdAt;
+    final items = [
+      for (final s in strokes)
+        if (_strokeInner(s).isNotEmpty)
+          {
+            't': s.createdAt.difference(t0).inMilliseconds,
+            'svg': _strokeInner(s),
+          },
+    ];
+    // "<" is escaped so user text can never close a <script> tag.
+    return jsonEncode(items).replaceAll('<', r'\u003c');
+  }
 
   /// Canvas is a fixed 1000x625 space (see kCanvasWidth/Height in Flutter).
   static String _strokesToSvg(List<Stroke> strokes) {

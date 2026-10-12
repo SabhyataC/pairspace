@@ -25,6 +25,7 @@ import 'package:pairspace_server/src/generated/integrity_event.dart'
 import 'package:pairspace_server/src/generated/participant.dart' as _ibvon4z2;
 import 'package:pairspace_server/src/generated/room.dart' as _it3k3a2g;
 import 'package:pairspace_server/src/generated/room_timing.dart' as _i6w8xnej;
+import 'package:pairspace_server/src/generated/run_result.dart' as _i9mp160k;
 import 'package:pairspace_server/src/generated/signal_message.dart'
     as _i4itcfai;
 import 'package:pairspace_server/src/generated/stroke.dart' as _iziyni4f;
@@ -177,6 +178,8 @@ class TestEndpoints {
 
   late final _CodeEndpoint code;
 
+  late final _RunEndpoint run;
+
   late final _GreetingEndpoint greeting;
 
   late final _IntegrityEndpoint integrity;
@@ -210,6 +213,10 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
     code = _CodeEndpoint(
+      endpoints,
+      serializationManager,
+    );
+    run = _RunEndpoint(
       endpoints,
       serializationManager,
     );
@@ -813,6 +820,88 @@ class _CodeEndpoint {
         await _localUniqueSession.close();
       }
     });
+  }
+}
+
+class _RunEndpoint {
+  _RunEndpoint(
+    this._endpointDispatch,
+    this._serializationManager,
+  );
+
+  final _is.EndpointDispatch _endpointDispatch;
+
+  final _is.SerializationManager _serializationManager;
+
+  _ida.Future<_i9mp160k.RunResult> runCode(
+    _ist.TestSessionBuilder sessionBuilder,
+    int roomId,
+    String language,
+    String code, {
+    String? stdin,
+  }) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'run',
+            method: 'runCode',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'run',
+          methodName: 'runCode',
+          parameters: _ist.testObjectToJson({
+            'roomId': roomId,
+            'language': language,
+            'code': code,
+            'stdin': stdin,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_i9mp160k.RunResult>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Stream<_i9mp160k.RunResult> runStream(
+    _ist.TestSessionBuilder sessionBuilder,
+    int roomId,
+  ) {
+    var _localTestStreamManager = _ist.TestStreamManager<_i9mp160k.RunResult>();
+    _ist.callStreamFunctionAndHandleExceptions(
+      () async {
+        var _localUniqueSession =
+            (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+              endpoint: 'run',
+              method: 'runStream',
+            );
+        var _localCallContext = await _endpointDispatch
+            .getMethodStreamCallContext(
+              createSessionCallback: (_) => _localUniqueSession,
+              endpointPath: 'run',
+              methodName: 'runStream',
+              arguments: {'roomId': roomId},
+              requestedInputStreams: [],
+              serializationManager: _serializationManager,
+            );
+        await _localTestStreamManager.callStreamMethod(
+          _localCallContext,
+          _localUniqueSession,
+          {},
+        );
+      },
+      _localTestStreamManager.outputStreamController,
+    );
+    return _localTestStreamManager.outputStreamController.stream;
   }
 }
 

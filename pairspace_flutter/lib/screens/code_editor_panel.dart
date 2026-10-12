@@ -57,6 +57,14 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
   Timer? _syncTimer;
   int _remoteApplies = 0;
   String? _unconfirmed;
+  // Run Code (shared with everyone in the room)
+  StreamSubscription<RunResult>? _runSub;
+  Timer? _runReconnect;
+  Timer? _runTimeout;
+  RunResult? _runResult;
+  bool _running = false;
+  final TextEditingController _stdinCtrl = TextEditingController();
+  double _outputHeight = 235;
 
   void _onReady(MonacoController c) => unawaited(_init(c));
 
@@ -82,6 +90,7 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
     if (!mounted) return;
     _contentSub = c.onContentChanged.listen((_) => _scheduleSend());
     _connect();
+    _connectRun();
   }
 
   void _connect() {
@@ -250,6 +259,203 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
     if (sel != null) await c.setSelection(sel);
   }
 
+  void _connectRun() {
+    if (_disposed) return;
+    _runSub?.cancel();
+    _runSub = client.run
+        .runStream(widget.roomId)
+        .listen(
+          _onRunResult,
+          onError: (Object e) {
+            debugPrint('runStream error: $e');
+            _scheduleRunReconnect();
+          },
+          onDone: _scheduleRunReconnect,
+        );
+  }
+
+  void _scheduleRunReconnect() {
+    if (_disposed || !mounted) return;
+    if (_runReconnect?.isActive ?? false) return;
+    _runReconnect = Timer(const Duration(seconds: 3), _connectRun);
+  }
+
+  void _onRunResult(RunResult r) {
+    if (!mounted) return;
+    _runTimeout?.cancel();
+    if (r.status == 'Running') {
+      // Safety net: never leave the button stuck on "Running".
+      _runTimeout = Timer(const Duration(seconds: 30), () {
+        if (mounted) setState(() => _running = false);
+      });
+    }
+    setState(() {
+      _runResult = r;
+      _running = r.status == 'Running';
+    });
+  }
+
+  Future<void> _run() async {
+    final c = _controller;
+    if (c == null || _running) return;
+    final code = await c.document.getText();
+    await _sendNow(force: true); // make sure the other person has this code
+    if (!mounted) return;
+    setState(() => _running = true);
+    try {
+      final r = await client.run.runCode(
+        widget.roomId,
+        _selected,
+        code,
+        stdin: _stdinCtrl.text.isEmpty ? null : _stdinCtrl.text,
+      );
+      _onRunResult(r);
+    } catch (e) {
+      debugPrint('runCode failed: $e');
+      _onRunResult(
+        RunResult(
+          stdout: '',
+          stderr: 'Could not run code. Check your connection.',
+          status: 'Error',
+        ),
+      );
+    }
+  }
+
+  Widget _buildResizeHandle() {
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeRow,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onVerticalDragUpdate: (d) {
+          final maxH = MediaQuery.of(context).size.height * 0.6;
+          setState(() {
+            _outputHeight = (_outputHeight - d.delta.dy).clamp(90.0, maxH);
+          });
+        },
+        onDoubleTap: () => setState(() => _outputHeight = 235),
+        child: Container(
+          height: 12,
+          color: const Color(0xFF2A2A2A),
+          child: Center(
+            child: Container(
+              width: 40,
+              height: 3,
+              decoration: BoxDecoration(
+                color: Colors.white38,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOutput() {
+    final r = _runResult;
+    final Color statusColor = _running
+        ? Colors.amber
+        : r == null
+        ? Colors.grey
+        : r.status == 'Accepted'
+        ? Colors.greenAccent
+        : Colors.redAccent;
+
+    return Container(
+      height: _outputHeight,
+      color: const Color(0xFF1E1E1E),
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              FilledButton.icon(
+                onPressed: _running ? null : _run,
+                icon: _running
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.play_arrow, size: 18),
+                label: Text(_running ? 'Running…' : 'Run'),
+              ),
+              const SizedBox(width: 12),
+              if (r != null)
+                Flexible(
+                  child: Text(
+                    r.status +
+                        (!_running && r.timeMs != null
+                            ? ' · ${r.timeMs} ms'
+                            : ''),
+                    style: TextStyle(color: statusColor),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              const Spacer(),
+              if (_selected == 'Java')
+                const Text(
+                  'Java: public class must be named Main',
+                  style: TextStyle(fontSize: 12, color: Colors.white54),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          if (_outputHeight >= 190) ...[
+            TextField(
+              controller: _stdinCtrl,
+              maxLines: 2,
+              minLines: 2,
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 13,
+                color: Colors.white,
+              ),
+              decoration: const InputDecoration(
+                isDense: true,
+                border: OutlineInputBorder(),
+                labelText: 'Input (stdin), one value per line',
+              ),
+            ),
+            const SizedBox(height: 6),
+          ],
+          const SizedBox(height: 6),
+          Expanded(
+            child: SingleChildScrollView(
+              child: SelectableText.rich(
+                TextSpan(
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 13,
+                    color: Colors.white,
+                  ),
+                  children: [
+                    if (r == null)
+                      const TextSpan(
+                        text:
+                            'Press Run to execute the code. Everyone in the room sees the output.',
+                        style: TextStyle(color: Colors.white54),
+                      )
+                    else ...[
+                      TextSpan(text: r.stdout),
+                      if (r.stderr.isNotEmpty)
+                        TextSpan(
+                          text: r.stdout.isEmpty ? r.stderr : '\n${r.stderr}',
+                          style: const TextStyle(color: Colors.redAccent),
+                        ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _changeLanguage(String name) async {
     setState(() => _selected = name);
     await _controller?.document.setLanguage(_languages[name]!);
@@ -264,7 +470,11 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
     _debounce?.cancel();
     _contentSub?.cancel();
     _incomingSub?.cancel();
+    _runSub?.cancel();
+    _runReconnect?.cancel();
+    _runTimeout?.cancel();
     _outgoing?.close();
+    _stdinCtrl.dispose();
     if (identical(activeMonacoController, _controller)) {
       activeMonacoController = null;
     }
@@ -299,13 +509,17 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
                 showSelectedIcon: false,
                 style: ButtonStyle(
                   visualDensity: VisualDensity.compact,
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>((
+                    states,
+                  ) {
                     if (states.contains(WidgetState.selected)) {
                       return Colors.white;
                     }
                     return const Color(0xFF1E293B);
                   }),
-                  foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                  foregroundColor: WidgetStateProperty.resolveWith<Color>((
+                    states,
+                  ) {
                     if (states.contains(WidgetState.selected)) {
                       return const Color(0xFF0F172A);
                     }
@@ -334,6 +548,8 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
             onReady: _onReady,
           ),
         ),
+        _buildResizeHandle(),
+        _buildOutput(),
       ],
     );
   }

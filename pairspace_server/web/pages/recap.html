@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PairSpace recap</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; max-width: 960px;
+           margin: 0 auto; padding: 24px; color: #222; background: #fafafa; }
+    h1 { font-size: 24px; margin-bottom: 4px; }
+    h2 { font-size: 18px; margin: 28px 0 8px; }
+    .meta { color: #666; }
+    ul { list-style: disc; padding-left: 20px; }
+    pre { background: #1e1e1e; color: #eee; padding: 16px;
+          border-radius: 6px; overflow-x: auto; font-size: 13px; }
+    .badge { display: inline-block; background: #e8e8e8; border-radius: 4px;
+             padding: 2px 8px; font-size: 12px; margin-left: 8px; }
+                 .replay { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+    .replay button { padding: 6px 14px; border: 1px solid #bbb; border-radius: 4px;
+                     background: #fff; cursor: pointer; font-size: 14px; }
+    .replay input[type=range] { flex: 1; }
+  </style>
+</head>
+<body>
+{{#available}}
+  <h1>Interview recap</h1>
+  <p class="meta">Started {{started}} · Ended {{ended}} · Duration {{duration}}</p>
+
+  <h2>Participants</h2>
+  <ul>
+    {{#participants}}<li>{{name}} <span class="badge">{{role}}</span></li>{{/participants}}
+  </ul>
+
+  <h2>Final code <span class="badge">{{language}}</span></h2>
+  {{#hasCode}}<pre><code>{{code}}</code></pre>{{/hasCode}}
+  {{^hasCode}}<p class="meta">No code was written.</p>{{/hasCode}}
+
+  <h2>Canvas</h2>
+  {{#hasDrawing}}
+  <div id="canvas-wrap">{{{svg}}}</div>
+  {{#hasReplay}}
+  <div id="replay" class="replay">
+    <button id="rp-play" type="button">▶ Replay</button>
+    <input id="rp-range" type="range" min="0" max="0" value="0">
+    <span id="rp-label" class="meta"></span>
+  </div>
+  <script id="rp-data" type="application/json">{{{replayJson}}}</script>
+  <script>
+  (function () {
+    var data = JSON.parse(document.getElementById('rp-data').textContent);
+    var svg = document.querySelector('#canvas-wrap svg');
+    var box = document.getElementById('replay');
+    if (!svg || svg.children.length !== data.length) {
+      box.style.display = 'none';
+      return;
+    }
+    var els = Array.prototype.slice.call(svg.children);
+    var btn = document.getElementById('rp-play');
+    var range = document.getElementById('rp-range');
+    var label = document.getElementById('rp-label');
+    var n = els.length;
+    var shown = n;
+    var timer = null;
+
+    range.max = n;
+
+    function render(k) {
+      shown = k;
+      for (var i = 0; i < n; i++) {
+        els[i].style.display = i < k ? '' : 'none';
+      }
+      range.value = k;
+      label.textContent = k + ' / ' + n;
+    }
+
+    function stop() {
+      clearTimeout(timer);
+      timer = null;
+      btn.textContent = '▶ Replay';
+    }
+
+    function step() {
+      render(shown + 1);
+      if (shown >= n) {
+        stop();
+        return;
+      }
+      var gap = data[shown].t - data[shown - 1].t;
+      timer = setTimeout(step, Math.min(Math.max(gap, 120), 800));
+    }
+
+    btn.onclick = function () {
+      if (timer) {
+        stop();
+        return;
+      }
+      if (shown >= n) render(0);
+      btn.textContent = '⏸ Pause';
+      timer = setTimeout(step, 300);
+    };
+
+    range.oninput = function () {
+      stop();
+      render(parseInt(range.value, 10));
+    };
+
+    render(n);
+  })();
+  </script>
+  {{/hasReplay}}
+  {{/hasDrawing}}
+  {{^hasDrawing}}<p class="meta">Nothing was drawn.</p>{{/hasDrawing}}
+{{/available}}
+{{^available}}
+  <h1>Recap not available yet</h1>
+  <p class="meta">The recap appears once the interviewer ends the meeting.</p>
+{{/available}}
+</body>
+</html>

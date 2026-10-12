@@ -33,6 +33,10 @@ database:
   port: 5432
   name: pairspace
   user: postgres
+  #requireSsl: true # defaults to false
+  #isUnixSocket: true # defaults to false
+  dataPath: .serverpod/development/pgdata
+  #maxConnectionCount: 10 # Defaults to 10, a negative or null value removes the limit
 
 # This is the setup for Redis.
 redis:

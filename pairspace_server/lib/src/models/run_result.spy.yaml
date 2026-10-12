@@ -1,0 +1,7 @@
+class: RunResult
+fields:
+  stdout: String
+  stderr: String
+  status: String
+  timeMs: int?
+  language: String?

@@ -21,6 +21,7 @@ import 'package:pairspace_client/src/protocol/integrity_event.dart'
 import 'package:pairspace_client/src/protocol/participant.dart' as _i9rgdsem;
 import 'package:pairspace_client/src/protocol/room.dart' as _iiu20v5l;
 import 'package:pairspace_client/src/protocol/room_timing.dart' as _ivvrayl6;
+import 'package:pairspace_client/src/protocol/run_result.dart' as _itbzxe9o;
 import 'package:pairspace_client/src/protocol/signal_message.dart' as _iusw7bjw;
 import 'package:pairspace_client/src/protocol/stroke.dart' as _is7tpwzz;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
@@ -371,6 +372,42 @@ class EndpointCode extends _isc.EndpointRef {
       );
 }
 
+/// {@category Endpoint}
+class EndpointRun extends _isc.EndpointRef {
+  EndpointRun(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'run';
+
+  _ida.Future<_itbzxe9o.RunResult> runCode(
+    int roomId,
+    String language,
+    String code, {
+    String? stdin,
+  }) => caller.callServerEndpoint<_itbzxe9o.RunResult>(
+    'run',
+    'runCode',
+    {
+      'roomId': roomId,
+      'language': language,
+      'code': code,
+      'stdin': stdin,
+    },
+  );
+
+  /// Everyone admitted to the room receives every run (and "Running" signal).
+  _ida.Stream<_itbzxe9o.RunResult> runStream(int roomId) =>
+      caller.callStreamingServerEndpoint<
+        _ida.Stream<_itbzxe9o.RunResult>,
+        _itbzxe9o.RunResult
+      >(
+        'run',
+        'runStream',
+        {'roomId': roomId},
+        {},
+      );
+}
+
 /// This is an example endpoint that returns a greeting message through
 /// its [hello] method.
 /// {@category Endpoint}
@@ -620,6 +657,7 @@ class Client extends _isc.ServerpodClientShared {
     jwtRefresh = EndpointJwtRefresh(this);
     canvas = EndpointCanvas(this);
     code = EndpointCode(this);
+    run = EndpointRun(this);
     greeting = EndpointGreeting(this);
     integrity = EndpointIntegrity(this);
     room = EndpointRoom(this);
@@ -636,6 +674,8 @@ class Client extends _isc.ServerpodClientShared {
   late final EndpointCanvas canvas;
 
   late final EndpointCode code;
+
+  late final EndpointRun run;
 
   late final EndpointGreeting greeting;
 
@@ -654,6 +694,7 @@ class Client extends _isc.ServerpodClientShared {
     'jwtRefresh': jwtRefresh,
     'canvas': canvas,
     'code': code,
+    'run': run,
     'greeting': greeting,
     'integrity': integrity,
     'room': room,

@@ -19,6 +19,9 @@ canvas:
 code:
   - codeStream:
   - getCode:
+run:
+  - runCode:
+  - runStream:
 greeting:
   - hello:
 integrity:

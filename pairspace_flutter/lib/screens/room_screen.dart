@@ -13,7 +13,6 @@ import 'integrity_monitor.dart';
 import 'integrity_log_panel.dart';
 import 'countdown_timer.dart';
 import 'room_setup_screen.dart';
-import 'session_recap_screen.dart';
 import '../widgets/pairspace_logo.dart';
 import '../theme/pairspace_colors.dart';
 
@@ -178,8 +177,6 @@ class _RoomScreenState extends State<RoomScreen> {
   }
   // ---------- Name prompts ----------
 
-
-
   Future<void> _promptJoin(String code) async {
     final name = await _askName(
       title: 'Your name',
@@ -219,8 +216,6 @@ class _RoomScreenState extends State<RoomScreen> {
       ),
     );
   }
-
-
 
   // ---------- Core actions ----------
 
@@ -585,7 +580,6 @@ class _RoomScreenState extends State<RoomScreen> {
 
   Widget _buildBody() {
     if (_left) return _buildLeftScreen();
-    if (_ended) return _buildEndedScreen();
     if (_loading) return const Center(child: CircularProgressIndicator());
 
     if (_isPending) {
@@ -739,8 +733,7 @@ class _RoomScreenState extends State<RoomScreen> {
                     color: Color(0xFF94A3B8),
                     size: 18,
                   ),
-                  onPressed: () =>
-                      setState(() => _leftSidebarExpanded = false),
+                  onPressed: () => setState(() => _leftSidebarExpanded = false),
                 ),
               ] else ...[
                 IconButton(
@@ -750,8 +743,7 @@ class _RoomScreenState extends State<RoomScreen> {
                     color: Colors.white,
                     size: 20,
                   ),
-                  onPressed: () =>
-                      setState(() => _leftSidebarExpanded = true),
+                  onPressed: () => setState(() => _leftSidebarExpanded = true),
                 ),
               ],
             ],
@@ -965,8 +957,10 @@ class _RoomScreenState extends State<RoomScreen> {
                           color: badgeColor ?? const Color(0xFFEF4444),
                           shape: BoxShape.circle,
                         ),
-                        constraints:
-                            const BoxConstraints(minWidth: 8, minHeight: 8),
+                        constraints: const BoxConstraints(
+                          minWidth: 8,
+                          minHeight: 8,
+                        ),
                       ),
                     ),
                 ],
@@ -1053,8 +1047,7 @@ class _RoomScreenState extends State<RoomScreen> {
               color: _showVideoStrip ? Colors.white : const Color(0xFF94A3B8),
               size: 20,
             ),
-            onPressed: () =>
-                setState(() => _showVideoStrip = !_showVideoStrip),
+            onPressed: () => setState(() => _showVideoStrip = !_showVideoStrip),
           ),
           const SizedBox(width: 4),
 
@@ -1066,14 +1059,19 @@ class _RoomScreenState extends State<RoomScreen> {
           // Share / Invite link
           IconButton(
             tooltip: 'Copy Invite Link',
-            icon: const Icon(Icons.share_outlined, color: Colors.white, size: 19),
+            icon: const Icon(
+              Icons.share_outlined,
+              color: Colors.white,
+              size: 19,
+            ),
             onPressed: _copyInviteLink,
           ),
 
           // Side panel toggle button
           IconButton(
-            tooltip:
-                _showPanel ? 'Hide Side Panel' : 'Show Participants & Info',
+            tooltip: _showPanel
+                ? 'Hide Side Panel'
+                : 'Show Participants & Info',
             icon: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -1109,8 +1107,10 @@ class _RoomScreenState extends State<RoomScreen> {
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFEF4444),
                 foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -1128,8 +1128,10 @@ class _RoomScreenState extends State<RoomScreen> {
                 side: const BorderSide(color: Color(0xFFEF4444)),
                 backgroundColor: const Color(0xFF1E293B),
                 foregroundColor: const Color(0xFFEF4444),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -1279,30 +1281,6 @@ class _RoomScreenState extends State<RoomScreen> {
     );
   }
 
-  Widget _buildEndedScreen() {
-    return SessionRecapScreen(
-      roomCode: _roomCode ?? 'ABC123',
-      duration: '45:00',
-      participantsCount: _present.isNotEmpty ? _present.length : 2,
-      codeEditsCount: 8,
-      whiteboardActionsCount: 6,
-      onDownload: () {
-        if (_roomId != null) _openRecap(_roomId!);
-      },
-      onShare: _copyInviteLink,
-      onBackToHome: () {
-        setState(() {
-          _ended = false;
-          _roomCode = null;
-          _roomId = null;
-        });
-        _checkActiveRoom();
-      },
-    );
-  }
-
-
-
   Widget _buildInfoPanel() {
     final interviewerPresent = _present.any(
       (p) => p.role == ParticipantRole.interviewer,
@@ -1372,23 +1350,39 @@ class _RoomScreenState extends State<RoomScreen> {
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: const Color(0xFF0F172A),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
                 onPressed: _copyRoomCode,
                 icon: const Icon(Icons.copy, size: 15),
-                label: const Text('Copy Code', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                label: const Text(
+                  'Copy Code',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                ),
               ),
               FilledButton.icon(
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF334155),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
                 onPressed: _copyInviteLink,
                 icon: const Icon(Icons.link, size: 15),
-                label: const Text('Copy Invite Link', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                label: const Text(
+                  'Copy Invite Link',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                ),
               ),
             ],
           ),
@@ -1403,7 +1397,11 @@ class _RoomScreenState extends State<RoomScreen> {
             ),
             child: const Row(
               children: [
-                Icon(Icons.warning_amber_rounded, color: Color(0xFFFBBF24), size: 18),
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: Color(0xFFFBBF24),
+                  size: 18,
+                ),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -1420,7 +1418,11 @@ class _RoomScreenState extends State<RoomScreen> {
         const SizedBox(height: 8),
         Text(
           'In this room (${_present.length})',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Colors.white,
+          ),
         ),
         const SizedBox(height: 8),
         ..._present.map(
@@ -1447,7 +1449,10 @@ class _RoomScreenState extends State<RoomScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1E293B),
                     borderRadius: BorderRadius.circular(12),
@@ -1474,7 +1479,11 @@ class _RoomScreenState extends State<RoomScreen> {
           const SizedBox(height: 8),
           Text(
             'Waiting to join (${_pending.length})',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(height: 8),
           if (_pending.isEmpty)
@@ -1489,7 +1498,10 @@ class _RoomScreenState extends State<RoomScreen> {
             ..._pending.map(
               (p) => Container(
                 margin: const EdgeInsets.symmetric(vertical: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0F172A),
                   borderRadius: BorderRadius.circular(8),
@@ -1497,7 +1509,11 @@ class _RoomScreenState extends State<RoomScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.person_outline, size: 18, color: Color(0xFF94A3B8)),
+                    const Icon(
+                      Icons.person_outline,
+                      size: 18,
+                      color: Color(0xFF94A3B8),
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -1542,24 +1558,43 @@ class _RoomScreenState extends State<RoomScreen> {
                 side: const BorderSide(color: Color(0xFF475569)),
                 foregroundColor: Colors.white,
                 backgroundColor: const Color(0xFF0F172A),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               onPressed: _confirmLeave,
               icon: const Icon(Icons.logout, size: 16, color: Colors.white),
-              label: const Text('Leave', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              label: const Text(
+                'Leave',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
             if (_isInterviewer)
               FilledButton.icon(
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFFEF4444),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 onPressed: _confirmEnd,
                 icon: const Icon(Icons.call_end, size: 16, color: Colors.white),
-                label: const Text('End meeting', style: TextStyle(fontWeight: FontWeight.w600)),
+                label: const Text(
+                  'End meeting',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
           ],
         ),
