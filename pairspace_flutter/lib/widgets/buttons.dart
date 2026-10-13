@@ -59,7 +59,11 @@ class PrimaryButton extends StatelessWidget {
         gradient: onPressed == null
             ? null
             : const LinearGradient(
-                colors: [Color(0xFF4F46E5), Color(0xFF6366F1), Color(0xFF7C3AED)],
+                colors: [
+                  Color(0xFF4F46E5),
+                  Color(0xFF6366F1),
+                  Color(0xFF7C3AED),
+                ],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
@@ -120,7 +124,9 @@ class SecondaryButton extends StatelessWidget {
             width: 1.2,
           ),
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 18),
         ),
         onPressed: onPressed,

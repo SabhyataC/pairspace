@@ -45,4 +45,5 @@ room:
   - isRoomEnded:
   - getRoomTiming:
 videoSignal:
+  - iceServers:
   - signalStream:

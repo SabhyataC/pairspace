@@ -811,6 +811,11 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<int>(),
               nullable: false,
             ),
+            'asInterviewer': _is.ParameterDescription(
+              name: 'asInterviewer',
+              type: _is.getType<bool>(),
+              nullable: false,
+            ),
           },
           call:
               (
@@ -820,6 +825,7 @@ class Endpoints extends _is.EndpointDispatch {
                   .admitParticipant(
                     session,
                     params['participantId'],
+                    params['asInterviewer'],
                   ),
         ),
         'denyParticipant': _is.MethodConnector(
@@ -941,6 +947,17 @@ class Endpoints extends _is.EndpointDispatch {
       name: 'videoSignal',
       endpoint: endpoints['videoSignal']!,
       methodConnectors: {
+        'iceServers': _is.MethodConnector(
+          name: 'iceServers',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['videoSignal'] as _i1o3hvfx.VideoSignalEndpoint)
+                      .iceServers(session),
+        ),
         'signalStream': _is.MethodStreamConnector(
           name: 'signalStream',
           params: {

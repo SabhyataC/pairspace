@@ -1,6 +1,7 @@
 class: SignalMessage
 fields:
   senderParticipantId: int
+  targetParticipantId: int?
   type: String
   sdp: String?
   candidate: String?

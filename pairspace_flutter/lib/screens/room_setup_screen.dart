@@ -48,7 +48,9 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
 
   Future<void> _handleCreate() async {
     final name = _displayNameController.text.trim().isEmpty
-        ? (_roomNameController.text.trim().isEmpty ? 'Interviewer' : _roomNameController.text.trim())
+        ? (_roomNameController.text.trim().isEmpty
+              ? 'Interviewer'
+              : _roomNameController.text.trim())
         : _displayNameController.text.trim();
 
     setState(() => _isLoading = true);
@@ -92,7 +94,10 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
             // Expanded Full-Page Content (Uses full screen height and width)
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 48,
+                  vertical: 32,
+                ),
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 860),
@@ -101,7 +106,9 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                       children: [
                         // Page Title & Subheading
                         Text(
-                          _isCreateTab ? 'Create or Join a Room' : 'Join an Existing Room',
+                          _isCreateTab
+                              ? 'Create or Join a Room'
+                              : 'Join an Existing Room',
                           style: const TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.w800,
@@ -135,17 +142,22 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                             border: Border.all(color: const Color(0xFFE2E8F0)),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF6366F1).withValues(alpha: 0.05),
+                                color: const Color(
+                                  0xFF6366F1,
+                                ).withValues(alpha: 0.05),
                                 blurRadius: 24,
                                 offset: const Offset(0, 8),
                               ),
                             ],
                           ),
-                          child: _isCreateTab ? _buildCreateForm() : _buildJoinForm(),
+                          child: _isCreateTab
+                              ? _buildCreateForm()
+                              : _buildJoinForm(),
                         ),
 
                         // Active / Past Meetings Section
-                        if (widget.myActiveRoom != null || widget.pastRooms.isNotEmpty) ...[
+                        if (widget.myActiveRoom != null ||
+                            widget.pastRooms.isNotEmpty) ...[
                           const SizedBox(height: 36),
                           _buildPastRoomsSection(),
                         ],
@@ -281,7 +293,8 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
             Expanded(
               child: _roleCard(
                 title: 'Interviewer',
-                desc: 'Create a room and invite candidates to conduct code and system design interviews.',
+                desc:
+                    'Create a room and invite candidates to conduct code and system design interviews.',
                 icon: Icons.person_search_rounded,
                 selected: _isInterviewer,
                 onTap: () => setState(() => _isInterviewer = true),
@@ -291,7 +304,8 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
             Expanded(
               child: _roleCard(
                 title: 'Candidate',
-                desc: 'Join a room as a candidate to demonstrate your problem-solving and coding skills.',
+                desc:
+                    'Join a room as a candidate to demonstrate your problem-solving and coding skills.',
                 icon: Icons.badge_outlined,
                 selected: !_isInterviewer,
                 onTap: () => setState(() => _isInterviewer = false),
@@ -321,16 +335,27 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                   controller: _displayNameController,
                   decoration: InputDecoration(
                     hintText: 'e.g. Alex Johnson',
-                    hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    hintStyle: const TextStyle(
+                      color: Color(0xFF94A3B8),
+                      fontSize: 13,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF6366F1),
+                        width: 1.5,
+                      ),
                     ),
                   ),
                 ),
@@ -353,17 +378,32 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                   controller: _roomNameController,
                   decoration: InputDecoration(
                     hintText: 'e.g. Frontend Interview',
-                    hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-                    suffixIcon: const Icon(Icons.meeting_room_outlined, size: 20, color: Color(0xFF94A3B8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    hintStyle: const TextStyle(
+                      color: Color(0xFF94A3B8),
+                      fontSize: 13,
+                    ),
+                    suffixIcon: const Icon(
+                      Icons.meeting_room_outlined,
+                      size: 20,
+                      color: Color(0xFF94A3B8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF6366F1),
+                        width: 1.5,
+                      ),
                     ),
                   ),
                 ),
@@ -412,16 +452,22 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFFF8FAFC),
+                    color: isSelected
+                        ? const Color(0xFF4F46E5)
+                        : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFFE2E8F0),
+                      color: isSelected
+                          ? const Color(0xFF4F46E5)
+                          : const Color(0xFFE2E8F0),
                       width: isSelected ? 1.6 : 1,
                     ),
                     boxShadow: [
                       if (isSelected)
                         BoxShadow(
-                          color: const Color(0xFF4F46E5).withValues(alpha: 0.25),
+                          color: const Color(
+                            0xFF4F46E5,
+                          ).withValues(alpha: 0.25),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -436,7 +482,9 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                          color: isSelected
+                              ? Colors.white
+                              : const Color(0xFF1E293B),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -445,7 +493,9 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w500,
-                          color: isSelected ? Colors.white70 : const Color(0xFF94A3B8),
+                          color: isSelected
+                              ? Colors.white70
+                              : const Color(0xFF94A3B8),
                         ),
                       ),
                     ],
@@ -495,7 +545,10 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
           decoration: InputDecoration(
             hintText: 'e.g. Candidate Name',
             hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -503,7 +556,10 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFF6366F1),
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -524,8 +580,15 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
           decoration: InputDecoration(
             hintText: 'e.g. ABC123',
             hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-            suffixIcon: const Icon(Icons.vpn_key_outlined, size: 20, color: Color(0xFF94A3B8)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            suffixIcon: const Icon(
+              Icons.vpn_key_outlined,
+              size: 20,
+              color: Color(0xFF94A3B8),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -533,7 +596,10 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFF6366F1),
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -596,12 +662,16 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: selected ? const Color(0xFFE0E7FF) : const Color(0xFFF1F5F9),
+                    color: selected
+                        ? const Color(0xFFE0E7FF)
+                        : const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     icon,
-                    color: selected ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
+                    color: selected
+                        ? const Color(0xFF4F46E5)
+                        : const Color(0xFF64748B),
                     size: 24,
                   ),
                 ),
@@ -619,7 +689,9 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: selected ? const Color(0xFF1E293B) : const Color(0xFF334155),
+                color: selected
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFF334155),
               ),
             ),
             const SizedBox(height: 6),
@@ -678,11 +750,19 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6366F1),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onPressed: widget.onRejoinActiveRoom,
-                  child: const Text('Rejoin Room', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    'Rejoin Room',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ],
             ),
@@ -691,57 +771,79 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
           if (widget.pastRooms.isNotEmpty) ...[
             const Text(
               'Past Meeting History',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: Color(0xFF0F172A)),
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: Color(0xFF0F172A),
+              ),
             ),
             const SizedBox(height: 12),
-            ...widget.pastRooms.map((r) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+            ...widget.pastRooms.map(
+              (r) => Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: ListTile(
+                  dense: true,
+                  leading: const Icon(
+                    Icons.history,
+                    size: 20,
+                    color: Color(0xFF6366F1),
                   ),
-                  child: ListTile(
-                    dense: true,
-                    leading: const Icon(Icons.history, size: 20, color: Color(0xFF6366F1)),
-                    title: Text(
-                      'Room ${r.code}',
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  title: Text(
+                    'Room ${r.code}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
-                    subtitle: Text(
-                      '${r.endedAt?.difference(r.createdAt).inMinutes ?? 0} minutes duration',
-                      style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                  ),
+                  subtitle: Text(
+                    '${r.endedAt?.difference(r.createdAt).inMinutes ?? 0} minutes duration',
+                    style: const TextStyle(
+                      color: Color(0xFF94A3B8),
+                      fontSize: 12,
                     ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          tooltip: 'Copy Code',
-                          icon: const Icon(Icons.copy_rounded, size: 16, color: Color(0xFF64748B)),
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: r.code));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Room code ${r.code} copied!')),
-                            );
-                          },
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: 'Copy Code',
+                        icon: const Icon(
+                          Icons.copy_rounded,
+                          size: 16,
+                          color: Color(0xFF64748B),
                         ),
-                        TextButton(
-                          onPressed: () {
-                            if (r.id != null) widget.onOpenRecap?.call(r.id!);
-                          },
-                          child: const Text(
-                            'View Recap',
-                            style: TextStyle(
-                              color: Color(0xFF6366F1),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: r.code));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Room code ${r.code} copied!'),
                             ),
+                          );
+                        },
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          if (r.id != null) widget.onOpenRecap?.call(r.id!);
+                        },
+                        child: const Text(
+                          'View Recap',
+                          style: TextStyle(
+                            color: Color(0xFF6366F1),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                )),
+                ),
+              ),
+            ),
           ],
         ],
       ),

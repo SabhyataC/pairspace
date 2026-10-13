@@ -30,6 +30,7 @@ class _RoomScreenState extends State<RoomScreen> {
   int? _participantId;
   bool _loading = false;
   bool _isInterviewer = false;
+  bool _isHost = false;
   bool _isPending = false;
   bool _ended = false;
   bool _left = false;
@@ -248,6 +249,7 @@ class _RoomScreenState extends State<RoomScreen> {
         _roomId = room.id;
         _participantId = participant.id;
         _isInterviewer = true;
+        _isHost = true;
         _loading = false;
       });
       _startPolling();
@@ -284,6 +286,7 @@ class _RoomScreenState extends State<RoomScreen> {
         _roomId = participant.roomId;
         _participantId = participant.id;
         _isInterviewer = participant.role == ParticipantRole.interviewer;
+        _isHost = _isHost || (_isInterviewer && _myActiveRoom?.code == code);
         _isPending = false;
         _left = false;
         _loading = false;
@@ -334,7 +337,10 @@ class _RoomScreenState extends State<RoomScreen> {
       if (!mounted) return;
 
       if (participant.status == ParticipantStatus.admitted) {
-        setState(() => _isPending = false);
+        setState(() {
+          _isPending = false;
+          _isInterviewer = participant.role == ParticipantRole.interviewer;
+        });
         _startPolling();
         return;
       }
@@ -382,9 +388,9 @@ class _RoomScreenState extends State<RoomScreen> {
 
   // ---------- Admit / deny ----------
 
-  Future<void> _admit(Participant p) async {
+  Future<void> _admit(Participant p, {bool asInterviewer = false}) async {
     try {
-      await client.room.admitParticipant(p.id!);
+      await client.room.admitParticipant(p.id!, asInterviewer);
       if (!mounted) return;
       setState(() => _pending.removeWhere((e) => e.id == p.id));
     } catch (e) {
@@ -628,6 +634,18 @@ class _RoomScreenState extends State<RoomScreen> {
       );
     }
 
+    return VideoSection(
+      roomId: _roomId!,
+      participantId: _participantId!,
+      names: {
+        for (final p in _present)
+          if (p.id != null) p.id!: p.displayName,
+      },
+      builder: (context, parts) => _buildRoomLayout(parts),
+    );
+  }
+
+  Widget _buildRoomLayout(VideoParts parts) {
     return Row(
       children: [
         // 1. Left Animated Navigation Sidebar
@@ -668,11 +686,9 @@ class _RoomScreenState extends State<RoomScreen> {
                                   ? Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        VideoSection(
-                                          roomId: _roomId!,
-                                          participantId: _participantId!,
-                                          isCaller: _isInterviewer,
-                                        ),
+                                        parts.stage,
+                                        const SizedBox(height: 6),
+                                        parts.controls,
                                         const SizedBox(height: 8),
                                       ],
                                     )
@@ -707,7 +723,7 @@ class _RoomScreenState extends State<RoomScreen> {
                             ),
                             child: SingleChildScrollView(
                               padding: const EdgeInsets.all(16),
-                              child: _buildInfoPanel(),
+                              child: _buildInfoPanel(parts),
                             ),
                           ),
                         ),
@@ -1335,7 +1351,79 @@ class _RoomScreenState extends State<RoomScreen> {
     _checkActiveRoom();
   }
 
-  Widget _buildInfoPanel() {
+  Widget _buildParticipantCard(Participant p, VideoParts parts) {
+    final id = p.id;
+    final isSelf = id == _participantId;
+    final isPinned = id != null && parts.pinnedId == id;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isPinned ? const Color(0xFF38BDF8) : const Color(0xFF334155),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (id != null)
+            AspectRatio(aspectRatio: 16 / 9, child: parts.tileFor(id)),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  isSelf ? '${p.displayName} (You)' : p.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF475569)),
+                ),
+                child: Text(
+                  p.role == ParticipantRole.interviewer
+                      ? 'Interviewer'
+                      : 'Candidate',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF94A3B8),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              if (!isSelf && id != null)
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: isPinned ? 'Unpin' : 'Pin to stage',
+                  icon: Icon(
+                    isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                    size: 18,
+                    color: isPinned
+                        ? const Color(0xFF38BDF8)
+                        : const Color(0xFF94A3B8),
+                  ),
+                  onPressed: () => parts.pin(id),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoPanel(VideoParts parts) {
     final interviewerPresent = _present.any(
       (p) => p.role == ParticipantRole.interviewer,
     );
@@ -1479,54 +1567,7 @@ class _RoomScreenState extends State<RoomScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        ..._present.map(
-          (p) => Container(
-            margin: const EdgeInsets.symmetric(vertical: 3),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F172A),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFF334155)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.person, size: 18, color: Color(0xFF38BDF8)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    p.displayName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF475569)),
-                  ),
-                  child: Text(
-                    p.role == ParticipantRole.interviewer
-                        ? 'Interviewer'
-                        : 'Candidate',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF94A3B8),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        ..._present.map((p) => _buildParticipantCard(p, parts)),
         if (_isInterviewer) ...[
           const SizedBox(height: 16),
           const Divider(color: Color(0xFF334155)),
@@ -1585,9 +1626,19 @@ class _RoomScreenState extends State<RoomScreen> {
                         color: Color(0xFF22C55E),
                         size: 22,
                       ),
-                      tooltip: 'Admit',
+                      tooltip: 'Admit as candidate',
                       onPressed: () => _admit(p),
                     ),
+                    if (_isHost)
+                      IconButton(
+                        icon: const Icon(
+                          Icons.record_voice_over,
+                          color: Color(0xFF38BDF8),
+                          size: 22,
+                        ),
+                        tooltip: 'Admit as panel interviewer',
+                        onPressed: () => _admit(p, asInterviewer: true),
+                      ),
                     IconButton(
                       icon: const Icon(
                         Icons.cancel,

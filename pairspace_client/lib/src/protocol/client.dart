@@ -557,12 +557,17 @@ class EndpointRoom extends _isc.EndpointRef {
         {'roomId': roomId},
       );
 
-  _ida.Future<_i9rgdsem.Participant> admitParticipant(int participantId) =>
-      caller.callServerEndpoint<_i9rgdsem.Participant>(
-        'room',
-        'admitParticipant',
-        {'participantId': participantId},
-      );
+  _ida.Future<_i9rgdsem.Participant> admitParticipant(
+    int participantId,
+    bool asInterviewer,
+  ) => caller.callServerEndpoint<_i9rgdsem.Participant>(
+    'room',
+    'admitParticipant',
+    {
+      'participantId': participantId,
+      'asInterviewer': asInterviewer,
+    },
+  );
 
   _ida.Future<_i9rgdsem.Participant> denyParticipant(int participantId) =>
       caller.callServerEndpoint<_i9rgdsem.Participant>(
@@ -619,8 +624,12 @@ class EndpointVideoSignal extends _isc.EndpointRef {
   @override
   String get name => 'videoSignal';
 
-  /// Relays WebRTC signaling messages (offers/answers/ICE candidates)
-  /// between the two participants in a room. Nothing is persisted.
+  _ida.Future<String> iceServers() => caller.callServerEndpoint<String>(
+    'videoSignal',
+    'iceServers',
+    {},
+  );
+
   _ida.Stream<_iusw7bjw.SignalMessage> signalStream(
     int roomId,
     int myParticipantId,

@@ -1333,6 +1333,7 @@ class _RoomEndpoint {
   _ida.Future<_ibvon4z2.Participant> admitParticipant(
     _ist.TestSessionBuilder sessionBuilder,
     int participantId,
+    bool asInterviewer,
   ) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -1345,7 +1346,10 @@ class _RoomEndpoint {
           createSessionCallback: (_) => _localUniqueSession,
           endpointPath: 'room',
           methodName: 'admitParticipant',
-          parameters: _ist.testObjectToJson({'participantId': participantId}),
+          parameters: _ist.testObjectToJson({
+            'participantId': participantId,
+            'asInterviewer': asInterviewer,
+          }),
           serializationManager: _serializationManager,
         );
         var _localReturnValue =
@@ -1557,6 +1561,34 @@ class _VideoSignalEndpoint {
   final _is.EndpointDispatch _endpointDispatch;
 
   final _is.SerializationManager _serializationManager;
+
+  _ida.Future<String> iceServers(_ist.TestSessionBuilder sessionBuilder) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'videoSignal',
+            method: 'iceServers',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'videoSignal',
+          methodName: 'iceServers',
+          parameters: _ist.testObjectToJson({}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<String>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
 
   _ida.Stream<_i4itcfai.SignalMessage> signalStream(
     _ist.TestSessionBuilder sessionBuilder,

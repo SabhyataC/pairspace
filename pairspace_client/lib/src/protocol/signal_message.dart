@@ -16,6 +16,7 @@ abstract class SignalMessage
     implements _isc.SerializableModel, _isc.ProtocolSerialization {
   SignalMessage._({
     required this.senderParticipantId,
+    this.targetParticipantId,
     required this.type,
     this.sdp,
     this.candidate,
@@ -25,6 +26,7 @@ abstract class SignalMessage
 
   factory SignalMessage({
     required int senderParticipantId,
+    int? targetParticipantId,
     required String type,
     String? sdp,
     String? candidate,
@@ -35,6 +37,7 @@ abstract class SignalMessage
   factory SignalMessage.fromJson(Map<String, dynamic> jsonSerialization) {
     return SignalMessage(
       senderParticipantId: jsonSerialization['senderParticipantId'] as int,
+      targetParticipantId: jsonSerialization['targetParticipantId'] as int?,
       type: jsonSerialization['type'] as String,
       sdp: jsonSerialization['sdp'] as String?,
       candidate: jsonSerialization['candidate'] as String?,
@@ -44,6 +47,8 @@ abstract class SignalMessage
   }
 
   int senderParticipantId;
+
+  int? targetParticipantId;
 
   String type;
 
@@ -60,6 +65,7 @@ abstract class SignalMessage
   @_isc.useResult
   SignalMessage copyWith({
     int? senderParticipantId,
+    int? targetParticipantId,
     String? type,
     String? sdp,
     String? candidate,
@@ -71,6 +77,8 @@ abstract class SignalMessage
     return {
       '__className__': 'SignalMessage',
       'senderParticipantId': senderParticipantId,
+      if (targetParticipantId != null)
+        'targetParticipantId': targetParticipantId,
       'type': type,
       if (sdp != null) 'sdp': sdp,
       if (candidate != null) 'candidate': candidate,
@@ -84,6 +92,8 @@ abstract class SignalMessage
     return {
       '__className__': 'SignalMessage',
       'senderParticipantId': senderParticipantId,
+      if (targetParticipantId != null)
+        'targetParticipantId': targetParticipantId,
       'type': type,
       if (sdp != null) 'sdp': sdp,
       if (candidate != null) 'candidate': candidate,
@@ -103,6 +113,7 @@ class _Undefined {}
 class _SignalMessageImpl extends SignalMessage {
   _SignalMessageImpl({
     required int senderParticipantId,
+    int? targetParticipantId,
     required String type,
     String? sdp,
     String? candidate,
@@ -110,6 +121,7 @@ class _SignalMessageImpl extends SignalMessage {
     int? sdpMLineIndex,
   }) : super._(
          senderParticipantId: senderParticipantId,
+         targetParticipantId: targetParticipantId,
          type: type,
          sdp: sdp,
          candidate: candidate,
@@ -123,6 +135,7 @@ class _SignalMessageImpl extends SignalMessage {
   @override
   SignalMessage copyWith({
     int? senderParticipantId,
+    Object? targetParticipantId = _Undefined,
     String? type,
     Object? sdp = _Undefined,
     Object? candidate = _Undefined,
@@ -131,6 +144,9 @@ class _SignalMessageImpl extends SignalMessage {
   }) {
     return SignalMessage(
       senderParticipantId: senderParticipantId ?? this.senderParticipantId,
+      targetParticipantId: targetParticipantId is int?
+          ? targetParticipantId
+          : this.targetParticipantId,
       type: type ?? this.type,
       sdp: sdp is String? ? sdp : this.sdp,
       candidate: candidate is String? ? candidate : this.candidate,

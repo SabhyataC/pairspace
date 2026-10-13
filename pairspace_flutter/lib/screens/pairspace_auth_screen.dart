@@ -189,7 +189,10 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
                 children: [
                   if (widget.onBackToLanding != null)
                     IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Color(0xFF64748B)),
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFF64748B),
+                      ),
                       onPressed: widget.onBackToLanding,
                     ),
                   const PairSpaceLogo(size: 32, fontSize: 20),
@@ -265,18 +268,33 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
                 return null;
               },
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.person_outline, size: 18, color: Color(0xFF94A3B8)),
+                prefixIcon: const Icon(
+                  Icons.person_outline,
+                  size: 18,
+                  color: Color(0xFF94A3B8),
+                ),
                 hintText: 'e.g. Alex Johnson',
-                hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                hintStyle: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 14,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF6366F1),
+                    width: 1.5,
+                  ),
                 ),
               ),
             ),
@@ -302,18 +320,33 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
               return null;
             },
             decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.email_outlined, size: 18, color: Color(0xFF94A3B8)),
+              prefixIcon: const Icon(
+                Icons.email_outlined,
+                size: 18,
+                color: Color(0xFF94A3B8),
+              ),
               hintText: 'you@example.com',
-              hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              hintStyle: const TextStyle(
+                color: Color(0xFF94A3B8),
+                fontSize: 14,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                borderSide: const BorderSide(
+                  color: Color(0xFF6366F1),
+                  width: 1.5,
+                ),
               ),
             ),
           ),
@@ -334,30 +367,49 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
             obscureText: _obscurePassword,
             validator: (val) {
               if (val == null || val.isEmpty) return 'Password is required';
-              if (val.length < 6) return 'Password must be at least 6 characters';
+              if (val.length < 6)
+                return 'Password must be at least 6 characters';
               return null;
             },
             decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.lock_outline, size: 18, color: Color(0xFF94A3B8)),
+              prefixIcon: const Icon(
+                Icons.lock_outline,
+                size: 18,
+                color: Color(0xFF94A3B8),
+              ),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  _obscurePassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
                   size: 18,
                   color: const Color(0xFF94A3B8),
                 ),
-                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
               ),
               hintText: 'Enter your password',
-              hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              hintStyle: const TextStyle(
+                color: Color(0xFF94A3B8),
+                fontSize: 14,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                borderSide: const BorderSide(
+                  color: Color(0xFF6366F1),
+                  width: 1.5,
+                ),
               ),
             ),
           ),
@@ -384,26 +436,45 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
                 return null;
               },
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.lock_outline, size: 18, color: Color(0xFF94A3B8)),
+                prefixIcon: const Icon(
+                  Icons.lock_outline,
+                  size: 18,
+                  color: Color(0xFF94A3B8),
+                ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    _obscureConfirmPassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
                     size: 18,
                     color: const Color(0xFF94A3B8),
                   ),
-                  onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                  onPressed: () => setState(
+                    () => _obscureConfirmPassword = !_obscureConfirmPassword,
+                  ),
                 ),
                 hintText: 'Confirm your password',
-                hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                hintStyle: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 14,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF6366F1),
+                    width: 1.5,
+                  ),
                 ),
               ),
             ),
@@ -424,8 +495,11 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
                       child: Checkbox(
                         value: _rememberMe,
                         activeColor: const Color(0xFF6366F1),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                        onChanged: (v) => setState(() => _rememberMe = v ?? true),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        onChanged: (v) =>
+                            setState(() => _rememberMe = v ?? true),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -438,7 +512,11 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
                 TextButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Contact your administrator for password reset.')),
+                      const SnackBar(
+                        content: Text(
+                          'Contact your administrator for password reset.',
+                        ),
+                      ),
                     );
                   },
                   child: const Text(
@@ -470,7 +548,10 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
               Expanded(child: Divider(color: Color(0xFFE2E8F0))),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 14),
-                child: Text('or', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13)),
+                child: Text(
+                  'or',
+                  style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                ),
               ),
               Expanded(child: Divider(color: Color(0xFFE2E8F0))),
             ],
@@ -487,8 +568,13 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  _isSignUp ? 'Already have an account? ' : "Don't have an account? ",
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                  _isSignUp
+                      ? 'Already have an account? '
+                      : "Don't have an account? ",
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF64748B),
+                  ),
                 ),
                 GestureDetector(
                   onTap: () => setState(() => _isSignUp = !_isSignUp),
@@ -523,7 +609,7 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
                     color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -546,13 +632,17 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           side: const BorderSide(color: Color(0xFFE2E8F0)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           backgroundColor: Colors.white,
         ),
         onPressed: () {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Google Sign-In is configured with Serverpod OAuth.'),
+              content: Text(
+                'Google Sign-In is configured with Serverpod OAuth.',
+              ),
               backgroundColor: PairSpaceColors.primary,
             ),
           );
@@ -619,11 +709,23 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
           const SizedBox(height: 36),
           _buildCollabIllustration(),
           const SizedBox(height: 36),
-          _miniFeatureBullet(Icons.edit_note_rounded, 'Real-time Collaboration', 'Code, whiteboard and chat'),
+          _miniFeatureBullet(
+            Icons.edit_note_rounded,
+            'Real-time Collaboration',
+            'Code, whiteboard and chat',
+          ),
           const SizedBox(height: 12),
-          _miniFeatureBullet(Icons.security_rounded, 'Secure Authentication', 'Powered by Serverpod'),
+          _miniFeatureBullet(
+            Icons.security_rounded,
+            'Secure Authentication',
+            'Powered by Serverpod',
+          ),
           const SizedBox(height: 12),
-          _miniFeatureBullet(Icons.devices_rounded, 'Accessible Anywhere', 'Web, Desktop, Mobile'),
+          _miniFeatureBullet(
+            Icons.devices_rounded,
+            'Accessible Anywhere',
+            'Web, Desktop, Mobile',
+          ),
         ],
       ),
     );
@@ -716,7 +818,11 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
                 ),
               ],
             ),
-            child: const Icon(Icons.code_rounded, color: Colors.white, size: 28),
+            child: const Icon(
+              Icons.code_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
           ),
           Positioned(
             right: 20,

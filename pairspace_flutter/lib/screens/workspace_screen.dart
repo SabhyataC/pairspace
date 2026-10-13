@@ -26,7 +26,8 @@ class WorkspaceScreen extends StatefulWidget {
 }
 
 class _WorkspaceScreenState extends State<WorkspaceScreen> {
-  int _activeNavIndex = 0; // 0: Whiteboard, 1: Code Editor, 2: Participants, 3: Settings
+  int _activeNavIndex =
+      0; // 0: Whiteboard, 1: Code Editor, 2: Participants, 3: Settings
   bool _whiteboardTabActive = true;
   bool _codeEditorTabActive = true;
   final TextEditingController _chatController = TextEditingController();
@@ -56,7 +57,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 // Center Split Panels: Whiteboard + Code Editor
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: _buildWorkspacePanels(),
                   ),
                 ),
@@ -118,7 +122,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 height: 7,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: widget.isConnected ? const Color(0xFF10B981) : Colors.amber,
+                  color: widget.isConnected
+                      ? const Color(0xFF10B981)
+                      : Colors.amber,
                 ),
               ),
               const SizedBox(width: 6),
@@ -126,7 +132,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 widget.isConnected ? 'Connected' : 'Connecting...',
                 style: TextStyle(
                   fontSize: 11,
-                  color: widget.isConnected ? const Color(0xFF10B981) : Colors.amber,
+                  color: widget.isConnected
+                      ? const Color(0xFF10B981)
+                      : Colors.amber,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -154,11 +162,17 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0xFFEF4444)),
                 backgroundColor: const Color(0xFF1E293B),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               onPressed: widget.onLeaveRoom,
-              icon: const Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 16),
+              icon: const Icon(
+                Icons.logout_rounded,
+                color: Color(0xFFEF4444),
+                size: 16,
+              ),
               label: const Text(
                 'Leave Room',
                 style: TextStyle(
@@ -174,7 +188,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     );
   }
 
-  Widget _sidebarNavItem(int index, IconData icon, String label, {String? badge}) {
+  Widget _sidebarNavItem(
+    int index,
+    IconData icon,
+    String label, {
+    String? badge,
+  }) {
     final active = _activeNavIndex == index;
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
@@ -207,7 +226,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 ),
                 child: Text(
                   badge,
-                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               )
             : null,
@@ -276,11 +299,19 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
           // Camera / Mic Controls
           IconButton(
-            icon: const Icon(Icons.mic_none_rounded, color: Color(0xFF94A3B8), size: 18),
+            icon: const Icon(
+              Icons.mic_none_rounded,
+              color: Color(0xFF94A3B8),
+              size: 18,
+            ),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.videocam_outlined, color: Color(0xFF94A3B8), size: 18),
+            icon: const Icon(
+              Icons.videocam_outlined,
+              color: Color(0xFF94A3B8),
+              size: 18,
+            ),
             onPressed: () {},
           ),
           const SizedBox(width: 8),
@@ -290,12 +321,17 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4F46E5),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             onPressed: () {},
             icon: const Icon(Icons.share_outlined, size: 14),
-            label: const Text('Share', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            label: const Text(
+              'Share',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -329,7 +365,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       backgroundColor: color,
       child: Text(
         name[0],
-        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -350,7 +390,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: widget.whiteboardWidget ?? _buildInteractiveWhiteboardMock(),
+                child:
+                    widget.whiteboardWidget ??
+                    _buildInteractiveWhiteboardMock(),
               ),
             ),
           ),
@@ -368,7 +410,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: widget.codeEditorWidget ?? _buildInteractiveCodeEditorMock(),
+                child:
+                    widget.codeEditorWidget ??
+                    _buildInteractiveCodeEditorMock(),
               ),
             ),
           ),
@@ -397,7 +441,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               _toolIcon(Icons.text_fields_rounded),
               _toolIcon(Icons.auto_fix_normal_outlined),
               const Spacer(),
-              const Text('100%', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+              const Text(
+                '100%',
+                style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+              ),
               const SizedBox(width: 8),
               _toolIcon(Icons.undo_rounded),
               _toolIcon(Icons.redo_rounded),
@@ -417,16 +464,28 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   children: [
                     const Text(
                       'System Design',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A),
+                      ),
                     ),
                     const SizedBox(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         _canvasBox('Client\n(Web/Mobile)'),
-                        const Icon(Icons.arrow_forward_rounded, size: 20, color: Color(0xFF64748B)),
+                        const Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 20,
+                          color: Color(0xFF64748B),
+                        ),
                         _canvasBox('API\n(Backend)'),
-                        const Icon(Icons.arrow_forward_rounded, size: 20, color: Color(0xFF64748B)),
+                        const Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 20,
+                          color: Color(0xFF64748B),
+                        ),
                         Column(
                           children: [
                             _canvasBox('Database\n(PostgreSQL)'),
@@ -439,7 +498,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     const SizedBox(height: 32),
                     const Text(
                       'Flow:\n1. User sends request\n2. API processes\n3. Store in DB + Cache\n4. Return response',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF475569), fontFamily: 'monospace', height: 1.45),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF475569),
+                        fontFamily: 'monospace',
+                        height: 1.45,
+                      ),
                     ),
                   ],
                 ),
@@ -470,10 +534,17 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         Icon(Icons.near_me, size: 14, color: color),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4)),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
           child: Text(
             name,
-            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],
@@ -492,7 +563,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1E293B),
+        ),
       ),
     );
   }
@@ -505,7 +580,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         color: isActive ? const Color(0xFFEEF2FF) : Colors.transparent,
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Icon(icon, size: 16, color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF64748B)),
+      child: Icon(
+        icon,
+        size: 16,
+        color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
+      ),
     );
   }
 
@@ -520,22 +599,42 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: const BoxDecoration(
                   color: Color(0xFF0F172A),
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(6), topRight: Radius.circular(6)),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(6),
+                    topRight: Radius.circular(6),
+                  ),
                 ),
                 child: const Row(
                   children: [
-                    Text('main.dart', style: TextStyle(color: Colors.white, fontSize: 11, fontFamily: 'monospace')),
+                    Text(
+                      'main.dart',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
                     SizedBox(width: 8),
                     Icon(Icons.close, size: 12, color: Color(0xFF94A3B8)),
                   ],
                 ),
               ),
               const Spacer(),
-              const Text('Dart', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
-              const Icon(Icons.arrow_drop_down, color: Color(0xFF94A3B8), size: 16),
+              const Text(
+                'Dart',
+                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+              ),
+              const Icon(
+                Icons.arrow_drop_down,
+                color: Color(0xFF94A3B8),
+                size: 16,
+              ),
             ],
           ),
         ),
@@ -547,19 +646,110 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('1   class Solution {', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontFamily: 'monospace')),
-                Text('2     int twoSum(List<int> nums, int target) {', style: TextStyle(color: Color(0xFF38BDF8), fontSize: 12, fontFamily: 'monospace')),
-                Text('3       Map<int, int> map = {};', style: TextStyle(color: Color(0xFFA78BFA), fontSize: 12, fontFamily: 'monospace')),
-                Text('4       for (int i = 0; i < nums.length; i++) {', style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontFamily: 'monospace')),
-                Text('5         int complement = target - nums[i];', style: TextStyle(color: Color(0xFFF472B6), fontSize: 12, fontFamily: 'monospace')),
-                Text('6         if (map.containsKey(complement)) {', style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontFamily: 'monospace')),
-                Text('7           return [map[complement]!, i];', style: TextStyle(color: Color(0xFF34D399), fontSize: 12, fontFamily: 'monospace')),
-                Text('8         }', style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontFamily: 'monospace')),
-                Text('9         map[nums[i]] = i;', style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontFamily: 'monospace')),
-                Text('10      }', style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontFamily: 'monospace')),
-                Text('11      return [];', style: TextStyle(color: Color(0xFF34D399), fontSize: 12, fontFamily: 'monospace')),
-                Text('12    }', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontFamily: 'monospace')),
-                Text('13  }', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontFamily: 'monospace')),
+                Text(
+                  '1   class Solution {',
+                  style: TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                Text(
+                  '2     int twoSum(List<int> nums, int target) {',
+                  style: TextStyle(
+                    color: Color(0xFF38BDF8),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                Text(
+                  '3       Map<int, int> map = {};',
+                  style: TextStyle(
+                    color: Color(0xFFA78BFA),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                Text(
+                  '4       for (int i = 0; i < nums.length; i++) {',
+                  style: TextStyle(
+                    color: Color(0xFFE2E8F0),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                Text(
+                  '5         int complement = target - nums[i];',
+                  style: TextStyle(
+                    color: Color(0xFFF472B6),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                Text(
+                  '6         if (map.containsKey(complement)) {',
+                  style: TextStyle(
+                    color: Color(0xFFE2E8F0),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                Text(
+                  '7           return [map[complement]!, i];',
+                  style: TextStyle(
+                    color: Color(0xFF34D399),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                Text(
+                  '8         }',
+                  style: TextStyle(
+                    color: Color(0xFFE2E8F0),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                Text(
+                  '9         map[nums[i]] = i;',
+                  style: TextStyle(
+                    color: Color(0xFFE2E8F0),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                Text(
+                  '10      }',
+                  style: TextStyle(
+                    color: Color(0xFFE2E8F0),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                Text(
+                  '11      return [];',
+                  style: TextStyle(
+                    color: Color(0xFF34D399),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                Text(
+                  '12    }',
+                  style: TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+                Text(
+                  '13  }',
+                  style: TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
               ],
             ),
           ),
@@ -581,7 +771,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       child: Row(
         children: [
           // Participants indicators
-          const Text('Participants', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
+          const Text(
+            'Participants',
+            style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+          ),
           const SizedBox(width: 10),
           _miniParticipantPill('You', 'Host', const Color(0xFF6366F1)),
           const SizedBox(width: 8),
@@ -598,12 +791,19 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               style: const TextStyle(color: Colors.white, fontSize: 12),
               decoration: InputDecoration(
                 hintText: 'Type a message...',
-                hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                hintStyle: const TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 11,
+                ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                 filled: true,
                 fillColor: const Color(0xFF1E293B),
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.send_rounded, size: 14, color: Color(0xFF6366F1)),
+                  icon: const Icon(
+                    Icons.send_rounded,
+                    size: 14,
+                    color: Color(0xFF6366F1),
+                  ),
                   onPressed: () => _chatController.clear(),
                 ),
                 border: OutlineInputBorder(
@@ -630,9 +830,19 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         children: [
           CircleAvatar(radius: 4, backgroundColor: color),
           const SizedBox(width: 6),
-          Text(name, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+          Text(
+            name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(width: 4),
-          Text(role, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 9)),
+          Text(
+            role,
+            style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 9),
+          ),
         ],
       ),
     );

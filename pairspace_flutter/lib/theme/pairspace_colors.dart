@@ -7,7 +7,7 @@ class PairSpaceColors {
   static const Color darkCard = Color(0xFF131D33);
   static const Color darkBorder = Color(0xFF334155);
   static const Color darkBorderSubtle = Color(0xFF1E293B);
-  
+
   // Brand Accents
   static const Color primary = Color(0xFF6366F1); // Indigo
   static const Color primaryLight = Color(0xFF818CF8);

@@ -150,12 +150,11 @@ class RoomEndpoint extends Endpoint {
     Session session,
     int roomId,
   ) async {
-    final room = await _requireOwnedRoom(session, roomId);
+    await _requireInterviewer(session, roomId);
     return Participant.db.find(
       session,
       where: (t) =>
-          t.roomId.equals(room.id!) &
-          t.status.equals(ParticipantStatus.pending),
+          t.roomId.equals(roomId) & t.status.equals(ParticipantStatus.pending),
     );
   }
 
@@ -173,6 +172,7 @@ class RoomEndpoint extends Endpoint {
     me.lastSeenAt = now;
     await Participant.db.updateRow(session, me, columns: (t) => [t.lastSeenAt]);
 
+    await endRoomIfInterviewerGone(session, roomId);
     final cutoff = now.subtract(_presenceWindow);
     return Participant.db.find(
       session,
@@ -187,12 +187,18 @@ class RoomEndpoint extends Endpoint {
   Future<Participant> admitParticipant(
     Session session,
     int participantId,
+    bool asInterviewer,
   ) async {
     final participant = await Participant.db.findById(session, participantId);
     if (participant == null) {
       throw AccessDeniedException(message: 'Participant not found');
     }
-    await _requireOwnedRoom(session, participant.roomId);
+    if (asInterviewer) {
+      await _requireOwnedRoom(session, participant.roomId);
+      participant.role = ParticipantRole.interviewer;
+    } else {
+      await _requireInterviewer(session, participant.roomId);
+    }
 
     participant.status = ParticipantStatus.admitted;
     participant.lastSeenAt = DateTime.now().toUtc();
@@ -209,7 +215,7 @@ class RoomEndpoint extends Endpoint {
     if (participant == null) {
       throw AccessDeniedException(message: 'Participant not found');
     }
-    await _requireOwnedRoom(session, participant.roomId);
+    await _requireInterviewer(session, participant.roomId);
 
     participant.status = ParticipantStatus.denied;
     return Participant.db.updateRow(session, participant);
@@ -242,7 +248,7 @@ class RoomEndpoint extends Endpoint {
   /// Interviewer-only: ends the room for everyone. Existing room/stroke
   /// data is kept (for Day 7's recap page later); no one can join after.
   Future<void> endRoom(Session session, int roomId) async {
-    await _requireOwnedRoom(session, roomId);
+    await _requireInterviewer(session, roomId);
     await endRoomInternal(session, roomId);
   }
 
@@ -290,6 +296,25 @@ class RoomEndpoint extends Endpoint {
       throw AccessDeniedException(message: 'Not admitted to this room');
     }
     return participant;
+  }
+
+  Future<Room> _requireInterviewer(Session session, int roomId) async {
+    final userId = session.authenticated!.authUserId;
+    final room = await Room.db.findById(session, roomId);
+    if (room == null) {
+      throw AccessDeniedException(message: 'Room not found');
+    }
+    if (room.createdBy == userId) return room;
+    final participant = await Participant.db.findFirstRow(
+      session,
+      where: (t) => t.roomId.equals(roomId) & t.authUserId.equals(userId),
+    );
+    if (participant == null ||
+        participant.status != ParticipantStatus.admitted ||
+        participant.role != ParticipantRole.interviewer) {
+      throw AccessDeniedException(message: 'Interviewer only');
+    }
+    return room;
   }
 
   Future<Room> _requireOwnedRoom(Session session, int roomId) async {
