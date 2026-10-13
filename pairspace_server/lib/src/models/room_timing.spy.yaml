@@ -1,5 +1,6 @@
 class: RoomTiming
 fields:
-  startedAt: DateTime
+  startedAt: DateTime?
   durationMinutes: int
   serverNow: DateTime
+  

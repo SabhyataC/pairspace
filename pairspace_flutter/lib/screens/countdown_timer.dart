@@ -23,6 +23,7 @@ class _CountdownTimerState extends State<CountdownTimer> {
   Duration _clockOffset = Duration.zero; // server time minus this device's time
   Duration? _remaining;
   bool _fired = false;
+  bool _started = false;
 
   @override
   void initState() {
@@ -34,14 +35,24 @@ class _CountdownTimerState extends State<CountdownTimer> {
   Future<void> _load() async {
     try {
       final RoomTiming t = await client.room.getRoomTiming(widget.roomId);
+      if (!mounted) return;
       _clockOffset = t.serverNow.difference(DateTime.now());
-      _endsAt = t.startedAt.add(Duration(minutes: t.durationMinutes));
+      final started = t.startedAt;
+      if (started == null) {
+        // No candidate admitted yet: show full length, don't tick, check again.
+        setState(() => _remaining = Duration(minutes: t.durationMinutes));
+        Future.delayed(const Duration(seconds: 5), () {
+          if (mounted && !_started) _load();
+        });
+        return;
+      }
+      _started = true;
+      _endsAt = started.add(Duration(minutes: t.durationMinutes));
       _update();
     } catch (e) {
       debugPrint('getRoomTiming failed: $e');
-      // Try again shortly (e.g. brief network drop).
       Future.delayed(const Duration(seconds: 5), () {
-        if (mounted && _endsAt == null) _load();
+        if (mounted && !_started) _load();
       });
     }
   }
@@ -99,7 +110,9 @@ class _CountdownTimerState extends State<CountdownTimer> {
           Icon(Icons.timer_outlined, size: 16, color: color),
           const SizedBox(width: 6),
           Text(
-            over ? "Time's up" : _fmt(r),
+            over
+                ? "Time's up"
+                : (_started ? _fmt(r) : '${_fmt(r)} · not started'),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,

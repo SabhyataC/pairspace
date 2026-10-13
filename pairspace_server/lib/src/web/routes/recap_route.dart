@@ -97,7 +97,7 @@ class RecapRoute extends WidgetRoute {
 
   static String _n(num v) => v.isFinite ? v.toStringAsFixed(1) : '0';
 
-  /// One stroke's SVG element (reuses the existing renderer, strips the <svg> wrapper).
+  /// One stroke's SVG element (reuses the existing renderer, strips the `<svg>` wrapper).
   static String _strokeInner(Stroke s) {
     final full = _strokesToSvg([s]);
     final start = full.indexOf('>') + 1;

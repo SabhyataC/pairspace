@@ -55,17 +55,17 @@ Future<bool> endRoomIfInterviewerGone(Session session, int roomId) async {
   return true;
 }
 
+const _sweepInterval = Duration(minutes: 1);
+
+/// Keeps one "check this room again in a minute" call scheduled.
 Future<void> syncEmptyRoomExpiry(Session session, int roomId) async {
   final room = await Room.db.findById(session, roomId);
   if (room == null || room.endedAt != null) return;
 
   final identifier = 'end-room-$roomId';
-  if (await activeInterviewerCount(session, roomId) == 0) {
-    await session.serverpod.futureCalls
-        .callWithDelay(_emptyRoomGrace, identifier: identifier)
-        .endEmptyRoom
-        .end(roomId);
-  } else {
-    await session.serverpod.futureCalls.cancel(identifier);
-  }
+  await session.serverpod.futureCalls.cancel(identifier);
+  await session.serverpod.futureCalls
+      .callWithDelay(_sweepInterval, identifier: identifier)
+      .endEmptyRoom
+      .end(roomId);
 }

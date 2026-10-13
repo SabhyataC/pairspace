@@ -10,7 +10,7 @@ import 'room_lifecycle.dart';
 class RoomEndpoint extends Endpoint {
   @override
   bool get requireLogin => true;
-  static const _presenceWindow = Duration(seconds: 5);
+  static const _presenceWindow = Duration(seconds: 20);
 
   static const _allowedDurations = {5, 15, 30, 45, 60, 90};
 
@@ -22,6 +22,14 @@ class RoomEndpoint extends Endpoint {
     final userId = session.authenticated!.authUserId;
     if (!_allowedDurations.contains(durationMinutes)) {
       throw ArgumentError('Unsupported duration: $durationMinutes');
+    }
+
+    final stale = await Room.db.find(
+      session,
+      where: (t) => t.createdBy.equals(userId) & t.endedAt.equals(null),
+    );
+    for (final r in stale) {
+      await endRoomInternal(session, r.id!);
     }
 
     final room = await Room.db.insertRow(
@@ -193,16 +201,22 @@ class RoomEndpoint extends Endpoint {
     if (participant == null) {
       throw AccessDeniedException(message: 'Participant not found');
     }
+    final Room room;
     if (asInterviewer) {
-      await _requireOwnedRoom(session, participant.roomId);
+      room = await _requireOwnedRoom(session, participant.roomId);
       participant.role = ParticipantRole.interviewer;
     } else {
-      await _requireInterviewer(session, participant.roomId);
+      room = await _requireInterviewer(session, participant.roomId);
     }
 
     participant.status = ParticipantStatus.admitted;
     participant.lastSeenAt = DateTime.now().toUtc();
     final updated = await Participant.db.updateRow(session, participant);
+
+    if (room.startedAt == null && updated.role == ParticipantRole.candidate) {
+      room.startedAt = DateTime.now().toUtc();
+      await Room.db.updateRow(session, room, columns: (t) => [t.startedAt]);
+    }
     await syncEmptyRoomExpiry(session, updated.roomId);
     return updated;
   }
@@ -256,7 +270,7 @@ class RoomEndpoint extends Endpoint {
   /// the interviewer ending the meeting while they're still in it).
   Future<bool> isRoomEnded(Session session, int roomId) async {
     final room = await Room.db.findById(session, roomId);
-    return room?.endedAt != null;
+    return room == null || room.endedAt != null;
   }
 
   /// Start time and length of the room, for the countdown. Both roles, admitted only.
@@ -267,7 +281,7 @@ class RoomEndpoint extends Endpoint {
       throw AccessDeniedException(message: 'Room not found');
     }
     return RoomTiming(
-      startedAt: room.createdAt,
+      startedAt: room.startedAt,
       durationMinutes: room.durationMinutes,
       serverNow: DateTime.now().toUtc(),
     );

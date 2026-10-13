@@ -15,22 +15,22 @@ import 'package:serverpod/serverpod.dart' as _is;
 abstract class RoomTiming
     implements _is.SerializableModel, _is.ProtocolSerialization {
   RoomTiming._({
-    required this.startedAt,
+    this.startedAt,
     required this.durationMinutes,
     required this.serverNow,
   });
 
   factory RoomTiming({
-    required DateTime startedAt,
+    DateTime? startedAt,
     required int durationMinutes,
     required DateTime serverNow,
   }) = _RoomTimingImpl;
 
   factory RoomTiming.fromJson(Map<String, dynamic> jsonSerialization) {
     return RoomTiming(
-      startedAt: _is.DateTimeJsonExtension.fromJson(
-        jsonSerialization['startedAt'],
-      ),
+      startedAt: jsonSerialization['startedAt'] == null
+          ? null
+          : _is.DateTimeJsonExtension.fromJson(jsonSerialization['startedAt']),
       durationMinutes: jsonSerialization['durationMinutes'] as int,
       serverNow: _is.DateTimeJsonExtension.fromJson(
         jsonSerialization['serverNow'],
@@ -38,7 +38,7 @@ abstract class RoomTiming
     );
   }
 
-  DateTime startedAt;
+  DateTime? startedAt;
 
   int durationMinutes;
 
@@ -56,7 +56,7 @@ abstract class RoomTiming
   Map<String, dynamic> toJson() {
     return {
       '__className__': 'RoomTiming',
-      'startedAt': startedAt.toJson(),
+      if (startedAt != null) 'startedAt': startedAt?.toJson(),
       'durationMinutes': durationMinutes,
       'serverNow': serverNow.toJson(),
     };
@@ -66,7 +66,7 @@ abstract class RoomTiming
   Map<String, dynamic> toJsonForProtocol() {
     return {
       '__className__': 'RoomTiming',
-      'startedAt': startedAt.toJson(),
+      if (startedAt != null) 'startedAt': startedAt?.toJson(),
       'durationMinutes': durationMinutes,
       'serverNow': serverNow.toJson(),
     };
@@ -78,9 +78,11 @@ abstract class RoomTiming
   }
 }
 
+class _Undefined {}
+
 class _RoomTimingImpl extends RoomTiming {
   _RoomTimingImpl({
-    required DateTime startedAt,
+    DateTime? startedAt,
     required int durationMinutes,
     required DateTime serverNow,
   }) : super._(
@@ -94,12 +96,12 @@ class _RoomTimingImpl extends RoomTiming {
   @_is.useResult
   @override
   RoomTiming copyWith({
-    DateTime? startedAt,
+    Object? startedAt = _Undefined,
     int? durationMinutes,
     DateTime? serverNow,
   }) {
     return RoomTiming(
-      startedAt: startedAt ?? this.startedAt,
+      startedAt: startedAt is DateTime? ? startedAt : this.startedAt,
       durationMinutes: durationMinutes ?? this.durationMinutes,
       serverNow: serverNow ?? this.serverNow,
     );

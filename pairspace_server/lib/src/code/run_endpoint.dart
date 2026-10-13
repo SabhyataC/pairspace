@@ -139,7 +139,7 @@ class RunEndpoint extends Endpoint {
               'language_id': languageId,
               'cpu_time_limit': 3,
               'memory_limit': 128000,
-              if (stdin case final input?) 'stdin': input,
+              'stdin': ?stdin,
             }),
           )
           .timeout(const Duration(seconds: 15));

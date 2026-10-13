@@ -21,6 +21,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
     this.endedAt,
     int? durationMinutes,
     this.recapToken,
+    this.startedAt,
   }) : createdAt = createdAt ?? DateTime.now(),
        durationMinutes = durationMinutes ?? 60;
 
@@ -32,6 +33,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
     DateTime? endedAt,
     int? durationMinutes,
     String? recapToken,
+    DateTime? startedAt,
   }) = _RoomImpl;
 
   factory Room.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -49,6 +51,9 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
           : _is.DateTimeJsonExtension.fromJson(jsonSerialization['endedAt']),
       durationMinutes: jsonSerialization['durationMinutes'] as int?,
       recapToken: jsonSerialization['recapToken'] as String?,
+      startedAt: jsonSerialization['startedAt'] == null
+          ? null
+          : _is.DateTimeJsonExtension.fromJson(jsonSerialization['startedAt']),
     );
   }
 
@@ -71,6 +76,8 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
 
   String? recapToken;
 
+  DateTime? startedAt;
+
   @override
   _is.Table<int?> get table => t;
 
@@ -85,6 +92,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
     DateTime? endedAt,
     int? durationMinutes,
     String? recapToken,
+    DateTime? startedAt,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -97,6 +105,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
       if (endedAt != null) 'endedAt': endedAt?.toJson(),
       'durationMinutes': durationMinutes,
       if (recapToken != null) 'recapToken': recapToken,
+      if (startedAt != null) 'startedAt': startedAt?.toJson(),
     };
   }
 
@@ -110,6 +119,7 @@ abstract class Room implements _is.TableRow<int?>, _is.ProtocolSerialization {
       'createdAt': createdAt.toJson(),
       if (endedAt != null) 'endedAt': endedAt?.toJson(),
       'durationMinutes': durationMinutes,
+      if (startedAt != null) 'startedAt': startedAt?.toJson(),
     };
   }
 
@@ -152,6 +162,7 @@ class _RoomImpl extends Room {
     DateTime? endedAt,
     int? durationMinutes,
     String? recapToken,
+    DateTime? startedAt,
   }) : super._(
          id: id,
          code: code,
@@ -160,6 +171,7 @@ class _RoomImpl extends Room {
          endedAt: endedAt,
          durationMinutes: durationMinutes,
          recapToken: recapToken,
+         startedAt: startedAt,
        );
 
   /// Returns a shallow copy of this [Room]
@@ -174,6 +186,7 @@ class _RoomImpl extends Room {
     Object? endedAt = _Undefined,
     int? durationMinutes,
     Object? recapToken = _Undefined,
+    Object? startedAt = _Undefined,
   }) {
     return Room(
       id: id is int? ? id : this.id,
@@ -183,6 +196,7 @@ class _RoomImpl extends Room {
       endedAt: endedAt is DateTime? ? endedAt : this.endedAt,
       durationMinutes: durationMinutes ?? this.durationMinutes,
       recapToken: recapToken is String? ? recapToken : this.recapToken,
+      startedAt: startedAt is DateTime? ? startedAt : this.startedAt,
     );
   }
 }
@@ -223,6 +237,12 @@ class RoomUpdateTable extends _is.UpdateTable<RoomTable> {
     table.recapToken,
     value,
   );
+
+  _is.ColumnValue<DateTime, DateTime> startedAt(DateTime? value) =>
+      _is.ColumnValue(
+        table.startedAt,
+        value,
+      );
 }
 
 class RoomTable extends _is.Table<int?> {
@@ -254,6 +274,10 @@ class RoomTable extends _is.Table<int?> {
       'recapToken',
       this,
     );
+    startedAt = _is.ColumnDateTime(
+      'startedAt',
+      this,
+    );
   }
 
   late final RoomUpdateTable updateTable;
@@ -270,6 +294,8 @@ class RoomTable extends _is.Table<int?> {
 
   late final _is.ColumnString recapToken;
 
+  late final _is.ColumnDateTime startedAt;
+
   @override
   List<_is.Column> get columns => [
     id,
@@ -279,6 +305,7 @@ class RoomTable extends _is.Table<int?> {
     endedAt,
     durationMinutes,
     recapToken,
+    startedAt,
   ];
 }
 

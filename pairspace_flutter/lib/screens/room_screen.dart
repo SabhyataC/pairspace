@@ -34,6 +34,9 @@ class _RoomScreenState extends State<RoomScreen> {
   bool _isPending = false;
   bool _ended = false;
   bool _left = false;
+  bool _refreshing = false;
+  bool _presenceLoaded = false;
+  int _noInterviewerPolls = 0;
 
   // ignore: unused_field
   String? _pendingRoomCode;
@@ -378,12 +381,14 @@ class _RoomScreenState extends State<RoomScreen> {
   }
 
   void _startPolling() {
+    _pollTimer?.cancel(); // never keep two timers
     _refresh();
     _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) => _refresh());
   }
 
   Future<void> _refresh() async {
-    if (_roomId == null || _ended || _left) return;
+    if (_refreshing || _roomId == null || _ended || _left) return;
+    _refreshing = true;
     try {
       final ended = await client.room.isRoomEnded(_roomId!);
       if (!mounted) return;
@@ -397,14 +402,24 @@ class _RoomScreenState extends State<RoomScreen> {
 
       final present = await client.room.admittedParticipants(_roomId!);
       if (!mounted) return;
-      setState(() => _present = present);
+      final hasInterviewer = present.any(
+        (p) => p.role == ParticipantRole.interviewer,
+      );
+      setState(() {
+        _present = present;
+        _presenceLoaded = true;
+        _noInterviewerPolls = hasInterviewer ? 0 : _noInterviewerPolls + 1;
+      });
 
       if (_isInterviewer) {
         final pending = await client.room.pendingParticipants(_roomId!);
         if (!mounted) return;
         setState(() => _pending = pending);
       }
-    } catch (_) {}
+    } catch (_) {
+    } finally {
+      _refreshing = false;
+    }
   }
 
   // ---------- Admit / deny ----------
@@ -432,9 +447,21 @@ class _RoomScreenState extends State<RoomScreen> {
   // ---------- Leave / End ----------
 
   Future<void> _confirmLeave() async {
+    final otherInterviewers = _present
+        .where(
+          (p) =>
+              p.role == ParticipantRole.interviewer && p.id != _participantId,
+        )
+        .length;
+    final onlyInterviewer = _isInterviewer && otherInterviewers == 0;
+
     final confirmed = await _confirmDialog(
       title: 'Leave meeting?',
-      body: 'You can rejoin later using the same link.',
+      body: onlyInterviewer
+          ? 'You are the only interviewer. If no interviewer is in the room, '
+                'it ends automatically after a few minutes. Use "End meeting" '
+                'to close it now.'
+          : 'You can rejoin later using the same link.',
       confirmLabel: 'Leave',
     );
     if (confirmed != true) return;
@@ -1436,9 +1463,8 @@ class _RoomScreenState extends State<RoomScreen> {
   }
 
   Widget _buildInfoPanel(VideoParts parts) {
-    final interviewerPresent = _present.any(
-      (p) => p.role == ParticipantRole.interviewer,
-    );
+    final interviewerGone =
+        !_isInterviewer && _presenceLoaded && _noInterviewerPolls >= 2;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1540,7 +1566,7 @@ class _RoomScreenState extends State<RoomScreen> {
               ),
             ],
           ),
-        if (!_isInterviewer && !interviewerPresent) ...[
+        if (interviewerGone) ...[
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(10),
