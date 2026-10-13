@@ -41,6 +41,13 @@
     }
     .brand-name { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
     .topbar-tag { font-size: 13px; font-weight: 500; color: var(--text-2); }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .topbar-link {
+      font-size: 13px; font-weight: 600; color: var(--primary-dark);
+      text-decoration: none; border: 1px solid var(--lavender-border);
+      background: var(--lavender); border-radius: 8px; padding: 6px 12px;
+    }
+    .topbar-link:hover { background: var(--lavender-border); }
 
     .page { max-width: 1000px; margin: 0 auto; padding: 36px 24px 64px; }
 
@@ -51,6 +58,14 @@
       border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 600;
     }
     .pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+    .pill.warn { background: #FFFBEB; color: #B45309; border-color: #FDE68A; }
+    .pill.warn::before { background: #F59E0B; }
+    .block { padding: 16px 20px; margin-bottom: 12px; }
+    .note { color: var(--text-2); font-size: 13px; margin: 0 0 12px; }
+    .kv { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .timeline { list-style: none; margin: 12px 0 0; padding: 0; font-size: 13px; }
+    .timeline li { padding: 3px 0; }
+    .t { color: var(--text-3); font-family: ui-monospace, Menlo, Consolas, monospace; margin-right: 10px; }
     h1 { font-size: 36px; font-weight: 700; letter-spacing: -1px; margin: 14px 0 6px; }
     .sub { color: var(--text-2); font-size: 15px; margin: 0; }
 
@@ -149,12 +164,15 @@
   <header class="topbar">
     <div class="topbar-inner">
       <span class="brand"><span class="brand-mark">∞</span><span class="brand-name">PairSpace</span></span>
-      <span class="topbar-tag">Interview recap</span>
+            <span class="topbar-right">
+        <span class="topbar-tag">Interview recap</span>
+                <a class="topbar-link" href="/?start=app">Create or join a room</a>
+      </span>
     </div>
   </header>
 {{#available}}
   <main class="page">
-    <span class="pill">Interview completed</span>
+      <span class="pill {{outcomeTone}}">{{outcomeLabel}}</span>
     <h1>Interview recap</h1>
     <p class="sub">A read-only summary of everything that happened in the room.</p>
 
@@ -324,6 +342,20 @@
     </div>
     {{/hasDrawing}}
     {{^hasDrawing}}<div class="empty">Nothing was drawn.</div>{{/hasDrawing}}
+    
+    <div class="section-title"><h2>Focus and paste signals</h2></div>
+    {{#hasIntegrity}}
+    <div class="card block">
+      <p class="note">Recorded for the candidate only. These signals can be false positives: a second monitor, a notification or screen sharing can all trigger them. Use them as context, not proof.</p>
+      <div class="kv"><span>Left the page</span><b>{{leftPage}}</b></div>
+      <div class="kv"><span>Pastes</span><b>{{pastes}} ({{pastedChars}} characters)</b></div>
+      <ul class="timeline">
+        {{#integrityEvents}}<li><span class="t">{{time}}</span>{{label}}</li>{{/integrityEvents}}
+      </ul>
+      {{#hasMoreEvents}}<p class="note">…and {{moreEvents}} more events not shown.</p>{{/hasMoreEvents}}
+    </div>
+    {{/hasIntegrity}}
+    {{^hasIntegrity}}<div class="empty">No focus or paste signals were recorded.</div>{{/hasIntegrity}}
   </main>
   <script>
   (function () {

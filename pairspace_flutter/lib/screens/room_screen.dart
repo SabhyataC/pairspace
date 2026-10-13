@@ -113,13 +113,7 @@ class _RoomScreenState extends State<RoomScreen> {
   Future<void> _goToRecap() async {
     final roomId = _roomId;
     if (roomId == null) return;
-    try {
-      final url = await client.room.recapUrl(roomId);
-      if (!mounted) return;
-      web.window.location.href = url;
-    } catch (_) {
-      _showMessage('Could not open the recap');
-    }
+    await _openRecap(roomId);
   }
 
   // ---------- Saved session (survives refresh) ----------
@@ -451,7 +445,6 @@ class _RoomScreenState extends State<RoomScreen> {
         _pollTimer?.cancel();
         _clearSession();
         setState(() => _ended = true);
-        if (_isInterviewer) _goToRecap();
         return;
       }
 
@@ -531,6 +524,16 @@ class _RoomScreenState extends State<RoomScreen> {
     setState(() => _left = true);
   }
 
+  Future<void> _declineMonitoring() async {
+    _pollTimer?.cancel();
+    _clearSession();
+    try {
+      if (_participantId != null) await client.room.leaveRoom(_participantId!);
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _left = true);
+  }
+
   Future<void> _confirmEnd() async {
     final confirmed = await _confirmDialog(
       title: 'End meeting for everyone?',
@@ -553,7 +556,6 @@ class _RoomScreenState extends State<RoomScreen> {
     if (!mounted) return;
     _clearSession();
     setState(() => _ended = true);
-    if (_isInterviewer) await _goToRecap();
   }
 
   Future<void> _onTimeUp() async {
@@ -807,7 +809,10 @@ class _RoomScreenState extends State<RoomScreen> {
                         child: Column(
                           children: [
                             if (!_isInterviewer)
-                              IntegrityMonitorHost(roomId: _roomId!),
+                              IntegrityMonitorHost(
+                                roomId: _roomId!,
+                                onDecline: _declineMonitoring,
+                              ),
                             AnimatedSize(
                               duration: const Duration(milliseconds: 280),
                               curve: Curves.easeInOutCubic,
@@ -1444,7 +1449,6 @@ class _RoomScreenState extends State<RoomScreen> {
           ),
           const SizedBox(height: 16),
           if (_isInterviewer && _roomId != null) ...[
-            // Fallback in case the automatic redirect doesn't happen.
             FilledButton.icon(
               onPressed: _goToRecap,
               icon: const Icon(Icons.description_outlined),

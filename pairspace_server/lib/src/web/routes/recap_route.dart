@@ -1,16 +1,15 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:serverpod/serverpod.dart';
 
 import '../../generated/protocol.dart';
-
-import 'dart:convert';
-import 'dart:math';
 
 class RecapPageWidget extends TemplateWidget {
   RecapPageWidget(Map<String, dynamic> values)
     : super(name: 'recap', values: values);
 }
 
-// Read-only recap of a finished room: GET /recap/{room code}
 class RecapRoute extends WidgetRoute {
   static bool _safeEquals(String a, String b) {
     if (a.length != b.length) return false;
@@ -30,9 +29,7 @@ class RecapRoute extends WidgetRoute {
       session,
       where: (t) => t.code.equals(code),
     );
-    if (room == null) return null; // 404
-    // Only a link with the room's private key opens the recap. Wrong or
-    // missing key looks exactly like "no such page".
+    if (room == null) return null;
     final key = request.url.queryParameters['k'] ?? '';
     final token = room.recapToken ?? '';
     if (token.isEmpty || !_safeEquals(key, token)) return null;
@@ -66,8 +63,15 @@ class RecapRoute extends WidgetRoute {
       where: (t) => t.roomId.equals(room.id!),
       orderBy: (t) => t.createdAt,
     );
+    final events = await IntegrityEvent.db.find(
+      session,
+      where: (t) => t.roomId.equals(room.id!),
+      orderBy: (t) => t.id,
+    );
 
     final text = snapshot?.content ?? '';
+    final origin = room.startedAt ?? room.createdAt;
+    final outcome = _outcome(room, endedAt);
 
     return RecapPageWidget({
       'available': true,
@@ -76,6 +80,8 @@ class RecapRoute extends WidgetRoute {
       'duration': room.startedAt == null
           ? 'Unknown'
           : '${endedAt.difference(room.startedAt!).inMinutes} min',
+      'outcomeLabel': outcome.$1,
+      'outcomeTone': outcome.$2,
       'participants': [
         for (final p in people)
           {
@@ -94,6 +100,7 @@ class RecapRoute extends WidgetRoute {
       'replayJson': _replayJson(strokes),
       'hasCodeReplay': edits.length >= 2,
       'codeReplayJson': _codeReplayJson(edits),
+      ..._integritySummary(events, origin),
     });
   }
 
@@ -104,16 +111,85 @@ class RecapRoute extends WidgetRoute {
         '${two(u.hour)}:${two(u.minute)} UTC';
   }
 
+  static (String, String) _outcome(Room room, DateTime endedAt) {
+    final started = room.startedAt;
+    if (started == null) {
+      return ('Ended before the candidate joined', 'warn');
+    }
+    if (endedAt.difference(started).inMinutes > room.durationMinutes) {
+      return ('Interview completed (ran past the scheduled time)', 'ok');
+    }
+    return ('Interview completed', 'ok');
+  }
+
+  static String _offset(DateTime t, DateTime origin) {
+    final s = t.difference(origin).inSeconds;
+    final sign = s < 0 ? '-' : '+';
+    final a = s.abs();
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '$sign${two(a ~/ 60)}:${two(a % 60)}';
+  }
+
+  static String _eventLabel(IntegrityEvent e) {
+    switch (e.type) {
+      case 'tab_hidden':
+        return 'Switched to another tab';
+      case 'tab_visible':
+        return 'Returned to the tab';
+      case 'window_blur':
+        return 'Window lost focus';
+      case 'window_focus':
+        return 'Window regained focus';
+      case 'paste':
+        return 'Pasted ${e.detail ?? '?'} characters';
+      default:
+        return e.type;
+    }
+  }
+
+  static Map<String, dynamic> _integritySummary(
+    List<IntegrityEvent> events,
+    DateTime origin,
+  ) {
+    final hidden = events.where((e) => e.type == 'tab_hidden').toList();
+    final extraBlurs = events
+        .where((e) => e.type == 'window_blur')
+        .where(
+          (b) => !hidden.any(
+            (h) =>
+                h.createdAt.difference(b.createdAt).abs() <
+                const Duration(seconds: 1),
+          ),
+        )
+        .length;
+    final pastes = events.where((e) => e.type == 'paste').toList();
+    var pastedChars = 0;
+    for (final p in pastes) {
+      pastedChars += int.tryParse(p.detail ?? '') ?? 0;
+    }
+    const cap = 60;
+    return {
+      'hasIntegrity': events.isNotEmpty,
+      'leftPage': hidden.length + extraBlurs,
+      'pastes': pastes.length,
+      'pastedChars': pastedChars,
+      'integrityEvents': [
+        for (final e in events.take(cap))
+          {'time': _offset(e.createdAt, origin), 'label': _eventLabel(e)},
+      ],
+      'hasMoreEvents': events.length > cap,
+      'moreEvents': events.length - cap,
+    };
+  }
+
   static String _n(num v) => v.isFinite ? v.toStringAsFixed(1) : '0';
 
-  /// One stroke's SVG element (reuses the existing renderer, strips the `<svg>` wrapper).
   static String _strokeInner(Stroke s) {
     final full = _strokesToSvg([s]);
     final start = full.indexOf('>') + 1;
     return full.substring(start, full.length - '</svg>'.length);
   }
 
-  /// [{t: ms since first stroke, svg: "<polyline .../>"}, ...] for the replay.
   static String _replayJson(List<Stroke> strokes) {
     if (strokes.isEmpty) return '[]';
     final t0 = strokes.first.createdAt;
@@ -125,11 +201,9 @@ class RecapRoute extends WidgetRoute {
             'svg': _strokeInner(s),
           },
     ];
-    // "<" is escaped so user text can never close a <script> tag.
     return jsonEncode(items).replaceAll('<', r'\u003c');
   }
 
-  /// Canvas is a fixed 1000x625 space (see kCanvasWidth/Height in Flutter).
   static String _strokesToSvg(List<Stroke> strokes) {
     final b = StringBuffer(
       '<svg viewBox="0 0 1000 625" xmlns="http://www.w3.org/2000/svg" '
@@ -148,7 +222,6 @@ class RecapRoute extends WidgetRoute {
 
       switch (s.kind) {
         case 'text':
-          // User text goes into HTML: it MUST be escaped.
           const esc = HtmlEscape();
           final size = s.width >= 8 ? s.width.clamp(8.0, 120.0) : 24.0;
           final lines = (s.text ?? '').split('\n');
@@ -199,7 +272,7 @@ class RecapRoute extends WidgetRoute {
             'rx="${_n((p[2] - p[0]).abs() / 2)}" '
             'ry="${_n((p[3] - p[1]).abs() / 2)}" $style/>',
           );
-        default: // pen
+        default:
           if (p.length == 2) {
             b.write(
               '<circle cx="${_n(p[0])}" cy="${_n(p[1])}" r="${_n(w / 2)}" '

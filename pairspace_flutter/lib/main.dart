@@ -17,7 +17,8 @@ void main() async {
     debugPrint('Serverpod client initialize warning: $e');
   }
   final hasSavedRoom = await _hasSavedRoom();
-  runApp(MyApp(startInApp: hasSavedRoom));
+  final openApp = Uri.base.queryParameters['start'] == 'app';
+  runApp(MyApp(startInApp: hasSavedRoom || openApp));
 }
 
 /// True if a meeting was saved from an earlier visit, so a refresh can skip

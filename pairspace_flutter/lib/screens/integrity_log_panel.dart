@@ -133,6 +133,13 @@ class _IntegrityLogPanelState extends State<IntegrityLogPanel> {
             const SizedBox(height: 8),
             const Divider(color: Color(0xFF334155), height: 1),
             const SizedBox(height: 8),
+            const Text(
+              'These signals can be false positives: a second monitor, '
+              'a notification or screen sharing can all trigger them. '
+              'Use them as context, not proof.',
+              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+            ),
+            const SizedBox(height: 8),
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 140),
               child: latest.isEmpty
