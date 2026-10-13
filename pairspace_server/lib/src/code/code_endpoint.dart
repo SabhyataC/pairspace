@@ -40,7 +40,7 @@ class CodeEndpoint extends Endpoint {
       final next = prev.then((_) => _saveSnapshot(session, roomId, u));
       _saveChain[roomId] = next;
       await next;
-      if (identical(_saveChain[roomId], next)) _saveChain.remove(roomId);
+      if (identical(_saveChain[roomId], next)) await _saveChain.remove(roomId);
     }
 
     var lastCheck = DateTime.now();

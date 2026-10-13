@@ -32,6 +32,7 @@ class _RoomScreenState extends State<RoomScreen> {
   bool _isInterviewer = false;
   bool _isHost = false;
   bool _isPending = false;
+  int _admissionGen = 0;
   bool _ended = false;
   bool _left = false;
   bool _refreshing = false;
@@ -160,7 +161,7 @@ class _RoomScreenState extends State<RoomScreen> {
       _checkActiveRoom();
       return;
     }
-    final ok = await _joinRoom(code, name);
+    final ok = await _joinRoom(code, name, silent: true);
     debugPrint('restore(no link): join ok=$ok');
     if (!ok) {
       await _clearSession();
@@ -183,7 +184,7 @@ class _RoomScreenState extends State<RoomScreen> {
     );
 
     if (savedCode == linkCode && savedName != null) {
-      final ok = await _joinRoom(linkCode, savedName);
+      final ok = await _joinRoom(linkCode, savedName, silent: true);
       debugPrint('restore(link): join ok=$ok');
       if (ok) return;
       await _clearSession();
@@ -259,11 +260,15 @@ class _RoomScreenState extends State<RoomScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      _showMessage('Failed to create room: $e');
+      _showMessage(_friendlyError(e, 'Could not create the room'));
     }
   }
 
-  Future<bool> _joinRoom(String code, String name) async {
+  Future<bool> _joinRoom(
+    String code,
+    String name, {
+    bool silent = false,
+  }) async {
     setState(() => _loading = true);
     try {
       final participant = await client.room.joinRoom(code, name);
@@ -320,7 +325,8 @@ class _RoomScreenState extends State<RoomScreen> {
     } catch (e) {
       if (!mounted) return false;
       setState(() => _loading = false);
-      _showMessage('Failed to join room: $e');
+      final msg = _friendlyError(e, 'Could not join the room');
+      if (!silent) _showMessage(msg);
       return false;
     }
   }
@@ -342,42 +348,87 @@ class _RoomScreenState extends State<RoomScreen> {
   // ---------- Polling ----------
 
   Future<void> _pollForAdmission() async {
-    while (mounted && _isPending) {
+    final gen = ++_admissionGen;
+    final roomId = _roomId;
+    final participantId = _participantId;
+    if (roomId == null || participantId == null) return;
+
+    bool stale() => !mounted || !_isPending || gen != _admissionGen;
+
+    while (!stale()) {
       await Future.delayed(const Duration(seconds: 2));
-      if (!mounted || !_isPending) return;
+      if (stale()) return;
 
-      final ended = await client.room.isRoomEnded(_roomId!);
-      if (!mounted) return;
-      if (ended) {
-        _clearSession();
-        setState(() {
-          _isPending = false;
-          _ended = true;
-        });
-        return;
-      }
+      try {
+        final ended = await client.room.isRoomEnded(roomId);
+        if (stale()) return;
+        if (ended) {
+          _clearSession();
+          setState(() {
+            _isPending = false;
+            _ended = true;
+          });
+          return;
+        }
 
-      final participant = await client.room.checkStatus(_participantId!);
-      if (!mounted) return;
+        final participant = await client.room.checkStatus(participantId);
+        if (stale()) return;
 
-      if (participant.status == ParticipantStatus.admitted) {
-        setState(() {
-          _isPending = false;
-          _isInterviewer = participant.role == ParticipantRole.interviewer;
-        });
-        _startPolling();
-        return;
-      }
-      if (participant.status == ParticipantStatus.denied) {
+        if (participant.status == ParticipantStatus.admitted) {
+          setState(() {
+            _isPending = false;
+            _isInterviewer = participant.role == ParticipantRole.interviewer;
+          });
+          _startPolling();
+          return;
+        }
+        if (participant.status == ParticipantStatus.denied) {
+          _clearSession();
+          setState(() {
+            _isPending = false;
+            _roomCode = null;
+          });
+          _showMessage('The interviewer denied your request to join.');
+          _checkActiveRoom();
+          return;
+        }
+      } on AccessDeniedException {
+        // The server no longer has us in this room: stop waiting.
+        if (stale()) return;
         _clearSession();
         setState(() {
           _isPending = false;
           _roomCode = null;
+          _roomId = null;
+          _participantId = null;
         });
-        _showMessage('The interviewer denied your request to join.');
+        _showMessage('You are no longer waiting in this room.');
+        _checkActiveRoom();
         return;
+      } catch (e) {
+        // Network blip or server hiccup: keep waiting and try again.
+        debugPrint('admission poll failed, retrying: $e');
       }
     }
+  }
+
+  /// The candidate backs out while waiting to be admitted.
+  Future<void> _cancelWaiting() async {
+    final id = _participantId;
+    _admissionGen++; // stops the polling loop
+    _clearSession();
+    setState(() {
+      _isPending = false;
+      _roomCode = null;
+      _roomId = null;
+      _participantId = null;
+    });
+    try {
+      if (id != null) await client.room.leaveRoom(id);
+    } catch (e) {
+      debugPrint('leaveRoom (cancel waiting) failed: $e');
+    }
+    if (mounted) _checkActiveRoom();
   }
 
   void _startPolling() {
@@ -430,7 +481,7 @@ class _RoomScreenState extends State<RoomScreen> {
       if (!mounted) return;
       setState(() => _pending.removeWhere((e) => e.id == p.id));
     } catch (e) {
-      _showMessage('Failed to admit: $e');
+      _showMessage(_friendlyError(e, 'Could not admit this person'));
     }
   }
 
@@ -440,7 +491,7 @@ class _RoomScreenState extends State<RoomScreen> {
       if (!mounted) return;
       setState(() => _pending.removeWhere((e) => e.id == p.id));
     } catch (e) {
-      _showMessage('Failed to deny: $e');
+      _showMessage(_friendlyError(e, 'Could not deny this person'));
     }
   }
 
@@ -491,7 +542,7 @@ class _RoomScreenState extends State<RoomScreen> {
     try {
       await client.room.endRoom(_roomId!);
     } catch (e) {
-      _showMessage('Failed to end meeting: $e');
+      _showMessage(_friendlyError(e, 'Could not end the meeting'));
       return;
     }
     _pollTimer?.cancel();
@@ -506,7 +557,10 @@ class _RoomScreenState extends State<RoomScreen> {
     _timeUpShown = true;
 
     final monaco = activeMonacoController;
-    await monaco?.setInteractionEnabled(false);
+    if (!mounted) {
+      await monaco?.setInteractionEnabled(true);
+      return;
+    }
     bool endNow = false;
     try {
       final result = await showDialog<bool>(
@@ -616,6 +670,23 @@ class _RoomScreenState extends State<RoomScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  /// A short message a user can understand, never the raw exception.
+  /// [action] says what failed, e.g. 'Could not join the room'.
+  String _friendlyError(Object e, String action) {
+    debugPrint('$action: $e'); // the raw error still goes to the console
+    if (e is AccessDeniedException) return e.message;
+    final s = e.toString().toLowerCase();
+    final offline =
+        s.contains('failed to fetch') ||
+        s.contains('clientexception') ||
+        s.contains('socketexception') ||
+        s.contains('timeout') ||
+        s.contains('timed out');
+    return offline
+        ? '$action. Check your internet connection and try again.'
+        : '$action. Please try again.';
+  }
+
   // ---------- UI ----------
 
   @override
@@ -652,13 +723,18 @@ class _RoomScreenState extends State<RoomScreen> {
     if (_loading) return const Center(child: CircularProgressIndicator());
 
     if (_isPending) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Waiting for the interviewer to admit you…'),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            const Text('Waiting for the interviewer to admit you…'),
+            const SizedBox(height: 24),
+            OutlinedButton(
+              onPressed: _cancelWaiting,
+              child: const Text('Cancel'),
+            ),
           ],
         ),
       );

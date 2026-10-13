@@ -367,8 +367,9 @@ class _PairSpaceAuthScreenState extends State<PairSpaceAuthScreen> {
             obscureText: _obscurePassword,
             validator: (val) {
               if (val == null || val.isEmpty) return 'Password is required';
-              if (val.length < 6)
+              if (val.length < 6) {
                 return 'Password must be at least 6 characters';
+              }
               return null;
             },
             decoration: InputDecoration(
