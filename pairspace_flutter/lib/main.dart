@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'client.dart';
 import 'theme/pairspace_colors.dart';
 import 'screens/landing_screen.dart';
@@ -16,7 +16,19 @@ void main() async {
   } catch (e) {
     debugPrint('Serverpod client initialize warning: $e');
   }
-  runApp(const MyApp());
+  final hasSavedRoom = await _hasSavedRoom();
+  runApp(MyApp(startInApp: hasSavedRoom));
+}
+
+/// True if a meeting was saved from an earlier visit, so a refresh can skip
+/// the landing page. (Same key RoomScreen uses to save/restore the session.)
+Future<bool> _hasSavedRoom() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getString('pairspace_roomCode') ?? '').isNotEmpty;
+  } catch (_) {
+    return false;
+  }
 }
 
 ThemeData _buildTheme(Brightness brightness) {
@@ -33,14 +45,16 @@ ThemeData _buildTheme(Brightness brightness) {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.startInApp = false});
+
+  final bool startInApp;
 
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  bool _showLanding = true;
+  late bool _showLanding = !widget.startInApp;
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +77,11 @@ class _MyAppState extends State<MyApp> {
                 onSignOut: () async {
                   try {
                     await client.auth.signOutDevice();
+                  } catch (_) {}
+                  try {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.remove('pairspace_roomCode');
+                    await prefs.remove('pairspace_displayName');
                   } catch (_) {}
                   if (mounted) {
                     setState(() => _showLanding = true);

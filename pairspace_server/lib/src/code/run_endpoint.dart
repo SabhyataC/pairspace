@@ -133,12 +133,13 @@ class RunEndpoint extends Endpoint {
           .post(
             Uri.parse('$_baseUrl/submissions?base64_encoded=false'),
             headers: {'Content-Type': 'application/json'},
+
             body: jsonEncode({
               'source_code': code,
               'language_id': languageId,
               'cpu_time_limit': 3,
               'memory_limit': 128000,
-              if (stdin != null) 'stdin': stdin,
+              if (stdin case final input?) 'stdin': input,
             }),
           )
           .timeout(const Duration(seconds: 15));

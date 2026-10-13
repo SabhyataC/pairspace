@@ -4,47 +4,195 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PairSpace recap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, Helvetica, sans-serif; max-width: 960px;
-           margin: 0 auto; padding: 24px; color: #222; background: #fafafa; }
-    h1 { font-size: 24px; margin-bottom: 4px; }
-    h2 { font-size: 18px; margin: 28px 0 8px; }
-    .meta { color: #666; }
-    ul { list-style: disc; padding-left: 20px; }
-    pre { background: #1e1e1e; color: #eee; padding: 16px;
-          border-radius: 6px; overflow-x: auto; font-size: 13px; }
-    .badge { display: inline-block; background: #e8e8e8; border-radius: 4px;
-             padding: 2px 8px; font-size: 12px; margin-left: 8px; }
-                 .replay { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
-    .replay button { padding: 6px 14px; border: 1px solid #bbb; border-radius: 4px;
-                     background: #fff; cursor: pointer; font-size: 14px; }
-    .replay input[type=range] { flex: 1; }
+    :root {
+      --bg: #F8FAFC; --surface: #FFFFFF; --border: #E2E8F0;
+      --text: #0F172A; --text-2: #64748B; --text-3: #94A3B8;
+      --primary: #6366F1; --primary-dark: #4F46E5; --violet: #8B5CF6;
+      --lavender: #EEF2FF; --lavender-border: #E0E7FF;
+      --success: #10B981; --success-bg: #ECFDF5;
+      --dark: #0F172A; --dark-surface: #1E293B; --dark-border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased; line-height: 1.5;
+    }
+
+    /* top bar */
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .topbar-inner {
+      max-width: 1000px; margin: 0 auto; padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
+    .brand-mark {
+      width: 28px; height: 28px; border-radius: 8px; color: #fff;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      box-shadow: 0 2px 8px rgba(99,102,241,.35);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 700; line-height: 1;
+    }
+    .brand-name { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    .topbar-tag { font-size: 13px; font-weight: 500; color: var(--text-2); }
+
+    .page { max-width: 1000px; margin: 0 auto; padding: 36px 24px 64px; }
+
+    /* hero */
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--success-bg); color: #047857; border: 1px solid #A7F3D0;
+      border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 600;
+    }
+    .pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+    h1 { font-size: 36px; font-weight: 700; letter-spacing: -1px; margin: 14px 0 6px; }
+    .sub { color: var(--text-2); font-size: 15px; margin: 0; }
+
+    /* stat cards */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 28px 0 8px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(15,23,42,.05);
+    }
+    .stat { padding: 18px 20px; }
+    .stat-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+    .stat-value { font-size: 17px; font-weight: 600; margin-top: 6px; letter-spacing: -0.2px; }
+    .stat.accent { background: var(--lavender); border-color: var(--lavender-border); }
+    .stat.accent .stat-value { color: var(--primary-dark); font-size: 22px; }
+
+    /* sections */
+    .section-title { display: flex; align-items: center; gap: 10px; margin: 36px 0 14px; }
+    .section-title h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; margin: 0; }
+    .tag {
+      background: var(--lavender); color: var(--primary-dark); border: 1px solid var(--lavender-border);
+      border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600;
+    }
+
+    /* participants */
+    .people { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+    .person { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%; flex: none; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px; text-transform: uppercase;
+      background: linear-gradient(135deg, #06B6D4, #3B82F6);
+    }
+    .person[data-role="Interviewer"] .avatar { background: linear-gradient(135deg, #6366F1, #8B5CF6); }
+    .person-name { font-weight: 600; font-size: 14px; }
+    .role {
+      display: inline-block; margin-top: 2px; border-radius: 6px; padding: 1px 8px;
+      font-size: 11px; font-weight: 600; background: #ECFEFF; color: #0E7490; border: 1px solid #CFFAFE;
+    }
+    .person[data-role="Interviewer"] .role { background: var(--lavender); color: var(--primary-dark); border-color: var(--lavender-border); }
+
+    /* code editor card */
+    .editor { background: var(--dark); border: 1px solid var(--dark-border); border-radius: 16px; overflow: hidden;
+              box-shadow: 0 8px 24px rgba(15,23,42,.12); }
+    .editor-bar { background: var(--dark-surface); border-bottom: 1px solid var(--dark-border);
+                  display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; }
+    .dots { display: flex; gap: 6px; }
+    .dots i { width: 10px; height: 10px; border-radius: 50%; background: #475569; display: block; }
+    .editor-lang { color: #94A3B8; font-size: 12px; font-weight: 500; }
+    .copy-btn {
+      background: transparent; color: #CBD5E1; border: 1px solid var(--dark-border); border-radius: 8px;
+      padding: 4px 12px; font: 600 12px 'Inter', sans-serif; cursor: pointer;
+    }
+    .copy-btn:hover { background: #334155; color: #fff; }
+    .editor pre { margin: 0; padding: 18px 20px; overflow-x: auto; max-height: 520px; }
+    .editor code { font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.7; color: #E2E8F0; }
+
+    /* canvas card */
+    .canvas-card { padding: 14px; }
+    /* the server writes inline border/background on the svg, so these need !important */
+    #canvas-wrap svg { display: block; border: 1px solid var(--border) !important; border-radius: 10px; }
+
+    /* replay controls */
+    .replay { display: flex; align-items: center; gap: 14px; margin: 14px 2px 2px; }
+    .replay button {
+      padding: 9px 18px; border: 0; border-radius: 10px; color: #fff; cursor: pointer;
+      font: 600 14px 'Inter', sans-serif; letter-spacing: -0.2px; white-space: nowrap;
+      background: linear-gradient(90deg, #4F46E5, #6366F1, #7C3AED);
+      box-shadow: 0 3px 10px rgba(99,102,241,.35);
+    }
+    .replay input[type=range] { flex: 1; accent-color: var(--primary); }
+    .replay .meta { color: var(--text-2); font-size: 13px; font-weight: 500; min-width: 52px; text-align: right; }
+
+    .empty { padding: 28px; text-align: center; color: var(--text-2); font-size: 14px; background: var(--surface);
+             border: 1px dashed var(--border); border-radius: 16px; }
+
+    /* not-available state */
+    .center { max-width: 460px; margin: 90px auto; padding: 40px 32px; text-align: center; }
+    .center .icon {
+      width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 18px; font-size: 26px;
+      background: var(--lavender); border: 1px solid var(--lavender-border);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .center h1 { font-size: 24px; margin: 0 0 8px; }
+
+    @media (max-width: 640px) {
+      .stats { grid-template-columns: 1fr; }
+      h1 { font-size: 28px; }
+      .page { padding: 24px 16px 48px; }
+    }
   </style>
 </head>
 <body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="brand"><span class="brand-mark">∞</span><span class="brand-name">PairSpace</span></span>
+      <span class="topbar-tag">Interview recap</span>
+    </div>
+  </header>
 {{#available}}
-  <h1>Interview recap</h1>
-  <p class="meta">Started {{started}} · Ended {{ended}} · Duration {{duration}}</p>
+  <main class="page">
+    <span class="pill">Interview completed</span>
+    <h1>Interview recap</h1>
+    <p class="sub">A read-only summary of everything that happened in the room.</p>
 
-  <h2>Participants</h2>
-  <ul>
-    {{#participants}}<li>{{name}} <span class="badge">{{role}}</span></li>{{/participants}}
-  </ul>
+    <div class="stats">
+      <div class="card stat"><div class="stat-label">Started</div><div class="stat-value">{{started}}</div></div>
+      <div class="card stat"><div class="stat-label">Ended</div><div class="stat-value">{{ended}}</div></div>
+      <div class="card stat accent"><div class="stat-label">Duration</div><div class="stat-value">{{duration}}</div></div>
+    </div>
 
-  <h2>Final code <span class="badge">{{language}}</span></h2>
-  {{#hasCode}}<pre><code>{{code}}</code></pre>{{/hasCode}}
-  {{^hasCode}}<p class="meta">No code was written.</p>{{/hasCode}}
+    <div class="section-title"><h2>Participants</h2></div>
+    <div class="people">
+      {{#participants}}
+      <div class="card person" data-role="{{role}}">
+        <div class="avatar">{{name}}</div>
+        <div><div class="person-name">{{name}}</div><span class="role">{{role}}</span></div>
+      </div>
+      {{/participants}}
+    </div>
 
-  <h2>Canvas</h2>
-  {{#hasDrawing}}
-  <div id="canvas-wrap">{{{svg}}}</div>
-  {{#hasReplay}}
-  <div id="replay" class="replay">
-    <button id="rp-play" type="button">▶ Replay</button>
-    <input id="rp-range" type="range" min="0" max="0" value="0">
-    <span id="rp-label" class="meta"></span>
-  </div>
-  <script id="rp-data" type="application/json">{{{replayJson}}}</script>
+    <div class="section-title"><h2>Final code</h2>{{#hasCode}}<span class="tag">{{language}}</span>{{/hasCode}}</div>
+    {{#hasCode}}
+    <div class="editor">
+      <div class="editor-bar">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <span class="editor-lang">{{language}}</span>
+        <button id="copy-code" class="copy-btn" type="button">Copy</button>
+      </div>
+      <pre><code id="code-block">{{code}}</code></pre>
+    </div>
+    {{/hasCode}}
+    {{^hasCode}}<div class="empty">No code was written.</div>{{/hasCode}}
+
+    <div class="section-title"><h2>Canvas</h2></div>
+    {{#hasDrawing}}
+    <div class="card canvas-card">
+    <div id="canvas-wrap">{{{svg}}}</div>
+    {{#hasReplay}}
+    <div id="replay" class="replay">
+      <button id="rp-play" type="button">▶ Replay</button>
+      <input id="rp-range" type="range" min="0" max="0" value="0">
+      <span id="rp-label" class="meta"></span>
+    </div>
+    <script id="rp-data" type="application/json">{{{replayJson}}}</script>
   <script>
   (function () {
     var data = JSON.parse(document.getElementById('rp-data').textContent);
@@ -107,13 +255,38 @@
     render(n);
   })();
   </script>
-  {{/hasReplay}}
-  {{/hasDrawing}}
-  {{^hasDrawing}}<p class="meta">Nothing was drawn.</p>{{/hasDrawing}}
+      {{/hasReplay}}
+    </div>
+    {{/hasDrawing}}
+    {{^hasDrawing}}<div class="empty">Nothing was drawn.</div>{{/hasDrawing}}
+  </main>
+  <script>
+  (function () {
+    // first letter of each participant's name inside the avatar circle
+    document.querySelectorAll('.avatar').forEach(function (a) {
+      var t = (a.textContent || '').trim();
+      a.textContent = t ? t.charAt(0) : '?';
+    });
+    var copy = document.getElementById('copy-code');
+    if (copy) {
+      copy.onclick = function () {
+        var text = document.getElementById('code-block').textContent;
+        if (!navigator.clipboard) return;
+        navigator.clipboard.writeText(text).then(function () {
+          copy.textContent = 'Copied!';
+          setTimeout(function () { copy.textContent = 'Copy'; }, 1500);
+        });
+      };
+    }
+  })();
+  </script>
 {{/available}}
 {{^available}}
-  <h1>Recap not available yet</h1>
-  <p class="meta">The recap appears once the interviewer ends the meeting.</p>
+  <main class="card center">
+    <div class="icon">⏳</div>
+    <h1>Recap not available yet</h1>
+    <p class="sub">The recap appears once the interviewer ends the meeting.</p>
+  </main>
 {{/available}}
 </body>
 </html>

@@ -265,6 +265,13 @@ class _RoomScreenState extends State<RoomScreen> {
     try {
       final participant = await client.room.joinRoom(code, name);
       if (!mounted) return false;
+      if (participant.status == ParticipantStatus.denied) {
+        _clearSession();
+        setState(() => _loading = false);
+        _showMessage('The interviewer denied your request to join this room.');
+        return false;
+      }
+
       _saveSession(code, name);
 
       if (participant.status == ParticipantStatus.pending) {
@@ -281,12 +288,26 @@ class _RoomScreenState extends State<RoomScreen> {
         return true;
       }
 
+      // Only the room's creator can admit panel interviewers. Ask the server
+      // instead of relying on _myActiveRoom, which isn't loaded when the
+      // session is restored after a refresh.
+
+      var isHost = false;
+      if (participant.role == ParticipantRole.interviewer) {
+        try {
+          final mine = await client.room.myActiveRoom();
+          isHost =
+              mine != null && mine.code.toUpperCase() == code.toUpperCase();
+        } catch (_) {}
+        if (!mounted) return false;
+      }
+
       setState(() {
         _roomCode = code;
         _roomId = participant.roomId;
         _participantId = participant.id;
         _isInterviewer = participant.role == ParticipantRole.interviewer;
-        _isHost = _isHost || (_isInterviewer && _myActiveRoom?.code == code);
+        _isHost = isHost;
         _isPending = false;
         _left = false;
         _loading = false;
@@ -625,6 +646,7 @@ class _RoomScreenState extends State<RoomScreen> {
         pastRooms: _pastRooms,
         onRejoinActiveRoom: _rejoinOwnActiveRoom,
         onOpenRecap: _openRecap,
+        onSignOut: widget.onSignOut,
         onCreateRoom: (name, minutes) async {
           await _createRoom(name, minutes);
         },
@@ -892,16 +914,6 @@ class _RoomScreenState extends State<RoomScreen> {
                 : const Color(0xFF4F46E5),
             onTap: () => setState(() => _showPanel = !_showPanel),
           ),
-          if (_isInterviewer)
-            _sidebarNavItem(
-              icon: Icons.radar_rounded,
-              label: 'Focus Radar',
-              isActive: false,
-              badge: _pending.isNotEmpty ? 'Lobby (${_pending.length})' : null,
-              badgeColor: const Color(0xFFEF4444),
-              onTap: () => setState(() => _showPanel = true),
-            ),
-
           const Spacer(),
 
           // Leave Room button

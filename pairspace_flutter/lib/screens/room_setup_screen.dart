@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:pairspace_client/pairspace_client.dart';
 import '../widgets/pairspace_logo.dart';
 import '../widgets/buttons.dart';
+import '../client.dart';
 
 class RoomSetupScreen extends StatefulWidget {
   final Future<void> Function(String name, int minutes) onCreateRoom;
@@ -12,6 +13,7 @@ class RoomSetupScreen extends StatefulWidget {
   final Future<void> Function()? onRejoinActiveRoom;
   final List<Room> pastRooms;
   final Future<void> Function(int roomId)? onOpenRecap;
+  final Future<void> Function()? onSignOut;
 
   const RoomSetupScreen({
     super.key,
@@ -22,6 +24,7 @@ class RoomSetupScreen extends StatefulWidget {
     this.onRejoinActiveRoom,
     this.pastRooms = const [],
     this.onOpenRecap,
+    this.onSignOut,
   });
 
   @override
@@ -30,9 +33,24 @@ class RoomSetupScreen extends StatefulWidget {
 
 class _RoomSetupScreenState extends State<RoomSetupScreen> {
   bool _isCreateTab = true;
-  bool _isInterviewer = true;
+  // bool _isInterviewer = true;
   int _durationMinutes = 60;
   bool _isLoading = false;
+
+  String? _email;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEmail();
+  }
+
+  Future<void> _loadEmail() async {
+    try {
+      final email = await client.account.myEmail();
+      if (mounted) setState(() => _email = email);
+    } catch (_) {}
+  }
 
   final _roomNameController = TextEditingController();
   final _joinCodeController = TextEditingController();
@@ -62,7 +80,7 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
   }
 
   Future<void> _handleJoin() async {
-    final code = _joinCodeController.text.trim().toUpperCase();
+    final code = _joinCodeController.text.trim();
     if (code.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a room code')),
@@ -198,16 +216,85 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
             ],
           ),
           // User avatar
-          Container(
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF6366F1), width: 1.5),
+          // User menu: email + sign out
+          PopupMenuButton<String>(
+            tooltip: 'Account',
+            offset: const Offset(0, 48),
+            color: Colors.white,
+            elevation: 6,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Color(0xFFE2E8F0)),
             ),
-            child: const CircleAvatar(
-              radius: 16,
-              backgroundColor: Color(0xFFEEF2FF),
-              child: Icon(Icons.person, color: Color(0xFF6366F1), size: 20),
+            onSelected: (value) {
+              if (value == 'signout') widget.onSignOut?.call();
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                enabled: false,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 240),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Signed in as',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF94A3B8),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _email ?? 'Signed in',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const PopupMenuDivider(),
+              if (widget.onSignOut != null)
+                const PopupMenuItem<String>(
+                  value: 'signout',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.logout_rounded,
+                        size: 18,
+                        color: Color(0xFFEF4444),
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        'Sign out',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFEF4444),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF6366F1), width: 1.5),
+              ),
+              child: const CircleAvatar(
+                radius: 16,
+                backgroundColor: Color(0xFFEEF2FF),
+                child: Icon(Icons.person, color: Color(0xFF6366F1), size: 20),
+              ),
             ),
           ),
         ],
@@ -277,44 +364,6 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Select Role',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1E293B),
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Role cards: Interviewer and Candidate (Expanded side by side)
-        Row(
-          children: [
-            Expanded(
-              child: _roleCard(
-                title: 'Interviewer',
-                desc:
-                    'Create a room and invite candidates to conduct code and system design interviews.',
-                icon: Icons.person_search_rounded,
-                selected: _isInterviewer,
-                onTap: () => setState(() => _isInterviewer = true),
-              ),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: _roleCard(
-                title: 'Candidate',
-                desc:
-                    'Join a room as a candidate to demonstrate your problem-solving and coding skills.',
-                icon: Icons.badge_outlined,
-                selected: !_isInterviewer,
-                onTap: () => setState(() => _isInterviewer = false),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 28),
-
         // Display Name & Room Name in responsive 2-column or 1-column layout
         LayoutBuilder(
           builder: (context, constraints) {
@@ -576,9 +625,9 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: _joinCodeController,
-          textCapitalization: TextCapitalization.characters,
+          // textCapitalization: TextCapitalization.characters,
           decoration: InputDecoration(
-            hintText: 'e.g. ABC123',
+            hintText: 'Paste the room code',
             hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
             suffixIcon: const Icon(
               Icons.vpn_key_outlined,
@@ -621,91 +670,6 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _roleCard({
-    required String title,
-    required String desc,
-    required IconData icon,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(22),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFFEEF2FF) : Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: selected ? const Color(0xFF6366F1) : const Color(0xFFE2E8F0),
-            width: selected ? 2 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: selected
-                  ? const Color(0xFF6366F1).withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? const Color(0xFFE0E7FF)
-                        : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: selected
-                        ? const Color(0xFF4F46E5)
-                        : const Color(0xFF64748B),
-                    size: 24,
-                  ),
-                ),
-                if (selected)
-                  const Icon(
-                    Icons.check_circle_rounded,
-                    color: Color(0xFF6366F1),
-                    size: 22,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: selected
-                    ? const Color(0xFF1E293B)
-                    : const Color(0xFF334155),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              desc,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF64748B),
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
