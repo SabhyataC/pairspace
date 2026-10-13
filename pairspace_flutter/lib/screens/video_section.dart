@@ -78,6 +78,7 @@ class _VideoSectionState extends State<VideoSection> {
   bool _camOn = true;
   bool _hasCamera = false;
   bool _hasMic = false;
+  bool _localReady = false;
   String? _error;
 
   Map<String, dynamic> _iceConfig = {
@@ -153,6 +154,7 @@ class _VideoSectionState extends State<VideoSection> {
       setState(() {
         _micOn = _hasMic;
         _camOn = _hasCamera;
+        _localReady = true;
       });
       _debug('Local media: mic=$_hasMic, camera=$_hasCamera');
 
@@ -475,9 +477,11 @@ class _VideoSectionState extends State<VideoSection> {
                 width: width,
                 height: height,
                 child: _videoTile(
-                  _localStage,
+                  _localReady ? _localStage : null,
                   label: 'You',
-                  overlayText: _hasCamera && _camOn ? null : 'Camera off',
+                  overlayText: !_localReady
+                      ? 'Starting camera…'
+                      : (_hasCamera && _camOn ? null : 'Camera off'),
                   mirror: true,
                 ),
               ),
@@ -492,7 +496,7 @@ class _VideoSectionState extends State<VideoSection> {
                         overlayText: 'Waiting for others to join…',
                       )
                     : _videoTile(
-                        peer.stage,
+                        peer.hasStream ? peer.stage : null,
                         label: '${_nameOf(peer.id)} (pinned)',
                         overlayText: _peerOverlay(peer),
                       ),
@@ -513,9 +517,11 @@ class _VideoSectionState extends State<VideoSection> {
     final isSelf = participantId == widget.participantId;
     if (isSelf) {
       return _videoTile(
-        _localThumb,
+        _localReady ? _localThumb : null,
         label: '',
-        overlayText: _hasCamera && _camOn ? null : 'Camera off',
+        overlayText: !_localReady
+            ? 'Starting camera…'
+            : (_hasCamera && _camOn ? null : 'Camera off'),
         mirror: true,
       );
     }
@@ -523,7 +529,11 @@ class _VideoSectionState extends State<VideoSection> {
     if (peer == null) {
       return _videoTile(null, label: '', overlayText: 'Connecting…');
     }
-    return _videoTile(peer.thumb, label: '', overlayText: _peerOverlay(peer));
+    return _videoTile(
+      peer.hasStream ? peer.thumb : null,
+      label: '',
+      overlayText: _peerOverlay(peer),
+    );
   }
 
   Widget _buildControls() {
@@ -584,6 +594,7 @@ class _VideoSectionState extends State<VideoSection> {
           if (renderer != null)
             RTCVideoView(
               renderer,
+              key: ObjectKey(renderer),
               mirror: mirror,
               objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
             ),

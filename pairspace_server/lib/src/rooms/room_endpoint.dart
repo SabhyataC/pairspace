@@ -208,6 +208,12 @@ class RoomEndpoint extends Endpoint {
     } else {
       room = await _requireInterviewer(session, participant.roomId);
     }
+    if (room.endedAt != null) {
+      throw AccessDeniedException(message: 'This room has ended');
+    }
+    if (participant.status != ParticipantStatus.pending) {
+      throw AccessDeniedException(message: 'Participant is not waiting');
+    }
 
     participant.status = ParticipantStatus.admitted;
     participant.lastSeenAt = DateTime.now().toUtc();
@@ -229,7 +235,11 @@ class RoomEndpoint extends Endpoint {
     if (participant == null) {
       throw AccessDeniedException(message: 'Participant not found');
     }
-    await _requireInterviewer(session, participant.roomId);
+    final room = await _requireInterviewer(session, participant.roomId);
+    if (participant.authUserId == room.createdBy ||
+        participant.status != ParticipantStatus.pending) {
+      throw AccessDeniedException(message: 'Participant is not waiting');
+    }
 
     participant.status = ParticipantStatus.denied;
     return Participant.db.updateRow(session, participant);
@@ -239,8 +249,9 @@ class RoomEndpoint extends Endpoint {
     Session session,
     int participantId,
   ) async {
+    final userId = session.authenticated!.authUserId;
     final participant = await Participant.db.findById(session, participantId);
-    if (participant == null) {
+    if (participant == null || participant.authUserId != userId) {
       throw AccessDeniedException(message: 'Participant not found');
     }
     return participant;
@@ -254,8 +265,12 @@ class RoomEndpoint extends Endpoint {
     if (participant == null || participant.authUserId != userId) {
       throw AccessDeniedException(message: 'Not your participant record');
     }
-    participant.status = ParticipantStatus.left;
-    await Participant.db.updateRow(session, participant);
+    if (participant.status == ParticipantStatus.admitted) {
+      participant.status = ParticipantStatus.left;
+      await Participant.db.updateRow(session, participant);
+    } else if (participant.status == ParticipantStatus.pending) {
+      await Participant.db.deleteRow(session, participant);
+    }
     await syncEmptyRoomExpiry(session, participant.roomId);
   }
 
@@ -269,6 +284,14 @@ class RoomEndpoint extends Endpoint {
   /// Lets a client know if the room has ended (for candidates to detect
   /// the interviewer ending the meeting while they're still in it).
   Future<bool> isRoomEnded(Session session, int roomId) async {
+    final userId = session.authenticated!.authUserId;
+    final mine = await Participant.db.findFirstRow(
+      session,
+      where: (t) => t.roomId.equals(roomId) & t.authUserId.equals(userId),
+    );
+    if (mine == null) {
+      throw AccessDeniedException(message: 'Not a member of this room');
+    }
     final room = await Room.db.findById(session, roomId);
     return room == null || room.endedAt != null;
   }
@@ -330,7 +353,8 @@ class RoomEndpoint extends Endpoint {
     }
     return room;
   }
-    Future<Room> _requireRecapAccess(Session session, int roomId) async {
+
+  Future<Room> _requireRecapAccess(Session session, int roomId) async {
     final userId = session.authenticated!.authUserId;
     final room = await Room.db.findById(session, roomId);
     if (room == null) {

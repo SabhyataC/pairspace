@@ -363,7 +363,6 @@ class EndpointCode extends _isc.EndpointRef {
   @override
   String get name => 'code';
 
-  /// Client sends its code updates in, and receives every update in the room.
   _ida.Stream<_i606xhqr.CodeUpdate> codeStream(
     int roomId,
     _ida.Stream<_i606xhqr.CodeUpdate> updates,
@@ -378,8 +377,6 @@ class EndpointCode extends _isc.EndpointRef {
         {'updates': updates},
       );
 
-  /// Latest saved code of a room, or null if nothing was typed yet.
-  /// Admitted participants only.
   _ida.Future<_ie6pu14k.CodeSnapshot?> getCode(int roomId) =>
       caller.callServerEndpoint<_ie6pu14k.CodeSnapshot?>(
         'code',

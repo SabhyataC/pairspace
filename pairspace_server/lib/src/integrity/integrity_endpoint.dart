@@ -32,6 +32,13 @@ class IntegrityEndpoint extends Endpoint {
     // Only the candidate is monitored; interviewer events are not recorded.
     if (participant.role != ParticipantRole.candidate) return;
 
+    final recorded = await IntegrityEvent.db.count(
+      session,
+      where: (t) =>
+          t.roomId.equals(roomId) & t.participantId.equals(participant.id!),
+    );
+    if (recorded >= 2000) return;
+
     await IntegrityEvent.db.insertRow(
       session,
       IntegrityEvent(

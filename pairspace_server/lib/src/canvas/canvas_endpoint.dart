@@ -20,13 +20,35 @@ class CanvasEndpoint extends Endpoint {
     await _requireAdmitted(session, roomId);
     final channel = 'room-strokes-$roomId';
 
-    // Handle incoming messages one at a time, so an erase can never overtake
-    // the insert of the stroke it refers to.
+    var lastCheck = DateTime.now();
+    var allowed = true;
+    var windowStart = DateTime.now();
+    var inWindow = 0;
+
+    Future<bool> ok() async {
+      final now = DateTime.now();
+      if (now.difference(windowStart) > const Duration(seconds: 1)) {
+        windowStart = now;
+        inWindow = 0;
+      }
+      if (++inWindow > 60) return false;
+      if (now.difference(lastCheck) > const Duration(seconds: 5)) {
+        lastCheck = now;
+        try {
+          await _requireAdmitted(session, roomId);
+        } catch (_) {
+          allowed = false;
+        }
+      }
+      return allowed;
+    }
+
     var queue = Future<void>.value();
     final incoming = strokes.listen((stroke) {
-      queue = queue.then(
-        (_) => _handleIncoming(session, roomId, channel, stroke),
-      );
+      queue = queue.then((_) async {
+        if (!await ok()) return;
+        await _handleIncoming(session, roomId, channel, stroke);
+      });
     });
 
     try {

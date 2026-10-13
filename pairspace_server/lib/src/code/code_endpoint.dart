@@ -11,7 +11,6 @@ class CodeEndpoint extends Endpoint {
 
   static const _maxChars = 100000;
 
-  /// Client sends its code updates in, and receives every update in the room.
   Stream<CodeUpdate> codeStream(
     Session session,
     int roomId,
@@ -20,8 +19,6 @@ class CodeEndpoint extends Endpoint {
     await _requireAdmitted(session, roomId);
     final channel = 'room-code-$roomId';
 
-    // Save to the database at most once per second, plus once when this
-    // client disconnects, instead of on every keystroke.
     CodeUpdate? pending;
     Timer? saveTimer;
 
@@ -34,15 +31,36 @@ class CodeEndpoint extends Endpoint {
       await _saveSnapshot(session, roomId, u);
     }
 
-    // Incoming: client -> everyone on the channel.
+    var lastCheck = DateTime.now();
+    var allowed = true;
+    var windowStart = DateTime.now();
+    var inWindow = 0;
+
     final incoming = updates.listen((update) async {
-      // Basic sanity checks on client-supplied data.
-      if (update.text.length > _maxChars || update.senderId.length > 64) {
+      final now = DateTime.now();
+      if (now.difference(windowStart) > const Duration(seconds: 1)) {
+        windowStart = now;
+        inWindow = 0;
+      }
+      if (++inWindow > 40) return;
+      if (now.difference(lastCheck) > const Duration(seconds: 5)) {
+        lastCheck = now;
+        try {
+          await _requireAdmitted(session, roomId);
+        } catch (_) {
+          allowed = false;
+        }
+      }
+      if (!allowed) return;
+
+      if (update.text.length > _maxChars ||
+          update.senderId.length > 64 ||
+          update.language.length > 20) {
         return;
       }
 
       try {
-        update.roomId = roomId; // never trust the roomId sent by the client
+        update.roomId = roomId;
         pending = update;
         saveTimer ??= Timer(const Duration(seconds: 1), flush);
         await session.messages.postMessage(channel, update);
@@ -55,7 +73,6 @@ class CodeEndpoint extends Endpoint {
       }
     });
 
-    // Outgoing: channel -> this client.
     try {
       yield* session.messages.createStream<CodeUpdate>(channel);
     } finally {
@@ -64,8 +81,6 @@ class CodeEndpoint extends Endpoint {
     }
   }
 
-  /// Latest saved code of a room, or null if nothing was typed yet.
-  /// Admitted participants only.
   Future<CodeSnapshot?> getCode(Session session, int roomId) async {
     await _requireAdmitted(session, roomId);
     return CodeSnapshot.db.findFirstRow(
@@ -118,6 +133,11 @@ class CodeEndpoint extends Endpoint {
     if (participant == null ||
         participant.status != ParticipantStatus.admitted) {
       throw AccessDeniedException(message: 'Not admitted to this room');
+    }
+
+    final room = await Room.db.findById(session, roomId);
+    if (room == null || room.endedAt != null) {
+      throw AccessDeniedException(message: 'This room has ended');
     }
   }
 }

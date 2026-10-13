@@ -54,6 +54,9 @@ class RunEndpoint extends Endpoint {
     if (!_languageIds.containsKey(_normalize(language))) {
       return _error('Unsupported language: $language');
     }
+    if (stdin != null && stdin.length > 5000) {
+      return _error('Input is too long (max 5000 characters).');
+    }
     if (code.length > _maxCodeChars) {
       return _error('Code is too long to run (max $_maxCodeChars characters).');
     }
