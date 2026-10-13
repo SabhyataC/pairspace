@@ -107,6 +107,9 @@
     .editor pre { margin: 0; padding: 18px 20px; overflow-x: auto; max-height: 520px; }
     .editor code { font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.7; color: #E2E8F0; }
 
+    .editor .replay { margin: 0; padding: 10px 16px; background: var(--dark-surface); border-top: 1px solid var(--dark-border); }
+.editor .replay .meta { color: #94A3B8; }
+
     /* canvas card */
     .canvas-card { padding: 14px; }
     /* the server writes inline border/background on the svg, so these need !important */
@@ -180,6 +183,66 @@
         <button id="copy-code" class="copy-btn" type="button">Copy</button>
       </div>
       <pre><code id="code-block">{{code}}</code></pre>
+      {{#hasCodeReplay}}
+<div id="code-replay" class="replay">
+  <button id="cr-play" type="button">▶ Replay</button>
+  <input id="cr-range" type="range" min="0" max="0" value="0">
+  <span id="cr-label" class="meta"></span>
+</div>
+<script id="cr-data" type="application/json">{{{codeReplayJson}}}</script>
+<script>
+(function () {
+  var edits = JSON.parse(document.getElementById('cr-data').textContent);
+  var codeEl = document.getElementById('code-block');
+  var box = document.getElementById('code-replay');
+  var pre = codeEl.parentNode;
+  var finalText = codeEl.textContent;
+  var n = edits.length;
+
+  function apply(s, e) { return s.slice(0, e.o) + e.i + s.slice(e.o + e.r); }
+  function build(k) {
+    var s = '';
+    for (var i = 0; i < k; i++) s = apply(s, edits[i]);
+    return s;
+  }
+  // log must rebuild the saved code, otherwise hide the replay
+  if (!n || build(n).trim() !== finalText.trim()) { box.style.display = 'none'; return; }
+  codeEl.dataset.final = finalText;
+
+  var btn = document.getElementById('cr-play');
+  var range = document.getElementById('cr-range');
+  var label = document.getElementById('cr-label');
+  var text = finalText, shown = n, timer = null;
+  range.max = n;
+
+  function render(k) {
+    if (k >= shown) { for (var i = shown; i < k; i++) text = apply(text, edits[i]); }
+    else { text = build(k); }
+    shown = k;
+    codeEl.textContent = text;
+    pre.scrollTop = pre.scrollHeight;
+    range.value = k;
+    label.textContent = k + ' / ' + n;
+  }
+  function stop() { clearTimeout(timer); timer = null; btn.textContent = '▶ Replay'; }
+  function step() {
+    render(shown + 1);
+    if (shown >= n) { stop(); return; }
+    var gap = edits[shown].t - edits[shown - 1].t;
+    timer = setTimeout(step, Math.min(Math.max(gap, 120), 800));
+  }
+  btn.onclick = function () {
+    if (timer) { stop(); return; }
+    if (shown >= n) render(0);
+    btn.textContent = '⏸ Pause';
+    timer = setTimeout(step, 300);
+  };
+  range.oninput = function () { stop(); render(parseInt(range.value, 10)); };
+  render(n);
+})();
+</script>
+{{/hasCodeReplay}}
+
     </div>
     {{/hasCode}}
     {{^hasCode}}<div class="empty">No code was written.</div>{{/hasCode}}
@@ -272,7 +335,8 @@
     var copy = document.getElementById('copy-code');
     if (copy) {
       copy.onclick = function () {
-        var text = document.getElementById('code-block').textContent;
+        var cb = document.getElementById('code-block');
+var text = cb.dataset.final || cb.textContent;
         if (!navigator.clipboard) return;
         navigator.clipboard.writeText(text).then(function () {
           copy.textContent = 'Copied!';

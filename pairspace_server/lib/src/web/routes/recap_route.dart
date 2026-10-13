@@ -61,6 +61,11 @@ class RecapRoute extends WidgetRoute {
       where: (t) => t.roomId.equals(room.id!) & t.isDeleted.equals(false),
       orderBy: (t) => t.id,
     );
+    final edits = await CodeEdit.db.find(
+      session,
+      where: (t) => t.roomId.equals(room.id!),
+      orderBy: (t) => t.createdAt,
+    );
 
     final text = snapshot?.content ?? '';
 
@@ -87,6 +92,8 @@ class RecapRoute extends WidgetRoute {
       'svg': _strokesToSvg(strokes),
       'hasReplay': strokes.length >= 2,
       'replayJson': _replayJson(strokes),
+      'hasCodeReplay': edits.length >= 2,
+      'codeReplayJson': _codeReplayJson(edits),
     });
   }
 
@@ -210,5 +217,20 @@ class RecapRoute extends WidgetRoute {
     }
     b.write('</svg>');
     return b.toString();
+  }
+
+  static String _codeReplayJson(List<CodeEdit> edits) {
+    if (edits.isEmpty) return '[]';
+    final t0 = edits.first.createdAt;
+    final items = [
+      for (final e in edits)
+        {
+          't': e.createdAt.difference(t0).inMilliseconds,
+          'o': e.offset,
+          'r': e.removed,
+          'i': e.inserted,
+        },
+    ];
+    return jsonEncode(items).replaceAll('<', r'\u003c');
   }
 }

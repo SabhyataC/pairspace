@@ -1,0 +1,11 @@
+class: CodeEdit
+table: code_edit
+fields:
+  roomId: int, relation(parent=room, onDelete=Cascade)
+  offset: int
+  removed: int
+  inserted: String
+  createdAt: DateTime
+indexes:
+  code_edit_room_idx:
+    fields: roomId, createdAt

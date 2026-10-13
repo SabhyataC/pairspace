@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:serverpod/serverpod.dart';
 import 'package:serverpod_auth_idp_server/core.dart';
+import 'code_edit_recorder.dart';
 
 import '../generated/protocol.dart';
 
@@ -111,6 +112,8 @@ class CodeEndpoint extends Endpoint {
         session,
         where: (t) => t.roomId.equals(roomId),
       );
+      var before = row?.content ?? '';
+
       if (row == null) {
         try {
           await CodeSnapshot.db.insertRow(
@@ -122,7 +125,6 @@ class CodeEndpoint extends Endpoint {
               updatedAt: DateTime.now(),
             ),
           );
-          return;
         } catch (_) {
           // Unique index on roomId: someone inserted first. Update theirs.
           row = await CodeSnapshot.db.findFirstRow(
@@ -130,12 +132,23 @@ class CodeEndpoint extends Endpoint {
             where: (t) => t.roomId.equals(roomId),
           );
           if (row == null) rethrow;
+          before = row.content;
         }
       }
-      row.content = u.text;
-      row.language = u.language;
-      row.updatedAt = DateTime.now();
-      await CodeSnapshot.db.updateRow(session, row);
+
+      if (row != null) {
+        row.content = u.text;
+        row.language = u.language;
+        row.updatedAt = DateTime.now();
+        await CodeSnapshot.db.updateRow(session, row);
+      }
+
+      await recordCodeEdit(
+        session,
+        roomId: roomId,
+        before: before,
+        after: u.text,
+      );
     } catch (e, st) {
       session.log(
         'Failed to save code snapshot: $e',

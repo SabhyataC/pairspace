@@ -23,6 +23,7 @@ import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
 import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _iais;
 import 'access_denied.dart' as _icyx6leh;
+import 'code_edit.dart' as _i6ehjrut;
 import 'code_snapshot.dart' as _ixhe19s2;
 import 'code_update.dart' as _i4nm3yea;
 import 'future_calls_generated_models/end_empty_room_future_call_end_model.dart'
@@ -40,6 +41,7 @@ import 'signal_message.dart' as _i6c8vmrx;
 import 'stdin_update.dart' as _i7ig3xsd;
 import 'stroke.dart' as _ikjj7mbr;
 export 'access_denied.dart';
+export 'code_edit.dart';
 export 'code_snapshot.dart';
 export 'code_update.dart';
 export 'greetings/greeting.dart';
@@ -63,6 +65,83 @@ class Protocol extends _is.DatabaseSerializationManager {
   static final Protocol _instance = Protocol._().._registerHostProtocols();
 
   static List<_isp.TableDefinition> get targetTableDefinitions => [
+    _isp.TableDefinition(
+      name: 'code_edit',
+      dartName: 'CodeEdit',
+      schema: 'public',
+      module: 'pairspace',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'roomId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'offset',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'removed',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'inserted',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'code_edit_fk_0',
+          columns: ['roomId'],
+          referenceTable: 'room',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'code_edit_room_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'roomId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'createdAt',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
     _isp.TableDefinition(
       name: 'code_snapshot',
       dartName: 'CodeSnapshot',
@@ -531,6 +610,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _icyx6leh.AccessDeniedException) {
       return _icyx6leh.AccessDeniedException.fromJson(data) as T;
     }
+    if (t == _i6ehjrut.CodeEdit) {
+      return _i6ehjrut.CodeEdit.fromJson(data) as T;
+    }
     if (t == _ixhe19s2.CodeSnapshot) {
       return _ixhe19s2.CodeSnapshot.fromJson(data) as T;
     }
@@ -581,6 +663,9 @@ class Protocol extends _is.DatabaseSerializationManager {
               ? _icyx6leh.AccessDeniedException.fromJson(data)
               : null)
           as T;
+    }
+    if (t == _is.getType<_i6ehjrut.CodeEdit?>()) {
+      return (data != null ? _i6ehjrut.CodeEdit.fromJson(data) : null) as T;
     }
     if (t == _is.getType<_ixhe19s2.CodeSnapshot?>()) {
       return (data != null ? _ixhe19s2.CodeSnapshot.fromJson(data) : null) as T;
@@ -676,6 +761,7 @@ class Protocol extends _is.DatabaseSerializationManager {
   static String? getClassNameForType(Type type) {
     return switch (type) {
       _icyx6leh.AccessDeniedException => 'AccessDeniedException',
+      _i6ehjrut.CodeEdit => 'CodeEdit',
       _ixhe19s2.CodeSnapshot => 'CodeSnapshot',
       _i4nm3yea.CodeUpdate => 'CodeUpdate',
       _iotrfso8.EndEmptyRoomFutureCallEndModel =>
@@ -708,6 +794,8 @@ class Protocol extends _is.DatabaseSerializationManager {
     switch (data) {
       case _icyx6leh.AccessDeniedException():
         return 'AccessDeniedException';
+      case _i6ehjrut.CodeEdit():
+        return 'CodeEdit';
       case _ixhe19s2.CodeSnapshot():
         return 'CodeSnapshot';
       case _i4nm3yea.CodeUpdate():
@@ -766,6 +854,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (dataClassName == 'AccessDeniedException') {
       return deserialize<_icyx6leh.AccessDeniedException>(data['data']);
+    }
+    if (dataClassName == 'CodeEdit') {
+      return deserialize<_i6ehjrut.CodeEdit>(data['data']);
     }
     if (dataClassName == 'CodeSnapshot') {
       return deserialize<_ixhe19s2.CodeSnapshot>(data['data']);
@@ -855,6 +946,8 @@ class Protocol extends _is.DatabaseSerializationManager {
       }
     }
     switch (t) {
+      case _i6ehjrut.CodeEdit:
+        return _i6ehjrut.CodeEdit.t;
       case _ixhe19s2.CodeSnapshot:
         return _ixhe19s2.CodeSnapshot.t;
       case _inmjytxd.IntegrityEvent:

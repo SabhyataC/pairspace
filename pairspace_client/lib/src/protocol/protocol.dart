@@ -22,6 +22,7 @@ import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
     as _iaic;
 import 'package:serverpod_client/serverpod_client.dart' as _isc;
 import 'access_denied.dart' as _icyx6leh;
+import 'code_edit.dart' as _i6ehjrut;
 import 'code_snapshot.dart' as _ixhe19s2;
 import 'code_update.dart' as _i4nm3yea;
 import 'greetings/greeting.dart' as _izw8z7ou;
@@ -37,6 +38,7 @@ import 'signal_message.dart' as _i6c8vmrx;
 import 'stdin_update.dart' as _i7ig3xsd;
 import 'stroke.dart' as _ikjj7mbr;
 export 'access_denied.dart';
+export 'code_edit.dart';
 export 'code_snapshot.dart';
 export 'code_update.dart';
 export 'greetings/greeting.dart';
@@ -90,6 +92,9 @@ class Protocol extends _isc.SerializationManager {
     if (t == _icyx6leh.AccessDeniedException) {
       return _icyx6leh.AccessDeniedException.fromJson(data) as T;
     }
+    if (t == _i6ehjrut.CodeEdit) {
+      return _i6ehjrut.CodeEdit.fromJson(data) as T;
+    }
     if (t == _ixhe19s2.CodeSnapshot) {
       return _ixhe19s2.CodeSnapshot.fromJson(data) as T;
     }
@@ -137,6 +142,9 @@ class Protocol extends _isc.SerializationManager {
               ? _icyx6leh.AccessDeniedException.fromJson(data)
               : null)
           as T;
+    }
+    if (t == _isc.getType<_i6ehjrut.CodeEdit?>()) {
+      return (data != null ? _i6ehjrut.CodeEdit.fromJson(data) : null) as T;
     }
     if (t == _isc.getType<_ixhe19s2.CodeSnapshot?>()) {
       return (data != null ? _ixhe19s2.CodeSnapshot.fromJson(data) : null) as T;
@@ -223,6 +231,7 @@ class Protocol extends _isc.SerializationManager {
   static String? getClassNameForType(Type type) {
     return switch (type) {
       _icyx6leh.AccessDeniedException => 'AccessDeniedException',
+      _i6ehjrut.CodeEdit => 'CodeEdit',
       _ixhe19s2.CodeSnapshot => 'CodeSnapshot',
       _i4nm3yea.CodeUpdate => 'CodeUpdate',
       _izw8z7ou.Greeting => 'Greeting',
@@ -253,6 +262,8 @@ class Protocol extends _isc.SerializationManager {
     switch (data) {
       case _icyx6leh.AccessDeniedException():
         return 'AccessDeniedException';
+      case _i6ehjrut.CodeEdit():
+        return 'CodeEdit';
       case _ixhe19s2.CodeSnapshot():
         return 'CodeSnapshot';
       case _i4nm3yea.CodeUpdate():
@@ -305,6 +316,9 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'AccessDeniedException') {
       return deserialize<_icyx6leh.AccessDeniedException>(data['data']);
+    }
+    if (dataClassName == 'CodeEdit') {
+      return deserialize<_i6ehjrut.CodeEdit>(data['data']);
     }
     if (dataClassName == 'CodeSnapshot') {
       return deserialize<_ixhe19s2.CodeSnapshot>(data['data']);
