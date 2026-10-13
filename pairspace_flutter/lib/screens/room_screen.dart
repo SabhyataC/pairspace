@@ -43,7 +43,7 @@ class _RoomScreenState extends State<RoomScreen> {
   String? _pendingRoomCode;
 
   Room? _myActiveRoom;
-  List<Room> _pastRooms = [];
+  List<PastRoom> _pastRooms = [];
   bool _checkingActiveRoom = true;
 
   bool _showPanel = true;
@@ -236,10 +236,14 @@ class _RoomScreenState extends State<RoomScreen> {
 
   // ---------- Core actions ----------
 
-  Future<void> _createRoom(String name, int minutes) async {
+  Future<void> _createRoom(String name, String? roomName, int minutes) async {
     setState(() => _loading = true);
     try {
-      final room = await client.room.createRoom(name, minutes);
+      final room = await client.room.createRoom(
+        name,
+        minutes,
+        roomName: roomName,
+      );
       if (!mounted) return;
 
       // createRoom only returns the Room — fetch our own Participant row
@@ -750,8 +754,8 @@ class _RoomScreenState extends State<RoomScreen> {
         onRejoinActiveRoom: _rejoinOwnActiveRoom,
         onOpenRecap: _openRecap,
         onSignOut: widget.onSignOut,
-        onCreateRoom: (name, minutes) async {
-          await _createRoom(name, minutes);
+        onCreateRoom: (name, roomName, minutes) async {
+          await _createRoom(name, roomName, minutes);
         },
         onJoinRoom: (code, name) async {
           return await _joinRoom(code, name);
@@ -907,86 +911,86 @@ class _RoomScreenState extends State<RoomScreen> {
           const SizedBox(height: 14),
 
           // Connection status & Room Code badge
-          if (_leftSidebarExpanded)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF334155)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF10B981),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'CONNECTED',
-                        style: TextStyle(
-                          color: Color(0xFF10B981),
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _roomCode ?? '',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'monospace',
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'Copy Room Code',
-                        icon: const Icon(
-                          Icons.copy_rounded,
-                          size: 13,
-                          color: Color(0xFF94A3B8),
-                        ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        onPressed: _copyRoomCode,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            )
-          else
-            Center(
-              child: Tooltip(
-                message: 'Connected · Room: $_roomCode',
-                child: Container(
-                  width: 10,
-                  height: 10,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF10B981),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ),
-          const SizedBox(height: 18),
+          // if (_leftSidebarExpanded)
+          //   Container(
+          //     width: double.infinity,
+          //     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          //     decoration: BoxDecoration(
+          //       color: const Color(0xFF1E293B),
+          //       borderRadius: BorderRadius.circular(8),
+          //       border: Border.all(color: const Color(0xFF334155)),
+          //     ),
+          //     child: Column(
+          //       crossAxisAlignment: CrossAxisAlignment.start,
+          //       children: [
+          //         Row(
+          //           children: [
+          //             Container(
+          //               width: 7,
+          //               height: 7,
+          //               decoration: const BoxDecoration(
+          //                 color: Color(0xFF10B981),
+          //                 shape: BoxShape.circle,
+          //               ),
+          //             ),
+          //             const SizedBox(width: 6),
+          //             const Text(
+          //               'CONNECTED',
+          //               style: TextStyle(
+          //                 color: Color(0xFF10B981),
+          //                 fontSize: 10,
+          //                 fontWeight: FontWeight.bold,
+          //                 letterSpacing: 0.5,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //         const SizedBox(height: 4),
+          //         Row(
+          //           children: [
+          //             Expanded(
+          //               child: Text(
+          //                 _roomCode ?? '',
+          //                 style: const TextStyle(
+          //                   color: Colors.white,
+          //                   fontSize: 12,
+          //                   fontWeight: FontWeight.bold,
+          //                   fontFamily: 'monospace',
+          //                 ),
+          //                 overflow: TextOverflow.ellipsis,
+          //               ),
+          //             ),
+          //             IconButton(
+          //               tooltip: 'Copy Room Code',
+          //               icon: const Icon(
+          //                 Icons.copy_rounded,
+          //                 size: 13,
+          //                 color: Color(0xFF94A3B8),
+          //               ),
+          //               padding: EdgeInsets.zero,
+          //               constraints: const BoxConstraints(),
+          //               onPressed: _copyRoomCode,
+          //             ),
+          //           ],
+          //         ),
+          //       ],
+          //     ),
+          //   )
+          // else
+          //   Center(
+          //     child: Tooltip(
+          //       message: 'Connected · Room: $_roomCode',
+          //       child: Container(
+          //         width: 10,
+          //         height: 10,
+          //         decoration: const BoxDecoration(
+          //           color: Color(0xFF10B981),
+          //           shape: BoxShape.circle,
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // const SizedBox(height: 18),
 
           // Navigation Section
           _sidebarNavItem(

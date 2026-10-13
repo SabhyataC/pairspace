@@ -1,0 +1,4 @@
+class: PastRoom
+fields:
+  room: Room
+  candidateName: String?

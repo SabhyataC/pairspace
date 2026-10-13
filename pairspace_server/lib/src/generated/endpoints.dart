@@ -714,6 +714,11 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<int>(),
               nullable: false,
             ),
+            'roomName': _is.ParameterDescription(
+              name: 'roomName',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
           },
           call:
               (
@@ -724,6 +729,7 @@ class Endpoints extends _is.EndpointDispatch {
                     session,
                     params['displayName'],
                     params['durationMinutes'],
+                    roomName: params['roomName'],
                   ),
         ),
         'myActiveRoom': _is.MethodConnector(

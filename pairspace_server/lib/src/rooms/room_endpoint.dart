@@ -17,8 +17,9 @@ class RoomEndpoint extends Endpoint {
   Future<Room> createRoom(
     Session session,
     String displayName,
-    int durationMinutes,
-  ) async {
+    int durationMinutes, {
+    String? roomName,
+  }) async {
     final userId = session.authenticated!.authUserId;
     if (!_allowedDurations.contains(durationMinutes)) {
       throw ArgumentError('Unsupported duration: $durationMinutes');
@@ -36,6 +37,7 @@ class RoomEndpoint extends Endpoint {
       session,
       Room(
         code: _generateCode(),
+        name: _sanitizeRoomName(roomName),
         createdBy: userId,
         durationMinutes: durationMinutes,
       ),
@@ -68,14 +70,34 @@ class RoomEndpoint extends Endpoint {
   }
 
   /// The caller's finished rooms, newest first, for the "Past meetings" list.
-  Future<List<Room>> pastRooms(Session session) async {
+  Future<List<PastRoom>> pastRooms(Session session) async {
     final userId = session.authenticated!.authUserId;
-    return Room.db.find(
+    final rooms = await Room.db.find(
       session,
       where: (t) => t.createdBy.equals(userId) & t.endedAt.notEquals(null),
       orderBy: (t) => t.endedAt.desc(),
       limit: 20,
     );
+    if (rooms.isEmpty) return [];
+
+    final candidates = await Participant.db.find(
+      session,
+      where: (t) =>
+          t.roomId.inSet(rooms.map((r) => r.id!).toSet()) &
+          t.role.equals(ParticipantRole.candidate) &
+          (t.status.equals(ParticipantStatus.admitted) |
+              t.status.equals(ParticipantStatus.left)),
+      orderBy: (t) => t.joinedAt,
+    );
+    final firstByRoom = <int, String>{};
+    for (final p in candidates) {
+      firstByRoom.putIfAbsent(p.roomId, () => p.displayName);
+    }
+
+    return [
+      for (final r in rooms)
+        PastRoom(room: r, candidateName: firstByRoom[r.id]),
+    ];
   }
 
   /// Interviewer-only: the private recap link of one of the caller's rooms.
@@ -393,5 +415,11 @@ class RoomEndpoint extends Endpoint {
     final trimmed = raw.trim();
     if (trimmed.isEmpty) return fallback;
     return trimmed.length > 40 ? trimmed.substring(0, 40) : trimmed;
+  }
+
+  String? _sanitizeRoomName(String? raw) {
+    final trimmed = raw?.trim() ?? '';
+    if (trimmed.isEmpty) return null;
+    return String.fromCharCodes(trimmed.runes.take(60));
   }
 }

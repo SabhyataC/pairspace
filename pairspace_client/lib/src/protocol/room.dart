@@ -17,6 +17,7 @@ abstract class Room
   Room._({
     this.id,
     required this.code,
+    this.name,
     required this.createdBy,
     DateTime? createdAt,
     this.endedAt,
@@ -28,6 +29,7 @@ abstract class Room
   factory Room({
     int? id,
     required String code,
+    String? name,
     required _isc.UuidValue createdBy,
     DateTime? createdAt,
     DateTime? endedAt,
@@ -39,6 +41,7 @@ abstract class Room
     return Room(
       id: jsonSerialization['id'] as int?,
       code: jsonSerialization['code'] as String,
+      name: jsonSerialization['name'] as String?,
       createdBy: _isc.UuidValueJsonExtension.fromJson(
         jsonSerialization['createdBy'],
       ),
@@ -62,6 +65,8 @@ abstract class Room
 
   String code;
 
+  String? name;
+
   _isc.UuidValue createdBy;
 
   DateTime createdAt;
@@ -78,6 +83,7 @@ abstract class Room
   Room copyWith({
     int? id,
     String? code,
+    String? name,
     _isc.UuidValue? createdBy,
     DateTime? createdAt,
     DateTime? endedAt,
@@ -90,6 +96,7 @@ abstract class Room
       '__className__': 'Room',
       if (id != null) 'id': id,
       'code': code,
+      if (name != null) 'name': name,
       'createdBy': createdBy.toJson(),
       'createdAt': createdAt.toJson(),
       if (endedAt != null) 'endedAt': endedAt?.toJson(),
@@ -104,6 +111,7 @@ abstract class Room
       '__className__': 'Room',
       if (id != null) 'id': id,
       'code': code,
+      if (name != null) 'name': name,
       'createdBy': createdBy.toJson(),
       'createdAt': createdAt.toJson(),
       if (endedAt != null) 'endedAt': endedAt?.toJson(),
@@ -124,6 +132,7 @@ class _RoomImpl extends Room {
   _RoomImpl({
     int? id,
     required String code,
+    String? name,
     required _isc.UuidValue createdBy,
     DateTime? createdAt,
     DateTime? endedAt,
@@ -132,6 +141,7 @@ class _RoomImpl extends Room {
   }) : super._(
          id: id,
          code: code,
+         name: name,
          createdBy: createdBy,
          createdAt: createdAt,
          endedAt: endedAt,
@@ -146,6 +156,7 @@ class _RoomImpl extends Room {
   Room copyWith({
     Object? id = _Undefined,
     String? code,
+    Object? name = _Undefined,
     _isc.UuidValue? createdBy,
     DateTime? createdAt,
     Object? endedAt = _Undefined,
@@ -155,6 +166,7 @@ class _RoomImpl extends Room {
     return Room(
       id: id is int? ? id : this.id,
       code: code ?? this.code,
+      name: name is String? ? name : this.name,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       endedAt: endedAt is DateTime? ? endedAt : this.endedAt,

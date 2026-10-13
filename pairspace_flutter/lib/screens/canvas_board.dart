@@ -82,8 +82,8 @@ class CanvasBoard extends StatefulWidget {
 }
 
 class _CanvasBoardState extends State<CanvasBoard> {
-  static const _color = Colors.black;
-  static const _width = 3.0;
+  Color _color = Colors.black;
+  double _width = 3.0;
   static const _eraserRadius = 12.0;
   // The server rejects pen strokes over 20000 values; split well before that.
   static const _maxPenValues = 10000;
@@ -260,6 +260,8 @@ class _CanvasBoardState extends State<CanvasBoard> {
           const SingleActivator(LogicalKeyboardKey.escape): _cancelText,
           const SingleActivator(LogicalKeyboardKey.enter, control: true):
               _commitText,
+          const SingleActivator(LogicalKeyboardKey.enter, meta: true):
+              _commitText,
         },
         child: DecoratedBox(
           decoration: BoxDecoration(
@@ -354,6 +356,10 @@ class _CanvasBoardState extends State<CanvasBoard> {
               _commitText();
               setState(() => _tool = t);
             },
+            color: _color,
+            width: _width,
+            onColorChanged: (c) => setState(() => _color = c),
+            onWidthChanged: (w) => setState(() => _width = w),
             textSize: _textSize,
             onSmaller: _textSizeIdx > 0 ? () => _stepTextSize(-1) : null,
             onBigger: _textSizeIdx < _textSizes.length - 1
@@ -422,10 +428,27 @@ class _Toolbar extends StatelessWidget {
     required this.textSize,
     required this.onSmaller,
     required this.onBigger,
+    required this.color,
+    required this.width,
+    required this.onColorChanged,
+    required this.onWidthChanged,
   });
 
   final CanvasTool tool;
   final ValueChanged<CanvasTool> onChanged;
+  final Color color;
+  final double width;
+  final ValueChanged<Color> onColorChanged;
+  final ValueChanged<double> onWidthChanged;
+
+  static const _palette = <Color>[
+    Colors.black,
+    Color(0xFFDC2626),
+    Color(0xFF2563EB),
+    Color(0xFF16A34A),
+    Color(0xFFF59E0B),
+  ];
+  static const _widths = <double>[2, 3, 6, 10];
   final double textSize;
   final VoidCallback? onSmaller;
   final VoidCallback? onBigger;
@@ -466,6 +489,74 @@ class _Toolbar extends StatelessWidget {
                 backgroundColor: t == tool ? Colors.white : Colors.transparent,
                 padding: const EdgeInsets.all(8),
                 minimumSize: const Size(36, 36),
+              ),
+            ),
+          if (tool != CanvasTool.eraser)
+            // Same trick as the text-size buttons: clicking here must not
+            // place an open text box.
+            TextFieldTapRegion(
+              child: ExcludeFocus(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(width: 6),
+                    for (final c in _palette)
+                      GestureDetector(
+                        onTap: () => onColorChanged(c),
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          decoration: BoxDecoration(
+                            color: c,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: c == color
+                                  ? Colors.white
+                                  : const Color(0xFF475569),
+                              width: c == color ? 2.5 : 1,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          if (tool != CanvasTool.eraser && tool != CanvasTool.text)
+            TextFieldTapRegion(
+              child: ExcludeFocus(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(width: 8),
+                    for (final w in _widths)
+                      GestureDetector(
+                        onTap: () => onWidthChanged(w),
+                        child: Container(
+                          width: 26,
+                          height: 26,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: w == width
+                                ? Colors.white
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Container(
+                            width: w + 2,
+                            height: w + 2,
+                            decoration: BoxDecoration(
+                              color: w == width
+                                  ? const Color(0xFF0F172A)
+                                  : Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           if (tool == CanvasTool.text)
@@ -513,6 +604,13 @@ class _Toolbar extends StatelessWidget {
                       style: IconButton.styleFrom(
                         padding: const EdgeInsets.all(6),
                         minimumSize: const Size(32, 32),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8, right: 4),
+                      child: Text(
+                        'Ctrl/Cmd+Enter to place · Esc to cancel',
+                        style: TextStyle(color: Colors.white70, fontSize: 11),
                       ),
                     ),
                   ],

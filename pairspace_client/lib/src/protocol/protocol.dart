@@ -14,7 +14,7 @@
 import 'package:pairspace_client/src/protocol/integrity_event.dart'
     as _ivbyloxl;
 import 'package:pairspace_client/src/protocol/participant.dart' as _i9rgdsem;
-import 'package:pairspace_client/src/protocol/room.dart' as _iiu20v5l;
+import 'package:pairspace_client/src/protocol/past_room.dart' as _ivrs6ogb;
 import 'package:pairspace_client/src/protocol/stroke.dart' as _is7tpwzz;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _iacc;
@@ -29,6 +29,7 @@ import 'integrity_event.dart' as _inmjytxd;
 import 'participant.dart' as _ih83ei55;
 import 'participant_role.dart' as _i5kza8cj;
 import 'participant_status.dart' as _idcdy19m;
+import 'past_room.dart' as _isik2whc;
 import 'room.dart' as _ieflxecy;
 import 'room_timing.dart' as _i4ch8j3m;
 import 'run_result.dart' as _i582tvfi;
@@ -43,6 +44,7 @@ export 'integrity_event.dart';
 export 'participant.dart';
 export 'participant_role.dart';
 export 'participant_status.dart';
+export 'past_room.dart';
 export 'room.dart';
 export 'room_timing.dart';
 export 'run_result.dart';
@@ -109,6 +111,9 @@ class Protocol extends _isc.SerializationManager {
     if (t == _idcdy19m.ParticipantStatus) {
       return _idcdy19m.ParticipantStatus.fromJson(data) as T;
     }
+    if (t == _isik2whc.PastRoom) {
+      return _isik2whc.PastRoom.fromJson(data) as T;
+    }
     if (t == _ieflxecy.Room) {
       return _ieflxecy.Room.fromJson(data) as T;
     }
@@ -157,6 +162,9 @@ class Protocol extends _isc.SerializationManager {
       return (data != null ? _idcdy19m.ParticipantStatus.fromJson(data) : null)
           as T;
     }
+    if (t == _isc.getType<_isik2whc.PastRoom?>()) {
+      return (data != null ? _isik2whc.PastRoom.fromJson(data) : null) as T;
+    }
     if (t == _isc.getType<_ieflxecy.Room?>()) {
       return (data != null ? _ieflxecy.Room.fromJson(data) : null) as T;
     }
@@ -191,8 +199,10 @@ class Protocol extends _isc.SerializationManager {
               .toList()
           as T;
     }
-    if (t == List<_iiu20v5l.Room>) {
-      return (data as List).map((e) => deserialize<_iiu20v5l.Room>(e)).toList()
+    if (t == List<_ivrs6ogb.PastRoom>) {
+      return (data as List)
+              .map((e) => deserialize<_ivrs6ogb.PastRoom>(e))
+              .toList()
           as T;
     }
     if (t == List<_i9rgdsem.Participant>) {
@@ -220,6 +230,7 @@ class Protocol extends _isc.SerializationManager {
       _ih83ei55.Participant => 'Participant',
       _i5kza8cj.ParticipantRole => 'ParticipantRole',
       _idcdy19m.ParticipantStatus => 'ParticipantStatus',
+      _isik2whc.PastRoom => 'PastRoom',
       _ieflxecy.Room => 'Room',
       _i4ch8j3m.RoomTiming => 'RoomTiming',
       _i582tvfi.RunResult => 'RunResult',
@@ -256,6 +267,8 @@ class Protocol extends _isc.SerializationManager {
         return 'ParticipantRole';
       case _idcdy19m.ParticipantStatus():
         return 'ParticipantStatus';
+      case _isik2whc.PastRoom():
+        return 'PastRoom';
       case _ieflxecy.Room():
         return 'Room';
       case _i4ch8j3m.RoomTiming():
@@ -313,6 +326,9 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'ParticipantStatus') {
       return deserialize<_idcdy19m.ParticipantStatus>(data['data']);
+    }
+    if (dataClassName == 'PastRoom') {
+      return deserialize<_isik2whc.PastRoom>(data['data']);
     }
     if (dataClassName == 'Room') {
       return deserialize<_ieflxecy.Room>(data['data']);

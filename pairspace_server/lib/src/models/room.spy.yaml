@@ -2,6 +2,7 @@ class: Room
 table: room
 fields:
   code: String
+  name: String?
   createdBy: UuidValue
   createdAt: DateTime, default=now
   endedAt: DateTime?

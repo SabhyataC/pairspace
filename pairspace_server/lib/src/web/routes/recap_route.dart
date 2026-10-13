@@ -68,7 +68,9 @@ class RecapRoute extends WidgetRoute {
       'available': true,
       'started': _fmt(room.createdAt),
       'ended': _fmt(endedAt),
-      'duration': '${endedAt.difference(room.createdAt).inMinutes} min',
+      'duration': room.startedAt == null
+          ? 'Unknown'
+          : '${endedAt.difference(room.startedAt!).inMinutes} min',
       'participants': [
         for (final p in people)
           {

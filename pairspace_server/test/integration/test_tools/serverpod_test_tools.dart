@@ -23,6 +23,7 @@ import 'package:pairspace_server/src/generated/greetings/greeting.dart'
 import 'package:pairspace_server/src/generated/integrity_event.dart'
     as _iihiao09;
 import 'package:pairspace_server/src/generated/participant.dart' as _ibvon4z2;
+import 'package:pairspace_server/src/generated/past_room.dart' as _ilnoa9em;
 import 'package:pairspace_server/src/generated/room.dart' as _it3k3a2g;
 import 'package:pairspace_server/src/generated/room_timing.dart' as _i6w8xnej;
 import 'package:pairspace_server/src/generated/run_result.dart' as _i9mp160k;
@@ -1155,8 +1156,9 @@ class _RoomEndpoint {
   _ida.Future<_it3k3a2g.Room> createRoom(
     _ist.TestSessionBuilder sessionBuilder,
     String displayName,
-    int durationMinutes,
-  ) async {
+    int durationMinutes, {
+    String? roomName,
+  }) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
           (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
@@ -1171,6 +1173,7 @@ class _RoomEndpoint {
           parameters: _ist.testObjectToJson({
             'displayName': displayName,
             'durationMinutes': durationMinutes,
+            'roomName': roomName,
           }),
           serializationManager: _serializationManager,
         );
@@ -1217,7 +1220,7 @@ class _RoomEndpoint {
     });
   }
 
-  _ida.Future<List<_it3k3a2g.Room>> pastRooms(
+  _ida.Future<List<_ilnoa9em.PastRoom>> pastRooms(
     _ist.TestSessionBuilder sessionBuilder,
   ) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
@@ -1239,7 +1242,7 @@ class _RoomEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _ida.Future<List<_it3k3a2g.Room>>);
+                as _ida.Future<List<_ilnoa9em.PastRoom>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

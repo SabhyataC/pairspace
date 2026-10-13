@@ -19,6 +19,7 @@ import 'package:pairspace_client/src/protocol/greetings/greeting.dart'
 import 'package:pairspace_client/src/protocol/integrity_event.dart'
     as _ivbyloxl;
 import 'package:pairspace_client/src/protocol/participant.dart' as _i9rgdsem;
+import 'package:pairspace_client/src/protocol/past_room.dart' as _ivrs6ogb;
 import 'package:pairspace_client/src/protocol/room.dart' as _iiu20v5l;
 import 'package:pairspace_client/src/protocol/room_timing.dart' as _ivvrayl6;
 import 'package:pairspace_client/src/protocol/run_result.dart' as _itbzxe9o;
@@ -505,13 +506,15 @@ class EndpointRoom extends _isc.EndpointRef {
 
   _ida.Future<_iiu20v5l.Room> createRoom(
     String displayName,
-    int durationMinutes,
-  ) => caller.callServerEndpoint<_iiu20v5l.Room>(
+    int durationMinutes, {
+    String? roomName,
+  }) => caller.callServerEndpoint<_iiu20v5l.Room>(
     'room',
     'createRoom',
     {
       'displayName': displayName,
       'durationMinutes': durationMinutes,
+      'roomName': roomName,
     },
   );
 
@@ -524,8 +527,8 @@ class EndpointRoom extends _isc.EndpointRef {
       );
 
   /// The caller's finished rooms, newest first, for the "Past meetings" list.
-  _ida.Future<List<_iiu20v5l.Room>> pastRooms() =>
-      caller.callServerEndpoint<List<_iiu20v5l.Room>>(
+  _ida.Future<List<_ivrs6ogb.PastRoom>> pastRooms() =>
+      caller.callServerEndpoint<List<_ivrs6ogb.PastRoom>>(
         'room',
         'pastRooms',
         {},

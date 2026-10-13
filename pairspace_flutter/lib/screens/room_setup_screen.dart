@@ -6,12 +6,13 @@ import '../widgets/buttons.dart';
 import '../client.dart';
 
 class RoomSetupScreen extends StatefulWidget {
-  final Future<void> Function(String name, int minutes) onCreateRoom;
+  final Future<void> Function(String name, String? roomName, int minutes)
+  onCreateRoom;
   final Future<bool> Function(String code, String name) onJoinRoom;
   final VoidCallback? onBack;
   final Room? myActiveRoom;
   final Future<void> Function()? onRejoinActiveRoom;
-  final List<Room> pastRooms;
+  final List<PastRoom> pastRooms;
   final Future<void> Function(int roomId)? onOpenRecap;
   final Future<void> Function()? onSignOut;
 
@@ -66,21 +67,24 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
 
   Future<void> _handleCreate() async {
     final name = _displayNameController.text.trim().isEmpty
-        ? (_roomNameController.text.trim().isEmpty
-              ? 'Interviewer'
-              : _roomNameController.text.trim())
+        ? 'Interviewer'
         : _displayNameController.text.trim();
+    final roomName = _roomNameController.text.trim();
 
     setState(() => _isLoading = true);
     try {
-      await widget.onCreateRoom(name, _durationMinutes);
+      await widget.onCreateRoom(
+        name,
+        roomName.isEmpty ? null : roomName,
+        _durationMinutes,
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _handleJoin() async {
-    final code = _joinCodeController.text.trim();
+    final code = _extractRoomCode(_joinCodeController.text);
     if (code.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a room code')),
@@ -97,6 +101,33 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  String _extractRoomCode(String input) {
+    final text = input.trim();
+    final match = RegExp(r'[?&]room=([^&#\s]+)').firstMatch(text);
+    return match != null ? Uri.decodeComponent(match.group(1)!) : text;
+  }
+
+  String _formatDate(DateTime d) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    final l = d.toLocal();
+    final h = l.hour % 12 == 0 ? 12 : l.hour % 12;
+    final m = l.minute.toString().padLeft(2, '0');
+    return '${months[l.month - 1]} ${l.day}, ${l.year} · $h:$m ${l.hour < 12 ? 'AM' : 'PM'}';
   }
 
   @override
@@ -701,7 +732,7 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Active Room: ${widget.myActiveRoom!.code}',
+                      'Active Room: ${widget.myActiveRoom!.name ?? widget.myActiveRoom!.code}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
@@ -742,8 +773,10 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            ...widget.pastRooms.map(
-              (r) => Container(
+            ...widget.pastRooms.map((p) {
+              final r = p.room;
+              final hasName = r.name?.isNotEmpty ?? false;
+              return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8FAFC),
@@ -758,14 +791,20 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                     color: Color(0xFF6366F1),
                   ),
                   title: Text(
-                    'Room ${r.code}',
+                    hasName
+                        ? r.name!
+                        : 'Interview · ${_formatDate(r.createdAt)}',
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),
                   ),
                   subtitle: Text(
-                    '${r.endedAt?.difference(r.createdAt).inMinutes ?? 0} minutes duration',
+                    [
+                      if (p.candidateName != null) 'with ${p.candidateName}',
+                      if (hasName) _formatDate(r.createdAt),
+                      '${r.endedAt?.difference(r.createdAt).inMinutes ?? 0} min',
+                    ].join(' · '),
                     style: const TextStyle(
                       color: Color(0xFF94A3B8),
                       fontSize: 12,
@@ -806,8 +845,8 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                     ],
                   ),
                 ),
-              ),
-            ),
+              );
+            }),
           ],
         ],
       ),
