@@ -21,6 +21,25 @@ class CodeEditorPanel extends StatefulWidget {
 class _CodeEditorPanelState extends State<CodeEditorPanel> {
   static const _initialText = '# Write your solution here\n';
 
+  /// Starter code per language. Keys must match the keys of [_languages].
+  static const _starters = <String, String>{
+    'Python': '# Write your solution here\n',
+    'Java':
+        'public class Main {\n'
+        '    public static void main(String[] args) {\n'
+        '        // Write your solution here\n'
+        '    }\n'
+        '}\n',
+    'C++':
+        '#include <iostream>\n'
+        'using namespace std;\n'
+        '\n'
+        'int main() {\n'
+        '    // Write your solution here\n'
+        '    return 0;\n'
+        '}\n',
+  };
+
   static final _languages = <String, MonacoLanguage>{
     'Python': MonacoLanguage('python'),
     // 'JavaScript': MonacoLanguage('javascript'),
@@ -45,6 +64,9 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
 
   // Last text we sent or applied. Used to avoid echo loops.
   String _lastSyncedText = _initialText;
+
+  /// Code kept per language while another language is showing.
+  final Map<String, String> _buffers = {};
   int _version = 0;
 
   StreamController<CodeUpdate>? _outgoing;
@@ -191,15 +213,14 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
     }
 
     if (snap.language != _selected && _languages.containsKey(snap.language)) {
+      _buffers[_selected] = current;
       if (mounted) setState(() => _selected = snap.language);
       await c.document.setLanguage(_languages[snap.language]!);
     }
     if (snap.content != current) {
       _unconfirmed = null;
       _lastSyncedText = snap.content; // set first so no echo is sent
-      final sel = await c.getSelection();
-      await c.document.setText(snap.content);
-      if (sel != null) await c.setSelection(sel);
+      await _applyRemoteText(c, current, snap.content);
     }
   }
 
@@ -238,8 +259,16 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
     if (c == null) return;
 
     if (u.language != _selected && _languages.containsKey(u.language)) {
+      // The other person switched language: keep our code for the old
+      // language, then show their code for the new one.
+      _buffers[_selected] = await c.document.getText();
       if (mounted) setState(() => _selected = u.language);
       await c.document.setLanguage(_languages[u.language]!);
+      _lastSyncedText = u.text; // set first so the change event is ignored
+      _remoteApplies++;
+      _unconfirmed = null;
+      await c.document.setText(u.text);
+      return;
     }
 
     if (u.text == _lastSyncedText) return;
@@ -258,9 +287,67 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
         u.text; // set first so the resulting change event is ignored
     _remoteApplies++;
     _unconfirmed = null;
-    final sel = await c.getSelection();
-    await c.document.setText(u.text);
-    if (sel != null) await c.setSelection(sel);
+    await _applyRemoteText(c, current, u.text);
+  }
+
+  /// Applies [next] to the editor as ONE minimal edit (common prefix/suffix
+  /// trimmed) instead of setText, so Monaco keeps cursor, scroll and undo.
+  /// [cur] must be the editor text read just before calling this.
+  Future<void> _applyRemoteText(
+    MonacoController c,
+    String cur,
+    String next,
+  ) async {
+    if (cur == next) return;
+
+    var start = 0;
+    final maxPrefix = min(cur.length, next.length);
+    while (start < maxPrefix &&
+        cur.codeUnitAt(start) == next.codeUnitAt(start)) {
+      start++;
+    }
+    var endCur = cur.length;
+    var endNext = next.length;
+    while (endCur > start &&
+        endNext > start &&
+        cur.codeUnitAt(endCur - 1) == next.codeUnitAt(endNext - 1)) {
+      endCur--;
+      endNext--;
+    }
+
+    // Never cut an emoji (surrogate pair) in half.
+    bool isHigh(int u) => u >= 0xD800 && u <= 0xDBFF;
+    bool isLow(int u) => u >= 0xDC00 && u <= 0xDFFF;
+    if (start > 0 && isHigh(cur.codeUnitAt(start - 1))) start--;
+    if (endCur < cur.length && isLow(cur.codeUnitAt(endCur))) {
+      endCur++;
+      endNext++;
+    }
+
+    // Offset -> Monaco's 1-based line/column.
+    Position pos(String s, int offset) {
+      var line = 1;
+      var lastNewline = -1;
+      for (var i = 0; i < offset; i++) {
+        if (s.codeUnitAt(i) == 10) {
+          line++;
+          lastNewline = i;
+        }
+      }
+      return Position(line: line, column: offset - lastNewline);
+    }
+
+    final from = pos(cur, start);
+    final to = pos(cur, endCur);
+    await c.document.replaceRange(
+      Range(
+        startLine: from.line,
+        startColumn: from.column,
+        endLine: to.line,
+        endColumn: to.column,
+      ),
+      next.substring(start, endNext),
+    );
   }
 
   void _connectRun() {
@@ -507,8 +594,22 @@ class _CodeEditorPanelState extends State<CodeEditorPanel> {
   }
 
   Future<void> _changeLanguage(String name) async {
+    final c = _controller;
+    if (c == null || name == _selected) return;
+
+    // Remember the code of the language we are leaving, then show the new
+    // language's own code (or its starter if nothing was written there yet).
+    final current = await c.document.getText();
+    _buffers[_selected] = current;
+    final saved = _buffers[name];
+    final next = (saved == null || saved.trim().isEmpty)
+        ? (_starters[name] ?? '')
+        : saved;
+
     setState(() => _selected = name);
-    await _controller?.document.setLanguage(_languages[name]!);
+    await c.document.setLanguage(_languages[name]!);
+    _lastSyncedText = next; // set first so no extra echo is sent
+    await c.document.setText(next);
     await _sendNow(force: true);
   }
 

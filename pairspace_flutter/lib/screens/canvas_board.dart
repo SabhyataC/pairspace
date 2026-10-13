@@ -85,6 +85,8 @@ class _CanvasBoardState extends State<CanvasBoard> {
   static const _color = Colors.black;
   static const _width = 3.0;
   static const _eraserRadius = 12.0;
+  // The server rejects pen strokes over 20000 values; split well before that.
+  static const _maxPenValues = 10000;
   static final _rng = Random.secure();
 
   CanvasTool _tool = CanvasTool.pen;
@@ -187,6 +189,12 @@ class _CanvasBoardState extends State<CanvasBoard> {
     setState(() {
       if (_tool == CanvasTool.pen) {
         s.points.addAll([p.dx, p.dy]);
+        if (s.points.length >= _maxPenValues) {
+          // Near the server limit: save this part, keep drawing in a new one.
+          widget.controller.add(s);
+          widget.onStrokeComplete?.call(s);
+          _preview = _newStroke('pen', [p.dx, p.dy]);
+        }
       } else {
         s.points[2] = p.dx;
         s.points[3] = p.dy;

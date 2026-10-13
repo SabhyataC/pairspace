@@ -15,6 +15,9 @@ class RunEndpoint extends Endpoint {
 
   static const _maxCodeChars = 20000;
   static const _maxOutputChars = 10000;
+  // How long to wait for Judge0 (queue + compile + run) before giving up.
+  // Keep this under the client's 30 s "stuck Running" safety net.
+  static const _pollBudget = Duration(seconds: 25);
   static const _maxRunsPerWindow = 5;
   static const _window = Duration(seconds: 30);
   static final Map<String, List<DateTime>> _recentRuns = {};
@@ -157,11 +160,24 @@ class RunEndpoint extends Endpoint {
       }
       final token = jsonDecode(create.body)['token'] as String;
 
-      for (var i = 0; i < 15; i++) {
-        await Future.delayed(const Duration(milliseconds: 800));
-        final res = await http
-            .get(Uri.parse('$_baseUrl/submissions/$token?base64_encoded=false'))
-            .timeout(const Duration(seconds: 15));
+      final watch = Stopwatch()..start();
+      var delay = const Duration(milliseconds: 500);
+      while (watch.elapsed < _pollBudget) {
+        await Future.delayed(delay);
+        // Poll quickly at first (fast runs), then back off to every 2 s.
+        if (delay < const Duration(seconds: 2)) {
+          delay = Duration(milliseconds: (delay.inMilliseconds * 1.5).round());
+        }
+        final http.Response res;
+        try {
+          res = await http
+              .get(
+                Uri.parse('$_baseUrl/submissions/$token?base64_encoded=false'),
+              )
+              .timeout(const Duration(seconds: 8));
+        } catch (_) {
+          continue; // one slow or failed poll: try again until the budget ends
+        }
         if (res.statusCode != 200) continue;
 
         final data = jsonDecode(res.body) as Map<String, dynamic>;
@@ -178,7 +194,10 @@ class RunEndpoint extends Endpoint {
           timeMs: seconds == null ? null : (seconds * 1000).round(),
         );
       }
-      return _error('Execution timed out. Please try again.');
+      return _error(
+        'The execution service is taking too long (over 25 seconds). '
+        'It may be busy. Please try again.',
+      );
     } catch (e, st) {
       session.log(
         'runCode failed',
