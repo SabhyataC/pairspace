@@ -80,7 +80,7 @@ class RoomEndpoint extends Endpoint {
 
   /// Interviewer-only: the private recap link of one of the caller's rooms.
   Future<String> recapUrl(Session session, int roomId) async {
-    final room = await _requireOwnedRoom(session, roomId);
+    final room = await _requireRecapAccess(session, roomId);
     var token = room.recapToken;
     if (token == null || token.isEmpty) {
       token = _generateCode(); // random, same generator as room codes
@@ -326,6 +326,25 @@ class RoomEndpoint extends Endpoint {
     if (participant == null ||
         participant.status != ParticipantStatus.admitted ||
         participant.role != ParticipantRole.interviewer) {
+      throw AccessDeniedException(message: 'Interviewer only');
+    }
+    return room;
+  }
+    Future<Room> _requireRecapAccess(Session session, int roomId) async {
+    final userId = session.authenticated!.authUserId;
+    final room = await Room.db.findById(session, roomId);
+    if (room == null) {
+      throw AccessDeniedException(message: 'Room not found');
+    }
+    if (room.createdBy == userId) return room;
+    final participant = await Participant.db.findFirstRow(
+      session,
+      where: (t) => t.roomId.equals(roomId) & t.authUserId.equals(userId),
+    );
+    if (participant == null ||
+        participant.role != ParticipantRole.interviewer ||
+        (participant.status != ParticipantStatus.admitted &&
+            participant.status != ParticipantStatus.left)) {
       throw AccessDeniedException(message: 'Interviewer only');
     }
     return room;
