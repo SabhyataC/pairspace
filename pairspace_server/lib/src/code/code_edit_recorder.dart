@@ -8,6 +8,7 @@ bool _isLow(int u) => u >= 0xDC00 && u <= 0xDFFF;
 Future<void> recordCodeEdit(
   Session session, {
   required int roomId,
+  required String language,
   required String before,
   required String after,
 }) async {
@@ -33,6 +34,7 @@ Future<void> recordCodeEdit(
     session,
     CodeEdit(
       roomId: roomId,
+      language: language,
       offset: p,
       removed: before.length - p - s,
       inserted: after.substring(p, after.length - s),

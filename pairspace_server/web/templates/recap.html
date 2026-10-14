@@ -109,6 +109,7 @@
     /* code editor card */
     .editor { background: var(--dark); border: 1px solid var(--dark-border); border-radius: 16px; overflow: hidden;
               box-shadow: 0 8px 24px rgba(15,23,42,.12); }
+    .editor + .editor { margin-top: 18px; }
     .editor-bar { background: var(--dark-surface); border-bottom: 1px solid var(--dark-border);
                   display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; }
     .dots { display: flex; gap: 6px; }
@@ -192,76 +193,78 @@
       {{/participants}}
     </div>
 
-    <div class="section-title"><h2>Final code</h2>{{#hasCode}}<span class="tag">{{language}}</span>{{/hasCode}}</div>
+        <div class="section-title"><h2>Final code</h2></div>
     {{#hasCode}}
+    {{#codeBlocks}}
     <div class="editor">
       <div class="editor-bar">
         <div class="dots"><i></i><i></i><i></i></div>
         <span class="editor-lang">{{language}}</span>
-        <button id="copy-code" class="copy-btn" type="button">Copy</button>
+        <button class="copy-btn" type="button" data-target="code-block-{{index}}">Copy</button>
       </div>
-      <pre><code id="code-block">{{code}}</code></pre>
+      <pre><code id="code-block-{{index}}">{{code}}</code></pre>
       {{#hasCodeReplay}}
-<div id="code-replay" class="replay">
-  <button id="cr-play" type="button">▶ Replay</button>
-  <input id="cr-range" type="range" min="0" max="0" value="0">
-  <span id="cr-label" class="meta"></span>
-</div>
-<script id="cr-data" type="application/json">{{{codeReplayJson}}}</script>
-<script>
-(function () {
-  var edits = JSON.parse(document.getElementById('cr-data').textContent);
-  var codeEl = document.getElementById('code-block');
-  var box = document.getElementById('code-replay');
-  var pre = codeEl.parentNode;
-  var finalText = codeEl.textContent;
-  var n = edits.length;
+      <div id="code-replay-{{index}}" class="replay">
+        <button id="cr-play-{{index}}" type="button">▶ Replay</button>
+        <input id="cr-range-{{index}}" type="range" min="0" max="0" value="0">
+        <span id="cr-label-{{index}}" class="meta"></span>
+      </div>
+      <script id="cr-data-{{index}}" type="application/json">{{{codeReplayJson}}}</script>
+      <script>
+      (function () {
+        var i = {{index}};
+        var edits = JSON.parse(document.getElementById('cr-data-' + i).textContent);
+        var codeEl = document.getElementById('code-block-' + i);
+        var box = document.getElementById('code-replay-' + i);
+        var pre = codeEl.parentNode;
+        var finalText = codeEl.textContent;
+        var n = edits.length;
 
-  function apply(s, e) { return s.slice(0, e.o) + e.i + s.slice(e.o + e.r); }
-  function build(k) {
-    var s = '';
-    for (var i = 0; i < k; i++) s = apply(s, edits[i]);
-    return s;
-  }
-  // log must rebuild the saved code, otherwise hide the replay
-  if (!n || build(n).trim() !== finalText.trim()) { box.style.display = 'none'; return; }
-  codeEl.dataset.final = finalText;
+        function apply(s, e) { return s.slice(0, e.o) + e.i + s.slice(e.o + e.r); }
+        function build(k) {
+          var s = '';
+          for (var j = 0; j < k; j++) s = apply(s, edits[j]);
+          return s;
+        }
+        // log must rebuild the saved code, otherwise hide the replay
+        if (!n || build(n).trim() !== finalText.trim()) { box.style.display = 'none'; return; }
+        codeEl.dataset.final = finalText;
 
-  var btn = document.getElementById('cr-play');
-  var range = document.getElementById('cr-range');
-  var label = document.getElementById('cr-label');
-  var text = finalText, shown = n, timer = null;
-  range.max = n;
+        var btn = document.getElementById('cr-play-' + i);
+        var range = document.getElementById('cr-range-' + i);
+        var label = document.getElementById('cr-label-' + i);
+        var text = finalText, shown = n, timer = null;
+        range.max = n;
 
-  function render(k) {
-    if (k >= shown) { for (var i = shown; i < k; i++) text = apply(text, edits[i]); }
-    else { text = build(k); }
-    shown = k;
-    codeEl.textContent = text;
-    pre.scrollTop = pre.scrollHeight;
-    range.value = k;
-    label.textContent = k + ' / ' + n;
-  }
-  function stop() { clearTimeout(timer); timer = null; btn.textContent = '▶ Replay'; }
-  function step() {
-    render(shown + 1);
-    if (shown >= n) { stop(); return; }
-    var gap = edits[shown].t - edits[shown - 1].t;
-    timer = setTimeout(step, Math.min(Math.max(gap, 120), 800));
-  }
-  btn.onclick = function () {
-    if (timer) { stop(); return; }
-    if (shown >= n) render(0);
-    btn.textContent = '⏸ Pause';
-    timer = setTimeout(step, 300);
-  };
-  range.oninput = function () { stop(); render(parseInt(range.value, 10)); };
-  render(n);
-})();
-</script>
-{{/hasCodeReplay}}
-
+        function render(k) {
+          if (k >= shown) { for (var j = shown; j < k; j++) text = apply(text, edits[j]); }
+          else { text = build(k); }
+          shown = k;
+          codeEl.textContent = text;
+          pre.scrollTop = pre.scrollHeight;
+          range.value = k;
+          label.textContent = k + ' / ' + n;
+        }
+        function stop() { clearTimeout(timer); timer = null; btn.textContent = '▶ Replay'; }
+        function step() {
+          render(shown + 1);
+          if (shown >= n) { stop(); return; }
+          var gap = edits[shown].t - edits[shown - 1].t;
+          timer = setTimeout(step, Math.min(Math.max(gap, 120), 800));
+        }
+        btn.onclick = function () {
+          if (timer) { stop(); return; }
+          if (shown >= n) render(0);
+          btn.textContent = '⏸ Pause';
+          timer = setTimeout(step, 300);
+        };
+        range.oninput = function () { stop(); render(parseInt(range.value, 10)); };
+        render(n);
+      })();
+      </script>
+      {{/hasCodeReplay}}
     </div>
+    {{/codeBlocks}}
     {{/hasCode}}
     {{^hasCode}}<div class="empty">No code was written.</div>{{/hasCode}}
 
@@ -375,38 +378,37 @@
       });
     });
 
-    var copy = document.getElementById('copy-code');
-    if (copy) {
-      var flash = function (msg) {
-        copy.textContent = msg;
-        setTimeout(function () { copy.textContent = 'Copy'; }, 1800);
-      };
-      var fallbackCopy = function (text) {
-        var ta = document.createElement('textarea');
-        ta.value = text;
-        ta.setAttribute('readonly', '');
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        var ok = false;
-        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
-        document.body.removeChild(ta);
-        return ok;
-      };
-      copy.onclick = function () {
-        var cb = document.getElementById('code-block');
+        var flash = function (btn, msg) {
+      btn.textContent = msg;
+      setTimeout(function () { btn.textContent = 'Copy'; }, 1800);
+    };
+    var fallbackCopy = function (text) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      return ok;
+    };
+    document.querySelectorAll('.copy-btn[data-target]').forEach(function (btn) {
+      btn.onclick = function () {
+        var cb = document.getElementById(btn.getAttribute('data-target'));
         var text = cb.dataset.final || cb.textContent;
         if (navigator.clipboard && window.isSecureContext) {
           navigator.clipboard.writeText(text).then(
-            function () { flash('Copied!'); },
-            function () { flash(fallbackCopy(text) ? 'Copied!' : 'Copy failed'); }
+            function () { flash(btn, 'Copied!'); },
+            function () { flash(btn, fallbackCopy(text) ? 'Copied!' : 'Copy failed'); }
           );
         } else {
-          flash(fallbackCopy(text) ? 'Copied!' : 'Copy failed');
+          flash(btn, fallbackCopy(text) ? 'Copied!' : 'Copy failed');
         }
       };
-    }
+    });
   })();
   </script>
 {{/available}}

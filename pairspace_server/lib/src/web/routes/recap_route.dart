@@ -48,9 +48,10 @@ class RecapRoute extends WidgetRoute {
       orderBy: (t) => t.joinedAt,
     );
 
-    final snapshot = await CodeSnapshot.db.findFirstRow(
+    final snapshots = await CodeSnapshot.db.find(
       session,
       where: (t) => t.roomId.equals(room.id!),
+      orderBy: (t) => t.id,
     );
 
     final strokes = await Stroke.db.find(
@@ -69,9 +70,10 @@ class RecapRoute extends WidgetRoute {
       orderBy: (t) => t.id,
     );
 
-    final text = snapshot?.content ?? '';
     final origin = room.startedAt ?? room.createdAt;
     final outcome = _outcome(room, endedAt);
+
+    final codeBlocks = _codeBlocks(snapshots, edits);
 
     return RecapPageWidget({
       'available': true,
@@ -93,15 +95,12 @@ class RecapRoute extends WidgetRoute {
                 : 'Candidate',
           },
       ],
-      'hasCode': text.trim().isNotEmpty,
-      'code': text,
-      'language': snapshot?.language ?? '',
       'hasDrawing': strokes.isNotEmpty,
       'svg': _strokesToSvg(strokes),
       'hasReplay': strokes.length >= 2,
       'replayJson': _replayJson(strokes),
-      'hasCodeReplay': edits.length >= 2,
-      'codeReplayJson': _codeReplayJson(edits),
+      'hasCode': codeBlocks.isNotEmpty,
+      'codeBlocks': codeBlocks,
       ..._integritySummary(events, origin),
     });
   }
@@ -289,6 +288,32 @@ class RecapRoute extends WidgetRoute {
     }
     b.write('</svg>');
     return b.toString();
+  }
+
+  static List<Map<String, dynamic>> _codeBlocks(
+    List<CodeSnapshot> snapshots,
+    List<CodeEdit> edits,
+  ) {
+    final blocks = <Map<String, dynamic>>[];
+    for (final s in snapshots) {
+      if (s.content.trim().isEmpty) continue;
+      // Edits recorded before the language column existed have '' as language;
+      // attribute them to the only snapshot if there is exactly one.
+      final mine = [
+        for (final e in edits)
+          if (e.language == s.language ||
+              (e.language.isEmpty && snapshots.length == 1))
+            e,
+      ];
+      blocks.add({
+        'index': blocks.length,
+        'language': s.language,
+        'code': s.content,
+        'hasCodeReplay': mine.length >= 2,
+        'codeReplayJson': _codeReplayJson(mine),
+      });
+    }
+    return blocks;
   }
 
   static String _codeReplayJson(List<CodeEdit> edits) {

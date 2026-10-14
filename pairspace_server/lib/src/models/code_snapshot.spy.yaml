@@ -7,5 +7,5 @@ fields:
   updatedAt: DateTime, default=now
 indexes:
   code_snapshot_room_idx:
-    fields: roomId
+    fields: roomId, language
     unique: true

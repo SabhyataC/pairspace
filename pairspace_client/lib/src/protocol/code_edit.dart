@@ -17,15 +17,17 @@ abstract class CodeEdit
   CodeEdit._({
     this.id,
     required this.roomId,
+    String? language,
     required this.offset,
     required this.removed,
     required this.inserted,
     required this.createdAt,
-  });
+  }) : language = language ?? '';
 
   factory CodeEdit({
     int? id,
     required int roomId,
+    String? language,
     required int offset,
     required int removed,
     required String inserted,
@@ -36,6 +38,7 @@ abstract class CodeEdit
     return CodeEdit(
       id: jsonSerialization['id'] as int?,
       roomId: jsonSerialization['roomId'] as int,
+      language: jsonSerialization['language'] as String?,
       offset: jsonSerialization['offset'] as int,
       removed: jsonSerialization['removed'] as int,
       inserted: jsonSerialization['inserted'] as String,
@@ -52,6 +55,8 @@ abstract class CodeEdit
 
   int roomId;
 
+  String language;
+
   int offset;
 
   int removed;
@@ -66,6 +71,7 @@ abstract class CodeEdit
   CodeEdit copyWith({
     int? id,
     int? roomId,
+    String? language,
     int? offset,
     int? removed,
     String? inserted,
@@ -77,6 +83,7 @@ abstract class CodeEdit
       '__className__': 'CodeEdit',
       if (id != null) 'id': id,
       'roomId': roomId,
+      'language': language,
       'offset': offset,
       'removed': removed,
       'inserted': inserted,
@@ -90,6 +97,7 @@ abstract class CodeEdit
       '__className__': 'CodeEdit',
       if (id != null) 'id': id,
       'roomId': roomId,
+      'language': language,
       'offset': offset,
       'removed': removed,
       'inserted': inserted,
@@ -109,6 +117,7 @@ class _CodeEditImpl extends CodeEdit {
   _CodeEditImpl({
     int? id,
     required int roomId,
+    String? language,
     required int offset,
     required int removed,
     required String inserted,
@@ -116,6 +125,7 @@ class _CodeEditImpl extends CodeEdit {
   }) : super._(
          id: id,
          roomId: roomId,
+         language: language,
          offset: offset,
          removed: removed,
          inserted: inserted,
@@ -129,6 +139,7 @@ class _CodeEditImpl extends CodeEdit {
   CodeEdit copyWith({
     Object? id = _Undefined,
     int? roomId,
+    String? language,
     int? offset,
     int? removed,
     String? inserted,
@@ -137,6 +148,7 @@ class _CodeEditImpl extends CodeEdit {
     return CodeEdit(
       id: id is int? ? id : this.id,
       roomId: roomId ?? this.roomId,
+      language: language ?? this.language,
       offset: offset ?? this.offset,
       removed: removed ?? this.removed,
       inserted: inserted ?? this.inserted,

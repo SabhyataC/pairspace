@@ -2,6 +2,7 @@ class: CodeEdit
 table: code_edit
 fields:
   roomId: int, relation(parent=room, onDelete=Cascade)
+  language: String, default=''
   offset: int
   removed: int
   inserted: String

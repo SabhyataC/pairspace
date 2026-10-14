@@ -12,9 +12,9 @@ class CodeEndpoint extends Endpoint {
 
   static const _maxChars = 100000;
 
-  /// Latest unsaved update per room, shared by every stream in the room, so
-  /// the most recently received code is always the one that gets saved.
-  static final Map<int, CodeUpdate> _pendingByRoom = {};
+  /// Latest unsaved update per room and language, shared by every stream in
+  /// the room, so the most recent code of each language gets saved.
+  static final Map<int, Map<String, CodeUpdate>> _pendingByRoom = {};
 
   /// Saves per room run one after another, so an older save can't finish
   /// after a newer one.
@@ -35,10 +35,14 @@ class CodeEndpoint extends Endpoint {
       saveTimer = null;
       // Take the room's latest update. If another stream's timer already took
       // it, this is null and there is nothing to do (no double insert).
-      final u = _pendingByRoom.remove(roomId);
-      if (u == null) return;
+      final pending = _pendingByRoom.remove(roomId);
+      if (pending == null || pending.isEmpty) return;
       final prev = _saveChain[roomId] ?? Future<void>.value();
-      final next = prev.then((_) => _saveSnapshot(session, roomId, u));
+      final next = prev.then((_) async {
+        for (final u in pending.values) {
+          await _saveSnapshot(session, roomId, u);
+        }
+      });
       _saveChain[roomId] = next;
       await next;
       if (identical(_saveChain[roomId], next)) await _saveChain.remove(roomId);
@@ -74,7 +78,7 @@ class CodeEndpoint extends Endpoint {
 
       try {
         update.roomId = roomId;
-        _pendingByRoom[roomId] = update;
+        (_pendingByRoom[roomId] ??= {})[update.language] = update;
         saveTimer ??= Timer(const Duration(seconds: 1), flush);
         await session.messages.postMessage(channel, update);
       } catch (e, st) {
@@ -96,10 +100,13 @@ class CodeEndpoint extends Endpoint {
 
   Future<CodeSnapshot?> getCode(Session session, int roomId) async {
     await _requireAdmitted(session, roomId);
-    return CodeSnapshot.db.findFirstRow(
+    final rows = await CodeSnapshot.db.find(
       session,
       where: (t) => t.roomId.equals(roomId),
     );
+    if (rows.isEmpty) return null;
+    rows.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    return rows.first;
   }
 
   Future<void> _saveSnapshot(
@@ -108,10 +115,12 @@ class CodeEndpoint extends Endpoint {
     CodeUpdate u,
   ) async {
     try {
-      var row = await CodeSnapshot.db.findFirstRow(
+      Future<CodeSnapshot?> find() => CodeSnapshot.db.findFirstRow(
         session,
-        where: (t) => t.roomId.equals(roomId),
+        where: (t) => t.roomId.equals(roomId) & t.language.equals(u.language),
       );
+
+      var row = await find();
       var before = row?.content ?? '';
 
       if (row == null) {
@@ -126,11 +135,8 @@ class CodeEndpoint extends Endpoint {
             ),
           );
         } catch (_) {
-          // Unique index on roomId: someone inserted first. Update theirs.
-          row = await CodeSnapshot.db.findFirstRow(
-            session,
-            where: (t) => t.roomId.equals(roomId),
-          );
+          // Unique index on (roomId, language): someone inserted first.
+          row = await find();
           if (row == null) rethrow;
           before = row.content;
         }
@@ -138,7 +144,6 @@ class CodeEndpoint extends Endpoint {
 
       if (row != null) {
         row.content = u.text;
-        row.language = u.language;
         row.updatedAt = DateTime.now();
         await CodeSnapshot.db.updateRow(session, row);
       }
@@ -146,6 +151,7 @@ class CodeEndpoint extends Endpoint {
       await recordCodeEdit(
         session,
         roomId: roomId,
+        language: u.language,
         before: before,
         after: u.text,
       );
