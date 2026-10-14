@@ -4,6 +4,10 @@
 
 ### The live pair-interview room. Code, draw, talk, and get a recap you can trust.
 
+### 🌐 Live demo: [pairspace.serverpod.space](https://pairspace.serverpod.space)
+
+> **Note:** email verification codes may arrive in your **Spam** folder. Check there, or sign in with Google.
+
 <br>
 
 ![Flutter](https://img.shields.io/badge/Flutter-Web-02569B?style=for-the-badge&logo=flutter&logoColor=white)
@@ -18,6 +22,14 @@
 [Features](#-features) · [How it works](#-how-it-works) · [Quick start](#-quick-start) · [Architecture](#-architecture) · [Security](#-security-and-privacy) · [Deploy](#-deployment) · [Limitations](#-honest-limitations)
 
 </div>
+## 📸 Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/hero.png" width="48%" alt="Interview Room Interface">
+  <img src="docs/screenshots/room_create.png" width="48%" alt="Private Recap Page">
+  <img src="docs/screenshots/lobby.png" width="48%" alt="Interview Room Interface">
+  <img src="docs/screenshots/recap.png" width="48%" alt="Private Recap Page">
+</p>
 
 ---
 
@@ -429,22 +441,46 @@ PairSpace treats every realtime channel as untrusted input.
 **Privacy by design:** paste events record only the **length** of pasted text, never its content.
 
 ---
-
 ## 🌍 Deployment
 
-The server ships with a multi-stage `Dockerfile`. Run `serverpod run flutter_build` first, then build from the **repository root**:
+### 🌐 Live demo: [pairspace.serverpod.space](https://pairspace.serverpod.space)
 
+PairSpace is deployed on [Serverpod Cloud](https://serverpod.dev/cloud), which provides managed PostgreSQL, HTTPS, and hosting for the Flutter web app.
+
+### Deploy to Serverpod Cloud
+
+1. **Set the Google redirect URI** in `pairspace_flutter/lib/client.dart` to your public URL (`https://<project-id>.serverpod.space/auth/callback`) and add the same URL to your Google OAuth client. This is compiled into the web build, so set it before deploying.
+2. **Add production secrets.** List what Cloud already manages, then set the rest:
+```bash
+   serverpod cloud password list
+   serverpod cloud password set googleClientSecret --from-file google_secret.json
+```
+   `googleClientSecret` must be the OAuth client JSON with a top-level `"web"` object. Use `--from-file` so the quotes are not mangled. Never commit this file.
+3. **First launch** (from `pairspace_server`):
+```bash
+   serverpod cloud launch
+```
+4. **Later updates:**
+```bash
+   serverpod cloud deploy
+```
+
+Optional TURN for video on strict networks:
+```bash
+serverpod cloud password set turnUrls "turn:your-turn-host:3478"
+serverpod cloud password set turnUsername "user"
+serverpod cloud password set turnCredential "secret"
+```
+
+### Self-hosting with Docker
+
+The server also ships a multi-stage `Dockerfile`. Run `serverpod run flutter_build` first, then build from the repository root:
 ```bash
 docker build -f pairspace_server/Dockerfile .
 ```
+You then need your own PostgreSQL, HTTPS, public hosts in `config/production.yaml`, and production secrets (`config/passwords.yaml` or `SERVERPOD_PASSWORD_*` variables). Browsers require HTTPS for camera, microphone and clipboard access.
 
-Before going live:
-
-1. Set your public hosts in `pairspace_server/config/production.yaml`.
-2. Provide production secrets (`config/passwords.yaml` or `SERVERPOD_PASSWORD_*` environment variables).
-3. Update `redirectUri` in `pairspace_flutter/lib/client.dart` from `http://localhost:8082/auth/callback` to your public URL, and add that URL to your Google OAuth client.
-4. Serve over **HTTPS**. Browsers require it for camera, microphone and clipboard access.
-5. Configure a **TURN server** for reliable video on restrictive networks.
+---.
 
 ---
 

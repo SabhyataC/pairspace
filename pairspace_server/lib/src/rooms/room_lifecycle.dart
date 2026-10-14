@@ -24,7 +24,7 @@ Future<void> endRoomInternal(Session session, int roomId) async {
     await Participant.db.update(session, participants);
   }
 
-  await session.serverpod.futureCalls.cancel('end-room-$roomId');
+   await _cancelEmptyRoomSweep(session, 'end-room-$roomId');
 }
 
 Future<int> activeInterviewerCount(Session session, int roomId) {
@@ -58,14 +58,36 @@ Future<bool> endRoomIfInterviewerGone(Session session, int roomId) async {
 const _sweepInterval = Duration(minutes: 1);
 
 /// Keeps one "check this room again in a minute" call scheduled.
+/// Keeps one "check this room again in a minute" call scheduled.
+/// Best effort: if future calls are unavailable (e.g. not initialized on
+/// the host), skip silently. Rooms still end via endRoomIfInterviewerGone
+/// whenever participants poll.
 Future<void> syncEmptyRoomExpiry(Session session, int roomId) async {
   final room = await Room.db.findById(session, roomId);
   if (room == null || room.endedAt != null) return;
 
   final identifier = 'end-room-$roomId';
-  await session.serverpod.futureCalls.cancel(identifier);
-  await session.serverpod.futureCalls
-      .callWithDelay(_sweepInterval, identifier: identifier)
-      .endEmptyRoom
-      .end(roomId);
+  try {
+    await session.serverpod.futureCalls.cancel(identifier);
+    await session.serverpod.futureCalls
+        .callWithDelay(_sweepInterval, identifier: identifier)
+        .endEmptyRoom
+        .end(roomId);
+  } catch (e) {
+    session.log(
+      'Could not schedule empty-room sweep: $e',
+      level: LogLevel.warning,
+    );
+  }
+}
+
+Future<void> _cancelEmptyRoomSweep(Session session, String identifier) async {
+  try {
+    await session.serverpod.futureCalls.cancel(identifier);
+  } catch (e) {
+    session.log(
+      'Could not cancel empty-room sweep: $e',
+      level: LogLevel.warning,
+    );
+  }
 }
