@@ -33,6 +33,6 @@ Future<void> initializeClient() async {
   client.auth.initializeGoogleSignIn(
     clientId:
         '984826556449-a7t9tue1es34jqtqpm7674bg9je4a6pa.apps.googleusercontent.com',
-    redirectUri: 'http://localhost:8082/auth/callback',
+    redirectUri: 'https://pairspace.serverpod.space/auth/callback',
   );
 }
