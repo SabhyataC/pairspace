@@ -285,6 +285,8 @@ Wait until the console shows the server running. Then open:
 
 ### 👉 http://localhost:8082
 
+### 🌐 Live demo: [pairspace.serverpod.space](https://pairspace.serverpod.space)
+
 | Service | URL |
 |---|---|
 | **The app** and recap pages | http://localhost:8082 |
