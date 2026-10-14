@@ -9,7 +9,6 @@ class CanvasEndpoint extends Endpoint {
   @override
   bool get requireLogin => true;
 
-  /// Client sends its strokes in, and receives every stroke drawn in the room.
   static const _kinds = {'pen', 'line', 'arrow', 'rect', 'ellipse', 'text'};
 
   Stream<Stroke> strokeStream(

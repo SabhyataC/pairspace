@@ -177,8 +177,8 @@
     <p class="sub">A read-only summary of everything that happened in the room.</p>
 
     <div class="stats">
-      <div class="card stat"><div class="stat-label">Started</div><div class="stat-value">{{started}}</div></div>
-      <div class="card stat"><div class="stat-label">Ended</div><div class="stat-value">{{ended}}</div></div>
+      <div class="card stat"><div class="stat-label">Started</div><div class="stat-value"><time class="ts" datetime="{{startedIso}}">{{started}}</time></div></div>
+      <div class="card stat"><div class="stat-label">Ended</div><div class="stat-value"><time class="ts" datetime="{{endedIso}}">{{ended}}</time></div></div>
       <div class="card stat accent"><div class="stat-label">Duration</div><div class="stat-value">{{duration}}</div></div>
     </div>
 
@@ -316,7 +316,7 @@
         stop();
         return;
       }
-      var gap = data[shown].t - data[shown - 1].t;
+        var gap = data[shown] - data[shown - 1];
       timer = setTimeout(step, Math.min(Math.max(gap, 120), 800));
     }
 
@@ -359,21 +359,52 @@
   </main>
   <script>
   (function () {
-    // first letter of each participant's name inside the avatar circle
     document.querySelectorAll('.avatar').forEach(function (a) {
       var t = (a.textContent || '').trim();
-      a.textContent = t ? t.charAt(0) : '?';
+      var first = Array.from(t)[0];
+      a.textContent = first ? first : '?';
     });
+
+    document.querySelectorAll('time.ts').forEach(function (el) {
+      var d = new Date(el.getAttribute('datetime'));
+      if (isNaN(d.getTime())) return;
+      el.textContent = d.toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        timeZoneName: 'short'
+      });
+    });
+
     var copy = document.getElementById('copy-code');
     if (copy) {
+      var flash = function (msg) {
+        copy.textContent = msg;
+        setTimeout(function () { copy.textContent = 'Copy'; }, 1800);
+      };
+      var fallbackCopy = function (text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        document.body.removeChild(ta);
+        return ok;
+      };
       copy.onclick = function () {
         var cb = document.getElementById('code-block');
-var text = cb.dataset.final || cb.textContent;
-        if (!navigator.clipboard) return;
-        navigator.clipboard.writeText(text).then(function () {
-          copy.textContent = 'Copied!';
-          setTimeout(function () { copy.textContent = 'Copy'; }, 1500);
-        });
+        var text = cb.dataset.final || cb.textContent;
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(
+            function () { flash('Copied!'); },
+            function () { flash(fallbackCopy(text) ? 'Copied!' : 'Copy failed'); }
+          );
+        } else {
+          flash(fallbackCopy(text) ? 'Copied!' : 'Copy failed');
+        }
       };
     }
   })();

@@ -46,27 +46,35 @@ class VideoSignalEndpoint extends Endpoint {
     var inWindow = 0;
 
     final incoming = outgoing.listen((msg) async {
-      final now = DateTime.now();
-      if (now.difference(windowStart) > const Duration(seconds: 1)) {
-        windowStart = now;
-        inWindow = 0;
-      }
-      if (++inWindow > 100) return;
-      if (now.difference(lastCheck) > const Duration(seconds: 5)) {
-        lastCheck = now;
-        try {
-          await _requireAdmitted(session, roomId, myParticipantId);
-        } catch (_) {
-          allowed = false;
+      try {
+        final now = DateTime.now();
+        if (now.difference(windowStart) > const Duration(seconds: 1)) {
+          windowStart = now;
+          inWindow = 0;
         }
+        if (++inWindow > 100) return;
+        if (now.difference(lastCheck) > const Duration(seconds: 5)) {
+          lastCheck = now;
+          try {
+            await _requireAdmitted(session, roomId, myParticipantId);
+          } catch (_) {
+            allowed = false;
+          }
+        }
+        if (!allowed) return;
+        if ((msg.sdp?.length ?? 0) > 20000 ||
+            (msg.candidate?.length ?? 0) > 2000) {
+          return;
+        }
+        msg.senderParticipantId = myParticipantId;
+        await session.messages.postMessage(channel, msg);
+      } catch (e, st) {
+        session.log(
+          'Failed to relay signal: $e',
+          level: LogLevel.error,
+          stackTrace: st,
+        );
       }
-      if (!allowed) return;
-      if ((msg.sdp?.length ?? 0) > 20000 ||
-          (msg.candidate?.length ?? 0) > 2000) {
-        return;
-      }
-      msg.senderParticipantId = myParticipantId;
-      await session.messages.postMessage(channel, msg);
     });
 
     try {

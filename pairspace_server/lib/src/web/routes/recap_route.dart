@@ -76,7 +76,9 @@ class RecapRoute extends WidgetRoute {
     return RecapPageWidget({
       'available': true,
       'started': _fmt(room.createdAt),
+      'startedIso': room.createdAt.toUtc().toIso8601String(),
       'ended': _fmt(endedAt),
+      'endedIso': endedAt.toUtc().toIso8601String(),
       'duration': room.startedAt == null
           ? 'Unknown'
           : '${endedAt.difference(room.startedAt!).inMinutes} min',
@@ -193,15 +195,12 @@ class RecapRoute extends WidgetRoute {
   static String _replayJson(List<Stroke> strokes) {
     if (strokes.isEmpty) return '[]';
     final t0 = strokes.first.createdAt;
-    final items = [
+    final times = [
       for (final s in strokes)
         if (_strokeInner(s).isNotEmpty)
-          {
-            't': s.createdAt.difference(t0).inMilliseconds,
-            'svg': _strokeInner(s),
-          },
+          s.createdAt.difference(t0).inMilliseconds,
     ];
-    return jsonEncode(items).replaceAll('<', r'\u003c');
+    return jsonEncode(times);
   }
 
   static String _strokesToSvg(List<Stroke> strokes) {

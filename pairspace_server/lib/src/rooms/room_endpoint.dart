@@ -22,7 +22,7 @@ class RoomEndpoint extends Endpoint {
   }) async {
     final userId = session.authenticated!.authUserId;
     if (!_allowedDurations.contains(durationMinutes)) {
-      throw ArgumentError('Unsupported duration: $durationMinutes');
+      throw AccessDeniedException(message: 'Unsupported duration');
     }
 
     final stale = await Room.db.find(
@@ -414,7 +414,7 @@ class RoomEndpoint extends Endpoint {
   String _sanitizeName(String raw, {required String fallback}) {
     final trimmed = raw.trim();
     if (trimmed.isEmpty) return fallback;
-    return trimmed.length > 40 ? trimmed.substring(0, 40) : trimmed;
+    return String.fromCharCodes(trimmed.runes.take(40));
   }
 
   String? _sanitizeRoomName(String? raw) {
