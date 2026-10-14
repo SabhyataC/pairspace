@@ -24,7 +24,7 @@ Future<void> endRoomInternal(Session session, int roomId) async {
     await Participant.db.update(session, participants);
   }
 
-   await _cancelEmptyRoomSweep(session, 'end-room-$roomId');
+  await _cancelEmptyRoomSweep(session, 'end-room-$roomId');
 }
 
 Future<int> activeInterviewerCount(Session session, int roomId) {
